@@ -1,3 +1,8 @@
+2004-06-18  Matthew Allum,,,  <mallum@handhelds.org>
+
+	* src/wm.c: (wm_handle_configure_request), (wm_make_new_client):
+	Hacks to make kaffe awt apps paint the UI's ok when sized by mb.
+
 2004-06-11  Matthew Allum,,,  <mallum@handhelds.org>
 
 	* src/toolbar_client.c: (toolbar_client_new):

@@ -1190,7 +1190,31 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
    xwc.stack_mode = e->detail;
 
    if (!no_configure) 
-     XConfigureWindow(w->dpy, e->window, e->value_mask, &xwc);
+     {
+#ifdef WANT_CRAZY_AWT_TO_WORK
+
+       /* 
+        * For some reason awt ( kaffe ) apps dont like getting anything
+        * other than what they've asked for in there *first* configure_request
+        * response ( they dont paint there UI otherwise ).
+        * This is a quick fix which sends 2 configure differering events  
+        * which seems to make things better. Im not sure what the best fix is. 
+        *
+        */
+
+       xwc.width  = e->width;
+       xwc.height = e->height;
+
+       XConfigureWindow(w->dpy, e->window, e->value_mask, &xwc);
+
+       xwc.width  = c->width;
+       xwc.height = c->height;
+
+#endif
+
+       XConfigureWindow(w->dpy, e->window, e->value_mask, &xwc);
+
+     }
 
    /* XXX Only raise a client if it size is constant and above is set 
       This may be broken                                             */
@@ -1428,17 +1452,13 @@ wm_handle_property_change(Wm *w, XPropertyEvent *e)
 Client*
 wm_make_new_client(Wm *w, Window win)
 {
-   Window trans_win;
-   Atom realType;
-   unsigned long n;
-   unsigned long extra;
-   unsigned long  val[1];
-   int format;
-   int status;
-   Atom *value = NULL;
-   Client *c = NULL, *t = NULL, *old_main_client = NULL;
-   XWMHints *wmhints;
-   int mwm_flags = 0;
+   Window        trans_win;
+   Atom          realType, *value = NULL;;
+   unsigned long n, extra, val[1];
+   int           format, status;
+   Client       *c = NULL, *t = NULL, *old_main_client = NULL;
+   XWMHints     *wmhints;
+   int           mwm_flags = 0;
 
    XGrabServer(w->dpy);
 
@@ -1647,8 +1667,6 @@ wm_make_new_client(Wm *w, Window win)
    
    c->move_resize(c);
 
-
-
    dbg("%s() showing new client\n", __func__);
 
    c->show(c);
@@ -1660,6 +1678,7 @@ wm_make_new_client(Wm *w, Window win)
    ewmh_set_active(c->wm);
 
    client_set_state(c, NormalState);
+
 
    /* This is really only for an lowlighting panels to make sure 
       they get really hidden. 
