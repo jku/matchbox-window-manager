@@ -1,3 +1,11 @@
+2004-08-21  mallum,,,  <mallum@handhelds.org>
+
+	* src/dialog_client.c: (dialog_client_configure):
+	* src/main_client.c: (main_client_hide), (main_client_show),
+	(main_client_destroy):
+	* src/wm.c: (wm_handle_configure_request), (wm_toggle_desktop):
+	source cleanups. remove #if 0's. rid compiler warnings
+
 2004-08-18  mallum,,,  <mallum@handhelds.org>
 
 	* src/client_common.c: (client_want_focus):

@@ -1,5 +1,5 @@
 /* matchbox - a lightweight window manager
-
+ 
    Copyright 2002 Matthew Allum
 
    This program is free software; you can redistribute it and/or modify
@@ -14,7 +14,7 @@
 */
 
 /*
-  $Id: main_client.c,v 1.7 2004/08/11 21:51:45 mallum Exp $
+  $Id: main_client.c,v 1.8 2004/08/21 11:46:19 mallum Exp $
 */
 
 #include "main_client.h"
@@ -580,7 +580,7 @@ main_client_hide(Client *c)
     main_client_manage_toolbars_for_fullscreen(c, False);
   
    /* lower window to bottom of stack */
-   XLowerWindow(c->wm->dpy, c->frame);
+   XLowerWindow(w->dpy, c->frame);
 }
 
 
@@ -603,9 +603,9 @@ main_client_show(Client *c)
 
    dbg("%s() called on %s\n", __func__, c->name);
    
-   if (c->wm->flags & DESKTOP_RAISED_FLAG) 
+   if (w->flags & DESKTOP_RAISED_FLAG) 
      {
-       c->wm->flags ^= DESKTOP_RAISED_FLAG; /* desktop not raised anymore */
+       w->flags ^= DESKTOP_RAISED_FLAG; /* desktop not raised anymore */
        c->flags |= CLIENT_NEW_FOR_DESKTOP;
      }
    else
@@ -614,29 +614,29 @@ main_client_show(Client *c)
      }
 
 
-   c->wm->main_client = c;
+   w->main_client = c;
    c->mapped = True;
 
    /* Make sure the desktop is always at the bottom */
-   if (!(c->wm->flags & DESKTOP_DECOR_FLAG)
+   if (!(w->flags & DESKTOP_DECOR_FLAG)
        && (desktop = wm_get_desktop(c->wm)) != NULL)
-     XLowerWindow(c->wm->dpy, desktop->window);
+     XLowerWindow(w->dpy, desktop->window);
 
 
-   XMapRaised(c->wm->dpy, c->frame);
-   XMapSubwindows(c->wm->dpy, c->frame);
+   XMapRaised(w->dpy, c->frame);
+   XMapSubwindows(w->dpy, c->frame);
 
-   if (c->wm->have_titlebar_panel 
-       && mbtheme_has_titlebar_panel(c->wm->mbtheme)
+   if (w->have_titlebar_panel 
+       && mbtheme_has_titlebar_panel(w->mbtheme)
        && !(c->flags & CLIENT_FULLSCREEN_FLAG))
-     XMapRaised(c->wm->dpy, c->wm->have_titlebar_panel->frame);
+     XMapRaised(w->dpy, w->have_titlebar_panel->frame);
 
    /* check input focus */
    if (client_want_focus(c))
    {
-      XSetInputFocus(c->wm->dpy, c->window,
+      XSetInputFocus(w->dpy, c->window,
 		     RevertToPointerRoot, CurrentTime);
-      c->wm->focused_client = c;
+      w->focused_client = c;
    }
 
    if (c->flags & CLIENT_FULLSCREEN_FLAG)
@@ -704,7 +704,6 @@ main_client_destroy(Client *c)
        w->flags ^= SINGLE_FLAG; /* turn on single flag */      
        main_client_redraw(w->main_client, False);
      }
-
 }
 
 

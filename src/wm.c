@@ -1197,49 +1197,6 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 	 }
      }
 
-#if 0    			/* Old way */
-   /* allow decoration free dialogs to move themselves */
-   if ((c->type == dialog  	
-	&& ( c->flags & CLIENT_TITLE_HIDDEN_FLAG 
-	    || c->flags & CLIENT_IS_MESSAGE_DIALOG
-	    || c->flags & CLIENT_IS_MESSAGE_DIALOG_HI
-	    || c->flags & CLIENT_IS_MESSAGE_DIALOG_LO
-	     || c->wm->config->dialog_stratergy == WM_DIALOGS_STRATERGY_FREE))
-       || c->type == MBCLIENT_TYPE_OVERRIDE)
-     {
-
-       /* render any existing  */
-       comp_engine_render(c->wm, c->wm->all_damage);
-
-       c->width  = xwc.width  = e->width;
-       c->height = xwc.height = e->height;
-
-       dbg("%s setting widthxheight = %ix%i\n", __func__, e->width, e->height);
-
-       c->x      = xwc.x = e->x;
-				
-       c->y      = xwc.y = e->y;
-
-       dbg("%s() moving window\n", __func__);
-
-       no_configure = True; 	/* use below instead XXX find better fix */
-
-       dialog_client_move_resize(c);
-
-       /* Make sure we get the damage before the move.. */
-
-       XFlush(w->dpy);
-
-       need_comp_update = True;
-       
-     } else {
-       xwc.width  = c->width;
-       xwc.height = c->height;
-       xwc.x = c->x;
-       xwc.y = c->y;
-     }
-#endif
-
    xwc.border_width = 0;
    xwc.sibling = e->above;
    xwc.stack_mode = e->detail;
@@ -2190,10 +2147,13 @@ wm_toggle_desktop(Wm *w)
 	w->flags ^= DESKTOP_RAISED_FLAG;	
    }
 
-   ewmh_update(w);
-   ewmh_set_active(w);
 
    XUngrabServer(w->dpy);
+
+   XSync(w->dpy, False);
+
+   ewmh_update(w);
+   ewmh_set_active(w);
 }
 
 void
