@@ -583,7 +583,8 @@ void main_client_button_press(Client *c, XButtonEvent *e)
             * Add more.
 	   */
 	   if ((button_item && button_item->id == BUTTON_ACTION_CUSTOM)
-	       || (button_item && button_item->id == BUTTON_ACTION_MIN))
+	       || (button_item && button_item->id == BUTTON_ACTION_MIN)
+	       || (button_item && button_item->id == BUTTON_ACTION_CLOSE))
 	     return;
 	 }
      }

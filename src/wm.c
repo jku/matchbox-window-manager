@@ -1006,7 +1006,7 @@ wm_handle_keypress(Wm *w, XKeyEvent *e)
 			  p = wm_find_client(w, current_cycle->xid, WINDOW);
 			  if (p)
 			    {
-			      p->show(p);
+			      wm_activate_client(p);
 			      found = True;
 			    }
 			}
