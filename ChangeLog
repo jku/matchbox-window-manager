@@ -1,5 +1,19 @@
 2004-12-23  mallum,,,  <mallum@openedhand.com>
 
+	* src/main_client.c: (main_client_show):
+	Make sure closed app goes back to desktop correctly even after app
+	has opened. 
+
+	* src/toolbar_client.c: (toolbar_client_show),
+	(toolbar_client_redraw):
+	Try and fix composite not updating properly when dialog resized
+	via toolbar. 
+
+	* src/wm.c: (wm_handle_configure_request):
+	repaint resized dialogs
+
+2004-12-23  mallum,,,  <mallum@openedhand.com>
+
 	* src/main_client.c: (main_client_manage_toolbars_for_fullscreen):
 	Max sure toolbar for fullscreen window is resized correctly on toggle.
 

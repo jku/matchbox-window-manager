@@ -1371,7 +1371,7 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 	     client_buttons_delete_all(c);
 
 	   /* TODO: fix composite for this */
-	   comp_engine_client_hide(c->wm, c);
+	   // comp_engine_client_hide(c->wm, c);
 	   
 	   xwc.width  = c->width  = req_w;
 	   xwc.height = c->height = req_h;
@@ -1385,6 +1385,7 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 	     client_deliver_config(c);
 	   
 	   dialog_client_move_resize(c);
+	   dialog_client_redraw(c, False);
 
 	   /* make sure composite does any needed updates */
 	   comp_engine_client_configure(w, c);

@@ -728,7 +728,13 @@ main_client_show(Client *c)
      }
    else
      {
-       c->flags &= ~CLIENT_NEW_FOR_DESKTOP;
+       /* Only reset this flag if were not the main client. 
+        * - ie we've paged to another app and come back. 
+        * Avoid problem of open app *and* the dialog from desktop, close 
+        * app then does not go back to desktop. 
+       */
+       if (wm_get_visible_main_client(w) != c)
+	 c->flags &= ~CLIENT_NEW_FOR_DESKTOP;
      }
 
    /* Move this client and any transients to the very top of the stack.

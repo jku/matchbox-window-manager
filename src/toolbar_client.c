@@ -196,6 +196,8 @@ toolbar_client_show(Client *c)
 
    XMapSubwindows(w->dpy, c->frame);
    XMapWindow(w->dpy, c->frame);
+
+   comp_engine_client_show(w, c);
 }
 
 void
@@ -334,6 +336,8 @@ toolbar_client_redraw(Client *c, Bool use_cache)
 						 FRAME_UTILITY_MAX);
   int min_offset = theme_frame_defined_height_get(w->mbtheme, 
 						  FRAME_UTILITY_MIN);
+
+  comp_engine_client_show(w, c);
 
   if (c->flags & CLIENT_TITLE_HIDDEN_FLAG) return;
 
