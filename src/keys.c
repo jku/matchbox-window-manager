@@ -546,7 +546,6 @@ keys_init(Wm *w)
   w->config->kb->entrys = NULL;
   
   keys_load_and_grab(w);
-
 }
 
 #endif 

@@ -171,7 +171,7 @@ ewmh_handle_root_message(Wm *w, XClientMessageEvent *e)
 	   if (c->pings_pending > 0) 
 	     {
 	       c->pings_pending = -1;
-	       c->wm->n_active_ping_clients--;
+	       w->n_active_ping_clients--;
 	     }
 	 }
      } 
@@ -390,31 +390,33 @@ ewmh_state_set(Client *c)
 Bool 
 ewmh_state_check(Client *c, Atom atom_state_wanted)
 {
-   unsigned long n;
-   unsigned long extra;
-   int           format, status, i;
-   Atom          realType, *value = NULL;
+  Wm   *w = c->wm;
 
-   status = XGetWindowProperty(c->wm->dpy, c->window,
-			       c->wm->atoms[WINDOW_STATE],
-			       0L, 1000000L,
-			       0, XA_ATOM, &realType, &format,
-			       &n, &extra, (unsigned char **) &value);
-   if (status == Success)
-     {
-       if (realType == XA_ATOM && format == 32 && n > 0)
-	 {
-	   for(i=0; i < n; i++)
-	     if (value[i] && value[i] == atom_state_wanted)
-	       {
-		 if (value) XFree(value);
-		 return True;
-	       }
-	 }
-     }
+  unsigned long n;
+  unsigned long extra;
+  int           format, status, i;
+  Atom          realType, *value = NULL;
 
-   if (value) 
-     XFree(value);
+  status = XGetWindowProperty(w->dpy, c->window,
+			      w->atoms[WINDOW_STATE],
+			      0L, 1000000L,
+			      0, XA_ATOM, &realType, &format,
+			      &n, &extra, (unsigned char **) &value);
+  if (status == Success)
+    {
+      if (realType == XA_ATOM && format == 32 && n > 0)
+	{
+	  for(i=0; i < n; i++)
+	    if (value[i] && value[i] == atom_state_wanted)
+	      {
+		if (value) XFree(value);
+		return True;
+	      }
+	}
+    }
+  
+  if (value) 
+    XFree(value);
 
    return False;
 }

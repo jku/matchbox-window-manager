@@ -14,13 +14,10 @@
 */
 
 /*
-  $Id: main_client.c,v 1.14 2004/11/01 20:22:08 mallum Exp $
+  $Id: main_client.c,v 1.15 2004/11/10 21:52:13 mallum Exp $
 */
 
 #include "main_client.h"
-
-#define VBW(c) 5
-#define SBW(c) 5
 
 Client*
 main_client_new(Wm *w, Window win)
@@ -178,7 +175,8 @@ main_client_configure(Client *c)
 
    dbg("%s() configured as %i*%i+%i+%i, frame size is %i\n", 
        __func__, c->width, c->height, c->x, c->y, frm_size);
-   
+
+   client_deliver_config(c);   
    // c->wm->main_client = c;
 }
 
@@ -286,6 +284,8 @@ main_client_move_resize(Client *c)
 		    c->y - main_client_title_height(c), 
 		    c->width + ( offset_east + offset_west),
 		    c->height + main_client_title_height(c) + offset_south);
+
+
 }
 
 
@@ -307,23 +307,6 @@ main_client_toggle_fullscreen(Client *c)
       client_buttons_delete_all(c);    
       c->redraw(c, False);
     }
-
-#if 0
-  if (w->have_titlebar_panel 
-      && mbtheme_has_titlebar_panel(w->mbtheme))
-    {
-      if (c->flags & CLIENT_FULLSCREEN_FLAG)
-	{
-	  w->have_titlebar_panel->ignore_unmap++;
-	  XUnmapWindow(w->dpy, w->have_titlebar_panel->frame);
-	}
-      else
-	{
-	  XMapRaised(w->dpy, w->have_titlebar_panel->frame);
-	}
-
-    }
-#endif
 
   ewmh_state_set(c); /* Let win know it fullscreen state has changed, it
 		        could be waiting on this to adjust ui */
@@ -562,7 +545,6 @@ void main_client_button_press(Client *c, XButtonEvent *e)
    }
 }
 
-
 void
 main_client_toggle_title_bar(Client *c)
 {
@@ -613,7 +595,6 @@ main_client_toggle_title_bar(Client *c)
   XUngrabServer(w->dpy);
 }
 
-
 /* This is called when a main client is not visible anymore - 
    i.e. another one is activated */
 void
@@ -634,28 +615,12 @@ main_client_hide(Client *c)
   else c->next_focused_client = NULL;
 }
 
-
 void
 main_client_iconize(Client *c)
 {
   client_set_state(c, IconicState);
   main_client_unmap(c);
-
-#if 0
-  base_client_iconize(c);
-  p = client_get_prev(c, MBCLIENT_TYPE_APP);
-  if (p) { p->show(p); }
-#endif
-
 }
-
-/* 
- *  - Add new raise and lower methods. leave dummy show, but remove later  
- *  - Change hide to lower ? 
- *    - or unmap method ? 
- *
- *
- */
 
 void
 main_client_show(Client *c)
@@ -666,7 +631,6 @@ main_client_show(Client *c)
    
    if (w->flags & DESKTOP_RAISED_FLAG) 
      {
-       // w->flags ^= DESKTOP_RAISED_FLAG; /* desktop not raised anymore */
        c->flags |= CLIENT_NEW_FOR_DESKTOP;
      }
    else
@@ -674,22 +638,11 @@ main_client_show(Client *c)
        c->flags &= ~CLIENT_NEW_FOR_DESKTOP;
      }
 
-   // w->main_client = c;
-
-
-   /*
-   if ( c->flags & CLIENT_FULLSCREEN_FLAG )
-     stack_move_above_extended(c, NULL, dock, 0);
-   else
-     stack_move_above_extended(c, NULL, mainwin, 0);
-   */
-
    /* Move this client and any transients to the very top of the stack.
       wm_activate_client() ( call it sync_display ? ) will then take
       care of painels etc as it can use active client as a 'watermark' 
    */
    stack_move_top(c);
-
    
    stack_dump(w);
 
@@ -700,38 +653,6 @@ main_client_show(Client *c)
      }
 
    c->mapped = True;
-
-
-#if 0
-   /* Make sure the desktop is always at the bottom */
-   if (!(w->flags & DESKTOP_DECOR_FLAG)
-       && (desktop = wm_get_desktop(c->wm)) != NULL)
-     XLowerWindow(w->dpy, desktop->window);
-
-
-   XMapRaised(w->dpy, c->frame);
-   XMapSubwindows(w->dpy, c->frame);
-
-   if (w->have_titlebar_panel 
-       && mbtheme_has_titlebar_panel(w->mbtheme)
-       && !(c->flags & CLIENT_FULLSCREEN_FLAG))
-     XMapRaised(w->dpy, w->have_titlebar_panel->frame);
-
-
-   /* check input focus */
-   if (client_want_focus(c))
-   {
-      XSetInputFocus(w->dpy, c->window,
-		     RevertToPointerRoot, CurrentTime);
-      w->focused_client = c;
-   }
-
-   if (c->flags & CLIENT_FULLSCREEN_FLAG)
-     main_client_manage_toolbars_for_fullscreen(c, True);
-
-   /* deal with transients etc */
-   base_client_show(c);
-#endif
 }
 
 void
@@ -764,16 +685,6 @@ main_client_unmap(Client *c)
 	   
 	   /* is there a desktop ? */
 	   next_client = wm_get_desktop(w);
-#if 0
-	       /* Hide a dock in titlebar of exists, should call hide() ? */
-	       if (w->have_titlebar_panel
-		   && !(w->have_titlebar_panel->flags & CLIENT_DOCK_TITLEBAR_SHOW_ON_DESKTOP))
-	   {
-	     dbg("%s() unmapping panel\n", __func__);
-	     XUnmapWindow(w->dpy, w->have_titlebar_panel->frame); 
-	   }
-	   return;
-#endif
 	 }
        else
 	 {
@@ -784,7 +695,6 @@ main_client_unmap(Client *c)
 	   if (c->flags & CLIENT_NEW_FOR_DESKTOP)
 	     next_client = wm_get_desktop(w);
 	 }
-	   
      }
 
    c->mapped = False;
@@ -808,64 +718,9 @@ main_client_destroy(Client *c)
 {
    dbg("%s called for %s\n", __func__, c->name);
   
-#if 0
-
-   /* What main clients are left?, need to decide what nav buttons appear */
-
-  if ( c->flags & CLIENT_FULLSCREEN_FLAG )
-    main_client_manage_toolbars_for_fullscreen(c, False);
-
-   if (c == w->main_client)
-   {
-      w->main_client = client_get_prev(c, mainwin);
-      
-      if(w->main_client == c)  /* Is this the only main client left? */
-      {
-	 w->main_client = NULL;
-	 if (w->flags & SINGLE_FLAG)
-	    w->flags ^= SINGLE_FLAG; /* turn off single flag */
-	 base_client_destroy(c);
-
-	 /* Check for a desktop win and update  */
-	 if (!(w->flags & DESKTOP_RAISED_FLAG))
-	   {
-	     wm_toggle_desktop(w);
-	   }
-	 else wm_activate_client(w->head_client);
-
-	 /* Hide a dock in titlebar of exists, should call hide() ? */
-	 if (w->have_titlebar_panel
-	     && !(w->have_titlebar_panel->flags & CLIENT_DOCK_TITLEBAR_SHOW_ON_DESKTOP))
-	   {
-	     dbg("%s() unmapping panel\n", __func__);
-	     XUnmapWindow(w->dpy, w->have_titlebar_panel->frame); 
-	   }
-	 return;
-      }
-      /* If we came from the desktop, make sure we go back there */
-      if (c->flags & CLIENT_NEW_FOR_DESKTOP)
-	{
-	  base_client_destroy(c); 
-	  wm_toggle_desktop(w);
-	  return;
-	}
-   }
-
-#endif
-
    main_client_unmap(c);
 
    base_client_destroy(c); 
-
-#if 0
-   wm_activate_client(w->main_client);   
-
-   if (w->main_client == client_get_prev(w->main_client, mainwin))
-     {  /* Is only 1 main_client left  */
-       w->flags ^= SINGLE_FLAG; /* turn on single flag */      
-       main_client_redraw(w->main_client, False);
-     }
-#endif
 }
 
 

@@ -129,6 +129,9 @@ select_client_new(Wm *w)
 
    c->height = height;
    c->width  = width;
+   c->name   = strdup("");
+
+   stack_move_top(c);
    
    XMapWindow(c->wm->dpy, c->frame);
 
@@ -156,8 +159,6 @@ select_client_event_loop( Client *c, struct list_item *button_item_cur )
   button = (MBClientButton *)button_item_cur->data;
 
   theme_frame_menu_highlight_entry( c, button, ACTIVE); 
-
-
 
   for (;;) 
     {
@@ -260,10 +261,7 @@ select_client_event_loop( Client *c, struct list_item *button_item_cur )
 	   theme_frame_menu_highlight_entry( c, button, INACTIVE); 
 	   break;
 	 }
-      /*
-      	comp_engine_handle_events(c->wm, &ev);
-	comp_engine_render(c->wm);
-      */
+
      }
 }
 

@@ -14,7 +14,7 @@
 */
 
 /*
-  $Id: base_client.c,v 1.12 2004/11/10 15:28:12 mallum Exp $
+  $Id: base_client.c,v 1.13 2004/11/10 21:52:13 mallum Exp $
 */
 
 
@@ -54,15 +54,12 @@ base_client_new(Wm *w, Window win)
    for (i=0; i<MSK_COUNT; i++)
      c->backing_masks[i] = None;
 
-   /* Window Name */
+   /* UTF8 Window Name */
 
    if ((c->name = ewmh_get_utf8_prop(w, win, w->atoms[_NET_WM_NAME])) != NULL)
      c->name_is_utf8 = True;
 
    c->subname = ewmh_get_utf8_prop(w, win, w->atoms[MB_WIN_SUB_NAME]);
-
-   base_client_process_name(c);
-
 
    /* Basic attributes */
 
@@ -247,7 +244,6 @@ base_client_new(Wm *w, Window win)
 	     }
 #endif
 	 }
-       
        XFree(protocols);
     }
 
@@ -281,6 +277,10 @@ void
 base_client_process_name(Client *c)
 {
   Wm *w = c->wm;
+
+  /* Crazily handle what to set the clients name too. 
+   * Note there is normally a check for utf8 name before this.
+   */
 
   XTextProperty  text_prop;
   Client        *p = NULL; 
@@ -322,8 +322,9 @@ base_client_process_name(Client *c)
 	}
     }
   
-  /* If window name already exists, rename, adding <%i> to it */
-  if (!stack_empty(w))
+  /* If window name already exists, rename, adding <%i> to it if app window */
+
+  if (!stack_empty(w) && c->type == MBCLIENT_TYPE_APP)
     {
       stack_enumerate(w, p)
 	{
@@ -444,71 +445,16 @@ base_client_get_coverage(Client *c, int *x, int *y, int *w, int *h)
   *x = c->x; *y = c->y;*w = c->width;*h = c->height;   
 }
 
-void 				/* XXX  Method not needed any more ? */
+void 				/* TODO: Method not needed any more ? */
 base_client_hide(Client *c)
 {
-  /*
-  base_client_hide_transients(c);
-
-  comp_engine_client_hide(c->wm, c);
-  */
+  ;
 }
 
 void
 base_client_show(Client *c)
 {
-
-#if 0
-   Client *t, *client_msg = NULL;
-
-   for(t = c->prev; t != c; t = t->prev)
-   {
-      switch (t->type)
-      {
-	 case MBCLIENT_TYPE_DIALOG:    /* raise any transients */
-	    dbg("%s() Transient found, name: %s mapped: %i\n", __func__, t->name, t->mapped);
-	    if ((t->trans == c || t->trans == NULL) && t->mapped)
-	    {
-	       dbg("%s() raising transient %s\n", __func__, t->name);
-
-#if 0
-	       /* Only raise 'global' msg wins above everything */
-	       if (t->flags & CLIENT_IS_MESSAGE_DIALOG
-		   && !(t->flags & CLIENT_IS_MESSAGE_DIALOG_HI)
-		   && !(t->flags & CLIENT_IS_MESSAGE_DIALOG_LO))
-		 {
-		   client_msg = t;
-		 }
-	       else
-#endif
-		 t->show(t);
-	    }
-	    /* raise any toolbar transients */
-	    else if (c->type != MBCLIENT_TYPE_TOOLBAR
-		     && t->trans != NULL
-		     && t->trans->type == MBCLIENT_TYPE_TOOLBAR
-		     && client_get_state(t->trans) == NormalState)
-	       t->show(t);
-	    break;
-      default:
-	    break;
-      }
-   }
-
-   comp_engine_client_show(c->wm, c);
-
-   /* Make sure message windows are _really_ on top */
-   if (client_msg) 
-     {
-       dbg("%s() really raising client message...", __func__);
-       client_msg->show(client_msg);
-       comp_engine_client_show(c->wm, client_msg);
-     }
-
-   ewmh_set_active(c->wm);
-
-#endif
-
+  ;
 }
 
 void /* cb for this needed, or let wm handle it */
@@ -521,25 +467,20 @@ base_client_destroy(Client *c)
 
    dbg("%s() called\n", __func__);
 
+   /* Update focus list and anythink that is transient for this */
    stack_enumerate(w, p)
      {
        if (p->next_focused_client == c)
 	 p->next_focused_client = c->next_focused_client;
+
+       /* TODO: It may be safer to destroy any transients automatically 
+        *       This is what we used to do. Its 'assumed' however the app
+        *       will do this its self. 
+        */
+
+       if (p->trans == c)
+	 p->trans = c->trans;
      }
-
-#if 0
-
-   if (c == w->prev_main_client)
-     w->prev_main_client = NULL;
-
-   /* destroy any transients */
-   for(t = c->prev; t != c; t = prev_client)
-     {
-       prev_client = t->prev;
-       if (t->type == MBCLIENT_TYPE_DIALOG && t->trans == c)
-	 t->destroy(t);
-     }
-#endif
 
 #ifdef USE_LIBSN
    wm_sn_cycle_remove(w, c->window);
@@ -552,9 +493,10 @@ base_client_destroy(Client *c)
 
    stack_remove(c);
 
+   /* Now free up various resources */
+
    if (c->type != MBCLIENT_TYPE_OVERRIDE)
      {
-
        client_buttons_delete_all(c);
        
        ewmh_update(w);
@@ -562,14 +504,12 @@ base_client_destroy(Client *c)
 #if defined (USE_XFT)
        if (c->xftdraw != NULL) XftDrawDestroy(c->xftdraw);
 #endif
-
        if (c->frame && c->frame != c->window) 
 	 XDestroyWindow(w->dpy, c->frame);
        if (c->title_frame != c->window 
 	   && c->title_frame != c->frame
 	   && c->title_frame != None) 
 	 XDestroyWindow(w->dpy, c->title_frame);
-
 #ifdef STANDALONE
        if (c->backing != None)
 	   XFreePixmap(w->dpy, c->backing);
@@ -577,7 +517,6 @@ base_client_destroy(Client *c)
        if (c->backing != NULL)
 	   mb_drawable_unref(c->backing);
 #endif
-
        for (i=0; i<MSK_COUNT; i++)
 	 if (c->backing_masks[i] != None)
 	   XFreePixmap(w->dpy, c->backing_masks[i]);
@@ -588,12 +527,11 @@ base_client_destroy(Client *c)
 	 XFreePixmap(w->dpy, c->icon_mask);
 
        if (c->icon_rgba_data) XFree(c->icon_rgba_data);
-
      }    
 
-    if (c->name) XFree(c->name);
-    if (c->startup_id) XFree(c->startup_id);
-    if (c->size) XFree(c->size);
+    if (c->name)         XFree(c->name);
+    if (c->startup_id)   XFree(c->startup_id);
+    if (c->size)         XFree(c->size);
     if (c->host_machine) free(c->host_machine);
 
     free(c);

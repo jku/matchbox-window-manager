@@ -31,12 +31,6 @@
 /* Selected restraint */
 #define DIALOG_DRAG_MODE         DIALOG_DRAG_FREE
 
-/* Border size for DIALOG_DRAG_RESTRAIN */
-#define DIALOG_DRAG_RESTRAIN_BDR 16
-
-/* Hide the dialog ( just show border ) when dragging  */
-#define DIALOG_WANT_HIDDEN_DRAG  0
-
 
 /********************************************/
 
@@ -113,15 +107,6 @@ dialog_client_check_for_state_hints(Client *c)
       dbg("%s() got modal hint, setting flag\n", __func__);
 
       c->flags ^= CLIENT_IS_MODAL_FLAG;
-
-      /* Call comp_engine_client_show to add damage to main window 
-       * so it gets fully lowlighted ok. 
-
-      if ((damaged = wm_get_visible_main_client(c->wm)) != NULL)
-	{
-	  comp_engine_client_show(c->wm, damaged);
-	}
-       */
     }
 
   if (ewmh_state_check(c, c->wm->atoms[WINDOW_STATE_ABOVE]))
@@ -193,6 +178,7 @@ dialog_client_hide(Client *c)
 {
   Client *damaged;
   dbg("%s() called for %s\n", __func__, c->name);
+
   XLowerWindow(c->wm->dpy, c->frame);
 
   if (c->flags & CLIENT_IS_MODAL_FLAG 
@@ -313,61 +299,6 @@ dialog_client_show(Client *c)
     }
 
   stack_move_transients_to_top(w, NULL, CLIENT_HAS_URGENCY_FLAG);
-
-#if 0
-
-  /* XXX paint before map so dialog gets shape 
-         can probably be more optimised / experimental at the moment. 
-  */
-  if (client_get_state(c) != NormalState)
-    dialog_client_redraw(c, False);
-
-  client_set_state(c, NormalState); 
-  XMapSubwindows(c->wm->dpy, c->frame);
-  XMapRaised(c->wm->dpy, c->frame);
-
-  if (client_want_focus(c) && (!(c->flags & CLIENT_IS_MESSAGE_DIALOG)))
-    {
-      XSetInputFocus(c->wm->dpy, c->window,
-		     RevertToPointerRoot, CurrentTime);
-      c->wm->focused_client = c;
-    }
-
-  comp_engine_client_show(c->wm, c);
-
-#if 0 	
-  if (c->flags & CLIENT_IS_MESSAGE_DIALOG_LO)
-    {      Client *t = NULL;
-
-      /* Make sure any higher priority dialogs are mapped above */
-      START_CLIENT_LOOP(c->wm, t)
-	{
-	  if (t->flags & CLIENT_IS_MESSAGE_DIALOG_HI)
-	    {
-	      t->show(t);
-	      /* We need to call show to get the composite stacking right */
-	      comp_engine_client_show(c->wm, t);
-	    }
-	}
-      END_CLIENT_LOOP(c->wm, t);
-    }
-
-  if (c->wm->msg_win_queue_head)
-    {
-      Client *msg_client = NULL;
-      if ((msg_client = wm_find_client(c->wm, 
-				       c->wm->msg_win_queue_head->win, 
-				       WINDOW)) != NULL)
-	if (msg_client != c) 
-	  {
-	    msg_client->show(msg_client);
-	    /* We need to call show to get the composite stacking right */
-	    comp_engine_client_show(c->wm, msg_client);
-	  }
-    }
-#endif
-
-#endif
 
   c->mapped = True;
 
@@ -778,7 +709,6 @@ dialog_client_redraw(Client *c, Bool use_cache)
   if (!(c->flags & CLIENT_BORDERS_ONLY_FLAG
 	|| c->flags & CLIENT_HAS_URGENCY_FLAG))
     {
-
       theme_frame_button_paint(c->wm->mbtheme, c, 
 			       BUTTON_ACTION_CLOSE, 
 			       INACTIVE, FRAME_DIALOG, 
@@ -900,17 +830,10 @@ static void
 dialog_client_drag(Client *c) /* drag box */
 {
   XEvent ev;
-  int x1, y1;
-  int old_cx = c->x;
-  int old_cy = c->y;
-    
-  int frm_size     = dialog_client_title_height(c);
-  int offset_south = 0, offset_west = 0, offset_east = 0;
-  int have_grab = 0;
-
-#ifdef USE_MSG_WIN
-  Client *t = NULL;
-#endif 
+  int    x1, y1, old_cx = c->x, old_cy = c->y;
+  int    frm_size     = dialog_client_title_height(c);
+  int    offset_south = 0, offset_west = 0, offset_east = 0;
+  int    have_grab = 0;
 
   dbg("%s called\n", __func__);
 
@@ -923,46 +846,11 @@ dialog_client_drag(Client *c) /* drag box */
       != GrabSuccess)
     return;
 
-  /* Let the comp know theres gonna be damage in out old position.
-   * XXX Must be a better way need to figure it out.    
-   */
-
-
-
-#if (DIALOG_WANT_HIDDEN_DRAG) 	/* hide the dialog on drag */
-
-#ifdef USE_COMPOSITE
-  comp_engine_client_hide(c->wm, c);
-  comp_engine_render(c->wm, c->wm->all_damage);
-#endif
-
-#else
-
  comp_engine_client_show(c->wm, c); 
-
-#endif /* DIALOG_WANT_HIDDEN_DRAG */
 
   c->flags |= CLIENT_IS_MOVING;
 
   _get_mouse_position(c->wm, &x1, &y1);
-
- 
-#if (DIALOG_WANT_HIDDEN_DRAG) 	/* hide the dialog on drag */
-
-#ifndef USE_COMPOSITE 		/* .. for lowlighted dialogs */
-  if (c->flags & CLIENT_IS_MODAL_FLAG && c->wm->config->dialog_shade)
-    {
-      XUnmapWindow(c->wm->dpy, c->window);
-      XUnmapWindow(c->wm->dpy, c->title_frame);
-    }
-  else 
-#endif
-    {
-      XUnmapWindow(c->wm->dpy, c->frame);
-    }
-
-  c->ignore_unmap++;
-#endif  /* DIALOG_WANT_HIDDEN_DRAG */
 
   XFlush(c->wm->dpy);
 
@@ -994,28 +882,23 @@ dialog_client_drag(Client *c) /* drag box */
 		      c->width + offset_west + offset_east,
 		      c->height + frm_size + offset_south);
 
-#if (DIALOG_DRAG_MODE)
-
 	wanted_x = (old_cx + (ev.xmotion.x - x1));
 	wanted_y = (old_cy + (ev.xmotion.y - y1));
 
 	switch (DIALOG_DRAG_MODE) 
 	  {
-	  case DIALOG_DRAG_NONE:
-	    /* No modifications to postion */
-	    break;
 	  case DIALOG_DRAG_RESTRAIN:
 
-	    if ( (wanted_x - offset_west) < 0 - DIALOG_DRAG_RESTRAIN_BDR)
-	      c->x = 0 - DIALOG_DRAG_RESTRAIN_BDR + offset_west;
-	    else if ( (wanted_x + c->width + offset_east) > c->wm->dpy_width + DIALOG_DRAG_RESTRAIN_BDR)
-	      c->x = c->wm->dpy_width + DIALOG_DRAG_RESTRAIN_BDR - (c->width + offset_east);
+	    if ( (wanted_x - offset_west) < 0)
+	      c->x = offset_west;
+	    else if ( (wanted_x + c->width + offset_east) > c->wm->dpy_width)
+	      c->x = c->wm->dpy_width - (c->width + offset_east);
 	    else c->x = wanted_x;
 	    
-	    if ( (wanted_y - frm_size) < 0 - DIALOG_DRAG_RESTRAIN_BDR)
-	      c->y = 0 - DIALOG_DRAG_RESTRAIN_BDR + frm_size;
-	    else if ( (wanted_y + c->height + offset_south) > c->wm->dpy_height + DIALOG_DRAG_RESTRAIN_BDR)
-	      c->y = c->wm->dpy_height + DIALOG_DRAG_RESTRAIN_BDR - (c->height + offset_south);
+	    if ( (wanted_y - frm_size) < 0)
+	      c->y = frm_size;
+	    else if ( (wanted_y + c->height + offset_south) > c->wm->dpy_height)
+	      c->y = c->wm->dpy_height - (c->height + offset_south);
 	    else c->y = wanted_y;
 
 	    break;
@@ -1026,15 +909,6 @@ dialog_client_drag(Client *c) /* drag box */
 	  default:
 	    break;
 	  }
-
-
-#else  /* Dialog drag mode disabled below */
-
-	if (c->wm->config->dialog_stratergy != WM_DIALOGS_STRATERGY_CONSTRAINED_HORIZ)
-	  c->x = old_cx + (ev.xmotion.x - x1);
-
-	c->y = old_cy + (ev.xmotion.y - y1);
-#endif  /* DIALOG_WANT_HIDDEN_DRAG */
 
 	_draw_outline(c, c->x - offset_west, c->y - frm_size,
 		      c->width + offset_west + offset_east,
@@ -1072,21 +946,6 @@ dialog_client_drag(Client *c) /* drag box */
 	
 	c->show(c);
 	
-#if 0
-	/* Check for message super above dialogs */
-	START_CLIENT_LOOP(c->wm, t)
-	  {
-	    if (t->flags & CLIENT_IS_MESSAGE_DIALOG
-		&& !(t->flags & CLIENT_IS_MESSAGE_DIALOG_HI)
-		&& !(t->flags & CLIENT_IS_MESSAGE_DIALOG_LO))
-	      {
-		t->show(t);
-		comp_engine_client_show(c->wm, t); 
-		break;
-	      }
-	  }
-	END_CLIENT_LOOP(c->wm, t);
-#endif /* USE_MSG_WIN */
 	c->flags &= ~ CLIENT_IS_MOVING;
 	
 	XUngrabPointer(c->wm->dpy, CurrentTime);
@@ -1129,12 +988,6 @@ void dialog_client_destroy(Client *c)
 {
   Wm     *w = c->wm; 
   Client *d = NULL;
-#if 0
-  int was_msg = (c->flags & CLIENT_IS_MESSAGE_DIALOG
-		 && !(c->flags & CLIENT_IS_MESSAGE_DIALOG_HI)
-		 && !(c->flags & CLIENT_IS_MESSAGE_DIALOG_LO));
-#endif 
-
 
   if (c->next_focused_client)
     client_set_focus(c->next_focused_client);
@@ -1150,33 +1003,4 @@ void dialog_client_destroy(Client *c)
   */
   if (d) wm_activate_client(d);
 
-#if 0
-  /* We could be a dialog over a desktop, in which case we
-     need to give it back keyboard focus - this is a bit
-     ugly. XXX Improve XXX
-  */
-
-
-  if ((d = wm_get_visible_main_client(w)) != NULL)
-    {
-      if (client_want_focus(d))
-	{
-	  XSetInputFocus(w->dpy, d->window,
-			 RevertToPointerRoot, CurrentTime);
-	  w->focused_client = d;
-	}
-
-      if (w->flags & DESKTOP_RAISED_FLAG)
-	comp_engine_client_show (w, d); 
-    }
-#endif
-
-#if 0
-
-   if (was_msg) 
-     {
-       dbg("%s() was message poping queue\n", __func__);
-       wm_msg_win_queue_pop(w);
-     }
-#endif 
 }

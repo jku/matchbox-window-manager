@@ -64,14 +64,12 @@ client_deliver_config(Client *c)
   Wm *w = c->wm;
   XConfigureEvent ce;
    
-  ce.type   = ConfigureNotify;
-  ce.event  = c->window;
+  ce.type = ConfigureNotify;
+  ce.event = c->window;
   ce.window = c->window;
-  
   ce.x = c->x;
   ce.y = c->y;
-   
-  ce.width  = c->width;
+  ce.width = c->width;
   ce.height = c->height;
   ce.border_width = 0;
   ce.above = None;
@@ -160,7 +158,8 @@ void
 client_deliver_delete(Client *c)
 {
   Wm *w = c->wm;
-  int i, n, found = 0;
+
+  int   i, n, found = 0;
   Atom *protocols;
     
   if (XGetWMProtocols(w->dpy, c->window, &protocols, &n)) {
@@ -170,6 +169,7 @@ client_deliver_delete(Client *c)
   }
 
   /* Initiate pinging the app - to really kill hung applications */
+
   if (c->has_ping_protocol && c->pings_pending == -1) 
     {
       c->pings_pending = 0;
@@ -224,26 +224,7 @@ client_set_focus(Client *c)
 
       XSetInputFocus(w->dpy, c->window, RevertToPointerRoot, CurrentTime);
 
-      /* Save what to focus next when this client closes.  
-       *
-       * Main clients save this slightly differently, see there hide() method.
-       * In there case its used to store what dialog to focus when 'reshown'.  
-      */
-#if 0
-      if (!(c->type & (MBCLIENT_TYPE_DESKTOP|MBCLIENT_TYPE_APP)))
-	c->next_focused_client = w->focused_client;
-
-      /* Special case for transient for root dialogs.  
-       * Dont save for main clients, dialog closing will better figure it out.
-       */
-      if (c->type == MBCLIENT_TYPE_DIALOG 
-	  && c->trans == NULL
-	  && w->focused_client != NULL 
-	  && w->focused_client->type & (MBCLIENT_TYPE_DESKTOP
-					|MBCLIENT_TYPE_APP))
-	c->next_focused_client = NULL; 
-#endif
-
+      /* Rememeber what was focused last */
       if (w->focused_client)
 	{
 	  Client *trans_old = w->focused_client;
@@ -260,13 +241,10 @@ client_set_focus(Client *c)
 	    c->next_focused_client = w->focused_client;
 	}
 
-
       w->focused_client = c;
 
       dbg("%s() called, setting focus to %s\n", 
 	  __func__, c->name);
-
-
 
       return True;
     }
@@ -303,18 +281,6 @@ client_get_transient_list(Wm *w, MBList **list, Client *c)
 	    }
 	}
     }
-
-
-#if 0
-  stack_enumerate(w,p)
-    {
-      if (p != c && p->trans && p->trans == c)
-	{
-	  list_add(list, NULL, 0, p);
-	  client_get_transient_list(list, p);  
-	}
-    }
-#endif
 }
 
 Client*
@@ -336,26 +302,6 @@ client_get_highest_transient(Client *c, int client_flags)
 
   return highest;
 }
-
-/*
-Client*
-client_get_next(Client* c, MBClientTypeEnum wanted)
-{
-   Client *p;
-   for (p=c->next; p != c; p = p->next)
-      if (p->type == wanted && p->mapped) return p;
-   return c;
-}
-
-Client*
-client_get_prev(Client* c, MBClientTypeEnum wanted)
-{
-   Client *p;
-   for (p=c->prev; p != c; p = p->prev)
-      if (p->type == wanted && p->mapped) return p;
-   return c;
-}
-*/
 
 void
 client_init_backing(Client* c, int width, int height)
@@ -459,6 +405,8 @@ client_init_backing_mask (Client *c,
   XFreeGC(w->dpy, shape_gc);
 }
 
+
+/* Decoration button stuff, could probably do with a good cleanup/rewrite */
 
 MBClientButton*
 client_button_new(Client *c, 
@@ -657,34 +605,8 @@ client_button_do_ops(Client       *c,
 		  if (!canceled)
 		  {
 		    return button_action;
-#if 0		    
-		     if (frm->buttons[b]->wants_dbl_click)
-		     {
-			if (w->flags & DBL_CLICK_FLAG)
-			  {
-			    if ( b == ACTION_MENU_EXTRA) /* HACK */
-			      b = ACTION_MENU;
-			    else if (b == ACTION_MAX_EXTRA)
-			      b = ACTION_MAX;
-			    else if (b == ACTION_MIN_EXTRA)
-			      b = ACTION_MIN;
-			    return b;
-			  }
-			else
-			   return -1;
-		     } else {
-		       if ( b == ACTION_MENU_EXTRA) /* HACK */
-			 b = ACTION_MENU;
-		       else if (b == ACTION_MAX_EXTRA)
-			 b = ACTION_MAX;
-		       else if (b == ACTION_MIN_EXTRA)
-			 b = ACTION_MIN;
-		       return b;
-		     }
-#endif		     
 		  }
-		  else
-		     return -1;  /* cancelled  */
+		  else return -1;  /* cancelled  */
 	    }
 
 #ifdef USE_COMPOSITE
@@ -698,9 +620,9 @@ client_button_do_ops(Client       *c,
 #endif
 
 	 }
-      }
+       }
    }
-   return 0;
+  return 0;
 }
 
 

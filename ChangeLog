@@ -1,3 +1,33 @@
+2004-11-10  mallum <mallum@handhelds.org>
+
+	* COMPLIANCE:
+	Update a little. 
+
+	* src/base_client.c: (base_client_new), (base_client_process_name),
+	(base_client_hide), (base_client_show), (base_client_destroy):
+	* src/client_common.c: (client_deliver_config),
+	(client_deliver_delete), (client_set_focus),
+	(client_get_transient_list), (client_button_do_ops):
+	* src/dialog_client.c: (dialog_client_check_for_state_hints),
+	(dialog_client_hide), (dialog_client_show), (dialog_client_redraw),
+	(dialog_client_drag), (dialog_client_destroy):
+	* src/dockbar_client.c: (dockbar_client_show),
+	(dockbar_client_destroy):
+	* src/ewmh.c: (ewmh_handle_root_message), (ewmh_state_check):
+	* src/keys.c: (keys_init):
+	* src/main_client.c: (main_client_configure),
+	(main_client_move_resize), (main_client_toggle_fullscreen),
+	(main_client_iconize), (main_client_show), (main_client_unmap),
+	(main_client_destroy):
+	* src/select_client.c: (select_client_new),
+	(select_client_event_loop):
+	* src/stack.c: (stack_move_transients_to_top), (stack_dump),
+	(main):
+	* src/wm.c: (wm_handle_configure_request), (wm_handle_unmap_event),
+	(wm_make_new_client), (wm_activate_client):
+	Eeek, another massive commit. Mainly just cleanups - removal
+	of #if 0's, more commenting, remove dialog defines. 
+
 2004-11-10  mallum,,,  <mallum@handhelds.org>
 
 	* configure.ac:

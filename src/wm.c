@@ -1034,6 +1034,7 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
    XWindowChanges  xwc;
    Bool            need_comp_update = False;
    Bool            no_configure     = False;
+   unsigned long   value_mask       = 0;
 
    if (!c ) 
      {
@@ -1046,31 +1047,86 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
        xwc.sibling = e->above;
        xwc.stack_mode = e->detail;
        XConfigureWindow(w->dpy, e->window, e->value_mask, &xwc);
-
        return;
      }
    
-   dbg("%s() for win %s - have w: %i vs %i, h: %i vs %i, x: %i vs %i, y: %i vs %i,\n", __func__, c->name, c->height, e->height, c->width, e->width, c->x, e->x, c->y, e->y );
+   dbg("%s() for win %s - have w: %i vs %i, h: %i" 
+       "vs %i, x: %i vs %i, y: %i vs %i,\n", 
+       __func__, c->name, c->height, e->height, c->width, 
+       e->width, c->x, e->x, c->y, e->y );
+
+   /* Defualts, main clients will likely end up with this */
+
+   xwc.width        = c->width;
+   xwc.height       = c->height;
+   xwc.x            = c->x;
+   xwc.y            = c->y;
+   xwc.border_width = 0;
+   xwc.sibling      = e->above;
+   xwc.stack_mode   = e->detail;
+   value_mask       = e->value_mask;
+
+   /* Deal with raising - needs work, not sure if anything really
+    * relies on this / or how it fits with mb. 
+    */
+   if (value_mask & (CWSibling|CWStackMode))
+     {
+       /* e->above  is sibling 
+        * e->detail is stack_mode 
+	*/
+#ifdef DEBUG
+
+       Client *sibling = wm_find_client(w, e->window, WINDOW);
+
+       if (sibling)
+	 {
+	   switch (e->detail)
+	     {
+	     case Above:
+	       dbg("%s() (CWSibling|CWStackMode) above %s\n",
+		   __func__, sibling->name);
+	       break;
+	     case Below:
+	       dbg("%s() (CWSibling|CWStackMode) below %s\n",
+		   __func__, sibling->name);
+	       break;
+	     case TopIf:    	/* What do these mean ? */
+	     case BottomIf: 
+	     case Opposite:
+	     default:
+	       dbg("%s() (CWSibling|CWStackMode) uh? %s\n",
+		   __func__, sibling->name);
+	       break;
+
+	     }
+	 }
+
+#endif       
+       /* Just clear the flags now to be safe */
+       value_mask &= ~(CWSibling|CWStackMode);
+     }
+
    
    if (c->type == MBCLIENT_TYPE_PANEL) 	/* Docks can move */
      {
        if ( c->height != e->height || c->width != e->width
 	    || c->x != e->x || c->y != e->y )
 	 {
-	   Window win_tmp = c->window;
-	   xwc.width  = e->width;
-	   xwc.height = e->height;
-	   xwc.x = e->x;
-	   xwc.y = e->y;
+	   Window win_tmp   = c->window;
+	   xwc.width        = e->width;
+	   xwc.height       = e->height;
+	   xwc.x            = e->x;
+	   xwc.y            = e->y;
 	   xwc.border_width = 0;
-	   xwc.sibling = e->above;
-	   xwc.stack_mode = e->detail;
+	   xwc.sibling      = 0;
+	   xwc.stack_mode   = e->detail;
 	   
-	   XConfigureWindow(w->dpy, e->window,
-			    e->value_mask, &xwc);
+	   XConfigureWindow(w->dpy, e->window, value_mask, &xwc);
 
 	   client_deliver_config(c);
 	   client_set_state(c, WithdrawnState);
+
+	   /* Now we destroy the window and re-birth it */
 
 	   XReparentWindow(w->dpy, c->window, w->root, e->x, e->y); 
 	   c->destroy(c);
@@ -1091,15 +1147,11 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 	   c->y += change_amount;
 	   c->height = e->height;
 	   c->move_resize(c);
+	   client_deliver_config(c);
 	   wm_update_layout(w, c, change_amount); 
 	   return;
 	 }
      }
-
-   xwc.width  = c->width;
-   xwc.height = c->height;
-   xwc.x = c->x;
-   xwc.y = c->y;
 
    if (c->type == MBCLIENT_TYPE_DIALOG)
      {
@@ -1141,7 +1193,7 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 	   xwc.x      = c->x      = req_x;
 	   xwc.y      = c->y      = req_y; 
 
-	   /* for below */
+	   /* for below - kind of dumb */
 	   no_configure = True; 
 
 	   dialog_client_move_resize(c);
@@ -1154,9 +1206,6 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 	 }
      }
 
-   xwc.border_width = 0;
-   xwc.sibling = e->above;
-   xwc.stack_mode = e->detail;
 
    if (!no_configure) 
      {
@@ -1186,31 +1235,11 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 
 	 }
 
-       XConfigureWindow(w->dpy, e->window, e->value_mask, &xwc);
+       XConfigureWindow(w->dpy, e->window, value_mask, &xwc);
 
        client_deliver_config(c);
      }
 
-
-#if 0
-   /* TODO: fix this crack ! */
-   if (c->width == e->width && c->height == e->height)
-     {
-       if (e->detail == Above && !(w->flags & DESKTOP_RAISED_FLAG))
-	 {
-	   wm_activate_client(c);
-	 }
-       
-       if (e->detail == Below && c == w->main_client) 
-	 {
-	   Client *p;
-	   p = client_get_prev(c, mainwin);
-	   c->hide(c);
-	   p->show(p);
-	 }
-     }
-
-#endif
 
    /* make sure composite does any needed updates */
    if (need_comp_update == True)
@@ -1270,7 +1299,6 @@ wm_handle_unmap_event(Wm *w, XUnmapEvent *e)
 	   win_old = c->window;
 	   c->destroy(c);
 	   XReparentWindow(w->dpy, win_old, w->root, 0, 0); 
-	   XUnmapWindow(w->dpy, win_old); /* XXX This happens later */
 
 	 }
 
@@ -1495,6 +1523,8 @@ wm_make_new_client(Wm *w, Window win)
      }
    else
      {
+       /* Use EWMH Window Type Hint to figure out window type */
+
        status = XGetWindowProperty(w->dpy, win, w->atoms[WINDOW_TYPE], 
 				   0L, 1000000L, 0, XA_ATOM, 
 				   &realType, &format,
@@ -1541,50 +1571,68 @@ wm_make_new_client(Wm *w, Window win)
 	 }
        
        if (value) XFree(value);
-
      }
 
    if ((mwm_flags = mwm_get_decoration_flags(w, win)))
-     { /* for now, treat just like a splash  */
-       if (!c) c = dialog_client_new(w, win, NULL);
-       if (c) c->flags ^= mwm_flags;
+     { 
+       /* for now, treat just like a splash  */
+       if (c == NULL) 
+	 c = dialog_client_new(w, win, NULL);
+
+       if (c) 
+	 c->flags ^= mwm_flags;
 
        dbg("%s() got MWM flags: %i\n", __func__, c->flags );
      }
 
    /* check for transient - ie detect if its a dialog */
+
    XGetTransientForHint(w->dpy, win, &trans_win);
    
-   if ( trans_win && (trans_win != win))
+   if (trans_win && (trans_win != win))
    {
-      dbg("%s() Transient found\n", __func__);
+      dbg("%s() Transient hint set\n", __func__);
+
       t = wm_find_client(w, trans_win, WINDOW);
 
-      if (t == NULL) /* Its transient for root, so we use group ids to find
-			a possible parent                                  */
+      if (t == NULL)
       {
-	 Client *p;
+	/* Its transient for something, but not managed by us .. 
+         * We check for win groups in last act of desperation.
+	 */
+
+	 Client *p = NULL;
+
 	 dbg("%s() transient window not managed\n", __func__);
+
 	 if ((wmhints = XGetWMHints(w->dpy, win)) != NULL)
 	 {
 	    if (wmhints->window_group && !stack_empty(w))
 	    {
 	       stack_enumerate(w, p)
 		 if (wmhints->window_group == p->window)
-		   { t = p; break; }
+		   { 
+		     t = p; 
+		     break; 
+		   }
 	    }
 	 }
       }
+
       dbg("%s() Transient ( %s) looks good, creating dialog\n", 
 	  __func__, t ? t->name : "none" );
-      if (!c)  /* if t is is NULL, dialog will always be visible */
-	c = dialog_client_new(w, win, t); 
-      else if (c->type == MBCLIENT_TYPE_DIALOG) /* client already exists and is dialog  */
-	c->trans = t;
-	
+
+      if (c == NULL)  
+	{
+	  /* if t is is NULL (from above), dialog will always be visible */
+	  c = dialog_client_new(w, win, t);
+	}
+      else if (c->type == MBCLIENT_TYPE_DIALOG) /* already exists, update  */
+	c->trans = t;  		/* TODO: what about other types 
+				         being transient for things ?*/
    }
    
-   if (c == NULL) /* default to a main client */
+   if (c == NULL) /* Noting else found, default to a main client */
    {
      c = main_client_new(w, win);
 
@@ -1594,6 +1642,10 @@ wm_make_new_client(Wm *w, Window win)
 	 goto end;
        }
    }
+
+   /* We do this now as really needs to know window type */
+
+   base_client_process_name(c);
 
    dbg("%s() calling configure method for new client\n", __func__);
    
@@ -1608,6 +1660,23 @@ wm_make_new_client(Wm *w, Window win)
    dbg("%s() move/resizing  new client\n", __func__);
    
    c->move_resize(c);          	/* set pos + size */
+
+   /* TODO:
+    *
+    * Its likely the size we given the new client, is not what it requested. 
+    * We've by now told the app its new size, but we need to give it a 
+    * chance to repaint itself at the new size or other wise we get horrible
+    * flicker on mapping ( as remenants of old size are seen ).
+    *
+    * A possible solutions could be to implement the new _NET_WM_SYNC_REQUEST 
+    * stuff, as this is for resizes and we are resizing after all. 
+    *
+    *  XUngrabServer(w->dpy);
+    *  XSync(w->dpy, False);
+    *  XGrabServer(w->dpy);
+    *
+    * Note, this seems worst on GTK apps.
+    */
 
    dbg("%s() showing new client\n", __func__);
 
@@ -1890,7 +1959,7 @@ wm_activate_client(Client *c)
 
       /* save focus state for transient dialogs of prev showing main win */
 
-      if (w->stack_top_app != c && w->stack_top_app)
+      if (w->stack_top_app && w->stack_top_app != c)
 	w->stack_top_app->hide(w->stack_top_app); 
 
       /* If this client has a saved dialog focus state, load it */

@@ -183,38 +183,6 @@ dockbar_client_show(Client *c) /*TODO: show and hide share common static func*/
   
   client_set_state(c, NormalState);
 
-#if 0
-
-   if (c->flags & CLIENT_DOCK_TITLEBAR)
-     {
-
-       dbg("%s() is titlebar dock\n", __func__);
-
-       if (!mbtheme_has_titlebar_panel(w->mbtheme))
-	 {
-	   /* Theme does not have titlebar so we dont actually map it */
-	   dbg("%s() not mapping titlebar dock\n", __func__);
-
-	   XUngrabServer(w->dpy);
-	   dockbar_client_hide(c);
-	   return;
-	 }
-
-       if (w->main_client 
-	   && !(w->main_client->flags & CLIENT_FULLSCREEN_FLAG)
-	   && !(w->flags & DESKTOP_RAISED_FLAG))
-	 XMapRaised(w->dpy, c->window);
-
-       if (w->flags & DESKTOP_RAISED_FLAG 
-	   && c->flags & CLIENT_DOCK_TITLEBAR_SHOW_ON_DESKTOP)
-	 XMapRaised(w->dpy, c->window);
-     }
-   else XMapRaised(w->dpy, c->window);
-
-   base_client_show(c);
-
-#endif
-
    XMapWindow(w->dpy, c->window);
 
    stack_move_above_extended(c, NULL, 
@@ -249,7 +217,6 @@ void
 dockbar_client_destroy(Client *c)
 {
   Wm *w = c->wm;
-  //dockbar_client_hide(c);
   if (c == w->have_titlebar_panel)
     w->have_titlebar_panel = NULL;
   

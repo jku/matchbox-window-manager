@@ -278,34 +278,6 @@ stack_move_transients_to_top(Wm *w, Client *client_trans_for, int flags)
     }
 
   list_destroy(&transient_list);
-
-
-#if 0
-  Client *cur = NULL, *client_tmp = NULL, *fake_stack_top = NULL;
-
-  cur = w->stack_bottom;
-
-  if (!cur) return;
-
-  do
-    {
-      /* cur->above will get trashed by stack_move_top() */
-      client_tmp = cur->above; 
-      if (cur->type == MBCLIENT_TYPE_DIALOG && cur->trans == client_trans_for)
-	{
-	  if (flags && !(cur->flags & flags))
-	    continue;
-
-	  stack_move_top(cur);
-	  // cur->show(cur);
-	  /* we never want to check above our initial raise */
-	  if (!fake_stack_top) fake_stack_top = cur;
-	}
-      cur = client_tmp;
-    }
-  while (cur != fake_stack_top);
-#endif
-
 }
 
 /* returns top -> bottom */
@@ -441,6 +413,7 @@ stack_get_below(Client*          client_above,
 void
 stack_dump(Wm *w)
 {
+#ifdef DEBUG
   Client *c = NULL;
 
   printf("\n---------------------------------------------------------\n");
@@ -451,11 +424,12 @@ stack_dump(Wm *w)
 
   stack_enumerate(w,c)
     {
-      printf("%s\n", c->name);
+      printf("%s\n", c->name ? c->name : "Not Set");
     }
 
 
   printf("\n---------------------------------------------------------\n\n");
+#endif
 }
 
 void
@@ -535,16 +509,11 @@ main(int argc, char **argv)
 
   printf("\n");
 
-
   printf("\n");
-
-
 
   stack_remove(w->stack_top);
 
   stack_remove(w->stack_bottom);
-
-
 
   stack_enumerate(w,c)
     {
