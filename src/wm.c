@@ -1684,7 +1684,7 @@ wm_make_new_client(Wm *w, Window win)
 	 }
       }
       dbg("%s() Transient ( %s) looks good, creating dialog\n", 
-	  __func__, t->name);
+	  __func__, t ? t->name : "none" );
       if (!c)  /* if t is is NULL, dialog will always be visible */
 	c = dialog_client_new(w, win, t); 
       else if (c->type == MBCLIENT_TYPE_DIALOG) /* client already exists and is dialog  */

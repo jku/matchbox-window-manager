@@ -1130,8 +1130,7 @@ comp_engine_destroy_root_buffer(Wm *w)
 void
 comp_engine_render(Wm *w, XserverRegion region)
 {
-
-  Client       *c = NULL, *t = NULL;
+  Client       *client_top_app = NULL, *t = NULL;
   int           x,y,width,height;
   Bool          have_modal = False;
 
@@ -1149,7 +1148,7 @@ comp_engine_render(Wm *w, XserverRegion region)
       region = XFixesCreateRegion (w->dpy, &r, 1);
     }
 
-  c = wm_get_visible_main_client(w);
+  client_top_app = wm_get_visible_main_client(w);
 
   if (!w->root_buffer)
     {
@@ -1193,83 +1192,32 @@ comp_engine_render(Wm *w, XserverRegion region)
 
       _render_a_client(w, t, region, False);
       
-      if (t == c)
+      if (t == client_top_app)
 	break;
     }
 
-
-#if 0
-  /* Menu's */
-
-  stack_enumerate(w, t) 
+  if (client_top_app == NULL)
     {
-      if ((t->type == MBCLIENT_TYPE_TASK_MENU || t->type == MBCLIENT_TYPE_OVERRIDE))
-	_render_a_client(w, t, region, False);
-    } 
 
-  /* Dialogs */
-
-  stack_enumerate(w, t) 
-    {
-      if (t->type == MBCLIENT_TYPE_DIALOG 
-	  && (t->trans == c || t->trans == NULL)  
-	  && t->mapped )
-	{
-	  if (t->flags & CLIENT_IS_MODAL_FLAG)
-	    have_modal = True; 
-	  _render_a_client(w, t, region, False);
-	}
-    } 
-
-  /* panels + toolbars */
-
-  if (!(c && c->flags & CLIENT_FULLSCREEN_FLAG))
-    {
-      stack_enumerate(w, t) 
-	{
-	  if (t->type == MBCLIENT_TYPE_PANEL || t->type == MBCLIENT_TYPE_TOOLBAR)
-	    {
-	      /* dont render hidden titlebar panels */
-	      if (t->type == MBCLIENT_TYPE_PANEL 
-		  && t->flags & CLIENT_DOCK_TITLEBAR
-		  && (w->flags & DESKTOP_RAISED_FLAG 
-		      || !mbtheme_has_titlebar_panel(w->mbtheme)))
-		continue;
-
-	      dbg("%s() rendering toolbar\n", __func__);
-	      _render_a_client(w, t, region, False);
-	    }
-	} 
-    }
-
-  if (c && ( c->type & (MBCLIENT_TYPE_APP|MBCLIENT_TYPE_DESKTOP)) && c->picture)
-    {
-      _render_a_client(w, c, region, have_modal);
-    }
-  else
-    {
-      /* No main client, Render block of boring black color */
-
-      dbg("%s() rendering darkness\n", __func__);
+      /* Render block of boring black in case of no top app or desktop */
 
       XFixesSetPictureClipRegion (w->dpy, w->root_buffer, 0, 0, region);
-
+  
       XRenderComposite (w->dpy, PictOpSrc, w->black_picture, 
-      			None, w->root_buffer, 0, 0, 0, 0, 0, 0, 
-      			w->dpy_width, w->dpy_height);
+			None, w->root_buffer, 0, 0, 0, 0, 0, 0, 
+			w->dpy_width, w->dpy_height);
+      
+      XFixesSetPictureClipRegion (w->dpy, w->root_buffer, 0, 0, None);
+
+      client_top_app = w->stack_bottom;
     }
 
-  XFixesSetPictureClipRegion (w->dpy, w->root_buffer, 0, 0, None);
-
-#endif
 
   XFixesSetPictureClipRegion (w->dpy, w->root_buffer, 0, 0, None);
 
-  /* Now render shadows */
+  /* Now render shadows but bottom -> top this time */
 
-  dbg("%s() now rendering shadows\n", __func__);
-
-  stack_enumerate_reverse(w,t)
+  for ((t)=client_top_app; (t) != NULL; (t)=(t)->above) 
     {
       dbg("%s() rendering shadow for %s\n", __func__, t->name);
 
@@ -1290,8 +1238,6 @@ comp_engine_render(Wm *w, XserverRegion region)
 	    {
 	      Picture shadow_pic;
 	  
-
-
 	      t->get_coverage(t, &x, &y, &width, &height);  
 
 	  
@@ -1314,7 +1260,8 @@ comp_engine_render(Wm *w, XserverRegion region)
 		  XFixesSetPictureClipRegion (w->dpy, w->root_buffer, 
 					      0, 0, shadow_region);
 
-		  /* shadows */
+		  /* now paint them */
+
 		  if (t->is_argb32 )
 		    {
 		      XRenderComposite (w->dpy, PictOpOver, 
@@ -1341,7 +1288,7 @@ comp_engine_render(Wm *w, XserverRegion region)
 					height + w->config->shadow_padding_height);
 		    }
 
-		  /* Paint any trans window contents */
+		  /* Paint any transparent window contents */
 		  if (t->transparency != -1 || t->is_argb32 )
 		    {
 		      XFixesDestroyRegion (w->dpy, shadow_region);
@@ -1364,7 +1311,6 @@ comp_engine_render(Wm *w, XserverRegion region)
 					  t->picture, w->trans_picture,
 					  w->root_buffer, 0, 0, 0, 0, 
 					  x, y, width, height);
-
 		    }
 
 		  XFixesDestroyRegion (w->dpy, shadow_region);
@@ -1382,13 +1328,6 @@ comp_engine_render(Wm *w, XserverRegion region)
 					t->picture, w->trans_picture,
 					w->root_buffer, 0, 0, 0, 0, 
 					x, y, width, height);
-		      /*
-		      XRenderComposite (w->dpy, PictOpOver, 
-					t->picture, None,
-					w->root_buffer, 0, 0, 0, 0, 
-					x, y, width, height);
-		      */
-
 		    } else {		  
 		      /* Combine pregenerated shadow tiles */
 

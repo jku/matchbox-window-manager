@@ -1,3 +1,16 @@
+2004-11-09  mallum,,,  <mallum@handhelds.org>
+
+	* src/composite-engine.c: (comp_engine_render):
+	* src/dialog_client.c: (dialog_client_check_for_state_hints),
+	(dialog_client_drag):
+	Composite engine tweaks for new api
+
+	* src/misc.c: (handle_xerror):
+	Add missing newline
+
+	* src/wm.c: (wm_make_new_client):
+	Remove possible segv in dodgy dbg statement
+
 2004-11-09  mallum <mallum@handhelds.org>
 
 	* src/misc.c: (handle_xerror):
