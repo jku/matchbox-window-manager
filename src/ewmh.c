@@ -621,13 +621,17 @@ ewmh_get_utf8_prop(Wm *w, Window win, Atom req_atom)
   long           bytes_after, n_items;
   unsigned char *str = NULL;
 
+  misc_trap_xerrors();
+
   result =  XGetWindowProperty (w->dpy, win, req_atom,
 				0, 1024L,
 				False, w->atoms[UTF8_STRING],
 				&type, &format, &n_items,
 				&bytes_after, (unsigned char **)&str);
 
-  if (result != Success || str == NULL)
+
+
+  if (misc_untrap_xerrors() || result != Success || str == NULL)
     {
       if (str) XFree (str);
       return NULL;
@@ -660,13 +664,15 @@ ewmh_get_icon_prop_data(Wm *w, Window win)
   long           bytes_after, n_items;
   unsigned char *data = NULL;
 
+  misc_trap_xerrors();
+
   result =  XGetWindowProperty (w->dpy, win, w->atoms[_NET_WM_ICON],
 				0, 100000L,
 				False, XA_CARDINAL,
 				&type, &format, &n_items,
 				&bytes_after, (unsigned char **)&data);
 
-  if (result != Success || data == NULL)
+  if (misc_untrap_xerrors() || result != Success || data == NULL)
     {
       if (data) XFree (data);
       return NULL;

@@ -249,6 +249,10 @@ theme_frame_button_paint(MBTheme *theme,
 					button_w, button_h,
 					button->inputonly,
 					NULL);
+
+		  if (button->press_activates)
+		    b->press_activates = True;
+
 		  list_add(&c->buttons, NULL, action, (void *)b);
 		}
 	      else

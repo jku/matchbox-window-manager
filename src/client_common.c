@@ -669,6 +669,7 @@ client_button_do_ops(Client       *c,
      if (b->press_activates)
        {
 	 XUngrabPointer(w->dpy, CurrentTime); 
+
 	 client_deliver_message(c, w->atoms[MB_GRAB_TRANSFER],
 				CurrentTime, e->subwindow, 0, 0, 0);
 	 return button_item->id;
