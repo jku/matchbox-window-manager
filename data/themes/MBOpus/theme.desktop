@@ -1,0 +1,20 @@
+[Desktop Entry]
+Type=MBTheme
+Name=Human
+Preview=XXX
+Comment=Blondie theme 
+ThemePath=@prefix@/themes/blondie
+
+MenuBgColor=#e1e6da
+MenuFgColor=#222222
+MenuBdColor=#8f9489
+MenuHlColor=#ccd2c6
+
+PanelFgColor=#22264a
+PanelBgColor=#cacfc4
+DesktopBgSpec=col-solid:#d1d6cb
+
+PanelMsgBgCol=#e1e6da 
+PanelMsgBgUrgentCol=#e1e6da 
+PanelMsgFgCol=#22222
+DesktopHlCol=#656b7b

@@ -1,5 +1,5 @@
 if WANT_STANDALONE
 SUBDIRS =
 else
-SUBDIRS = blondie bluebox borillo
+SUBDIRS = blondie Default MBOpus
 endif

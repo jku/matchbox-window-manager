@@ -1,5 +1,23 @@
 2005-01-12  mallum,,,  <mallum@openedhand.com>
 
+	* configure.ac:
+	* data/themes/Default/Makefile.am:
+	* data/themes/Default/acceptbutton.xpm:
+	* data/themes/Default/closebutton.xpm:
+	* data/themes/Default/menubutton.xpm:
+	* data/themes/Default/theme.desktop:
+	* data/themes/Default/theme.xml:
+	* data/themes/MBOpus/Makefile.am:
+	* data/themes/MBOpus/theme.desktop:
+	* data/themes/MBOpus/theme.xml:
+	* data/themes/Makefile.am:
+	Add new themes 
+
+	* src/structs.h:
+	Set Default theme to 'Default'
+
+2005-01-12  mallum,,,  <mallum@openedhand.com>
+
 	* src/dialog_client.c: (dialog_client_move_resize),
 	(dialog_client_reparent), (dialog_client_set_focus_next),
 	(dialog_client_iconize), (dialog_client_destroy):

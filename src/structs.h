@@ -77,18 +77,18 @@
 
 #ifdef MB_HAVE_PNG
 
-#define DEFAULT_THEME       DATADIR "/themes/blondie/matchbox/theme.xml"
+#define DEFAULT_THEME       DATADIR "/themes/Default/matchbox/theme.xml"
 
-#define DEFAULTTHEME       DATADIR "/themes/blondie/matchbox/theme.xml"
+#define DEFAULTTHEME       DATADIR "/themes/Default/matchbox/theme.xml"
 
-#define DEFAULT_THEMENAME  "blondie"
+#define DEFAULT_THEMENAME  "Default"
 
-#define DEFAULTTHEMENAME  "blondie"
+#define DEFAULTTHEMENAME  "Default"
 
 #else
 
-#define DEFAULT_THEME       DATADIR "/themes/bluebox/matchbox/theme.xml"
-#define DEFAULT_THEME_NAME  "bluebox"
+#define DEFAULT_THEME       DATADIR "/themes/Default/matchbox/theme.xml"
+#define DEFAULT_THEME_NAME  "Default"
 
 #endif
 

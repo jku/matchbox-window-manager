@@ -445,9 +445,9 @@ Makefile
 src/Makefile  
 data/Makefile
 data/themes/Makefile
+data/themes/Default/Makefile
 data/themes/blondie/Makefile
-data/themes/bluebox/Makefile
-data/themes/borillo/Makefile
+data/themes/MBOpus/Makefile
 data/schemas/Makefile
 ])
 
