@@ -713,8 +713,6 @@ dialog_client_redraw(Client *c, Bool use_cache)
     }
 
 
-
-  /* XXXX ifdef HAVE_SHAPE */
   if (is_shaped && !c->is_argb32)
     {
       XRectangle rects[1];
@@ -732,8 +730,9 @@ dialog_client_redraw(Client *c, Bool use_cache)
       if (c->wm->config->dialog_shade && (c->flags & CLIENT_IS_MODAL_FLAG)) 
 	{
 	  /* client->frame is our lowlighted window, so we only shape
-           * our decor frames. 
-           *
+           * our decor frames. We dont need to do this for composite. 
+	   *
+           * TODO: the logic for all this is very messy. fix.
 	  */
 
 	  XShapeCombineMask( c->wm->dpy, c->frames_decor[NORTH], 
@@ -771,26 +770,24 @@ dialog_client_redraw(Client *c, Bool use_cache)
 			     0, 0,
 			     c->backing_masks[MSK_EAST], ShapeSet);
 
-	  /* XXX REFACTOR THIS WITH ABOVE */
-
 	  XShapeCombineShape ( c->wm->dpy, 
 			       c->frame,
 			       ShapeBounding, 0, 0, 
 			       c->frames_decor[NORTH],
 			       ShapeBounding, ShapeUnion);
-
+	  
 	  XShapeCombineShape ( c->wm->dpy, 
 			       c->frame,
 			       ShapeBounding, 0, total_h - offset_south, 
 			       c->frames_decor[SOUTH],
 			       ShapeBounding, ShapeUnion);
-
+	  
 	  XShapeCombineShape ( c->wm->dpy, 
 			       c->frame,
 			       ShapeBounding, 0, offset_north,
 			       c->frames_decor[WEST],
 			       ShapeBounding, ShapeUnion);
-
+	  
 	  XShapeCombineShape ( c->wm->dpy, 
 			       c->frame,
 			       ShapeBounding, 
@@ -799,20 +796,6 @@ dialog_client_redraw(Client *c, Bool use_cache)
 			       ShapeBounding, ShapeUnion);
 	}
     }
-
-#if 0
-
-#ifdef STANDALONE
-   XSetWindowBackgroundPixmap(c->wm->dpy, c->title_frame, c->backing);
-#else
-   XSetWindowBackgroundPixmap(c->wm->dpy, c->title_frame, 
-			      mb_drawable_pixmap(c->backing));
-#endif
-
-   XClearWindow(c->wm->dpy, c->title_frame);
-
-   XFlush(c->wm->dpy);
-#endif
 }
 
 void
@@ -1052,8 +1035,8 @@ dialog_client_set_focus_next(Client *c)
 {
   Wm *w = c->wm; 
 
-  if (c->next_focused_client)
-    client_set_focus(c->next_focused_client);
+  if (c->next_focused_client && c != c->next_focused_client)
+    client_set_focus(c->next_focused_client); 
   else
     {
       if (w->focused_client == c)

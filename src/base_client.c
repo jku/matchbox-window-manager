@@ -467,6 +467,7 @@ base_client_destroy(Client *c)
 
    dbg("%s() called\n", __func__);
 
+
    /* Update focus list and anythink that is transient for this */
    stack_enumerate(w, p)
      {
@@ -508,19 +509,15 @@ base_client_destroy(Client *c)
 
    if (c->type != MBCLIENT_TYPE_OVERRIDE)
      {
-
-       misc_trap_xerrors(); 
-
        client_buttons_delete_all(c);
        
        ewmh_update(w);
 
        if (c->frame && c->frame != c->window) 
-	 XDestroyWindow(w->dpy, c->frame);
-
-       for (i=0; i<N_DECOR_FRAMES; i++)
-	 if (c->frames_decor[i] != None && c->frames_decor[i] != c->frame)
-	   XDestroyWindow(w->dpy, c->frames_decor[i]);
+	 {
+	   XDestroySubwindows(w->dpy, c->frame);
+	   XDestroyWindow(w->dpy, c->frame);
+	 }
 
        for (i=0; i<MSK_COUNT; i++)
 	 if (c->backing_masks[i] != None)
@@ -529,8 +526,6 @@ base_client_destroy(Client *c)
        /* No need to free up pixmap icon data client resource  */
 
        if (c->icon_rgba_data) XFree(c->icon_rgba_data);
-
-       misc_untrap_xerrors();
 
      }    
 
@@ -543,6 +538,8 @@ base_client_destroy(Client *c)
       w->focused_client = NULL;
 
     free(c);
+
+
 }
 
 

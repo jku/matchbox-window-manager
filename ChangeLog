@@ -1,5 +1,14 @@
 2004-12-10  mallum <mallum@openedhand.com>
 
+	* src/base_client.c: (base_client_destroy):
+	Call XDestroySubWindows() for frame decor wins, thus avoiding
+	some X Errors.
+
+	* src/dialog_client.c: (dialog_client_redraw):
+	Minor cleanup
+
+2004-12-10  mallum <mallum@openedhand.com>
+
 	* src/dialog_client.c: (dialog_constrain_geometry),
 	(dialog_init_geometry):
 	Position decorationless centered if and only if 0,0
