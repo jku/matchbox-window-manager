@@ -450,6 +450,11 @@ wm_load_config (Wm   *w,
      free(geom);
    }
 #endif
+
+   if (getenv("MB_AWT_WORKAROUND"))
+     w->config->awt_workaround = True;
+   else
+     w->config->awt_workaround = False;
 }
 
 
@@ -1129,17 +1134,28 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
      {
        int req_x = e->x, req_y = e->y, req_w = e->width, req_h = e->height;
 
-       if (e->width && e->width != c->width && e->width != c->init_width)
+       /* Process exactly what changes have been reuested */
+       if (!(e->value_mask & CWWidth))  req_w = c->width;
+       if (!(e->value_mask & CWHeight)) req_h = c->height;
+
+       if (e->x <= 0 || !(e->value_mask & CWX)) req_x = c->x;
+       if (e->y <= 0 || !(e->value_mask & CWY)) req_y = c->y;
+
+       /* Update the size the dialog is trying to get too eventually
+        * - eg toolbar/panel/input windows may dissapear and make
+        *      more space available. 
+        */
+       if (e->width && (e->value_mask & CWWidth) 
+	   && e->width != c->width && e->width != c->init_width)
 	 c->init_width = e->width;
 
-       if (e->height && e->height != c->height && e->height != c->init_height)
+       if (e->height && (e->value_mask & CWHeight) 
+	   && e->height != c->height && e->height != c->init_height)
 	 c->init_height = e->height;
 
-       if (e->x <= 0) req_x = c->x;
-       if (e->y <= 0) req_y = c->y;
-
-       if (e->x != c->x || e->y != c->y 
-	   || e->width != c->width || e->height != c->height)
+       /* If any changes, now make them fit it into avaialable area. */
+       if (req_x != c->x || req_y != c->y 
+	   || req_w != c->width || req_h != c->height)
 	 {
 	   dialog_check_geometry(c, &req_x, &req_y, &req_w, &req_h);
 
@@ -1148,9 +1164,9 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 	     client_buttons_delete_all(c);
 
 	   comp_engine_client_hide(c->wm, c);
-
+#ifdef USE_COMPOSITE
 	   XSync(w->dpy, False);
-
+#endif
 	   xwc.width  = c->width  = req_w;
 	   xwc.height = c->height = req_h;
 	   xwc.x      = c->x      = req_x;
@@ -1218,7 +1234,6 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 
    if (!no_configure) 
      {
-#ifdef WANT_CRAZY_AWT_TO_WORK
 
        /* 
         * For some reason awt ( kaffe ) apps dont like getting anything
@@ -1227,17 +1242,21 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
         * This is a quick fix which sends 2 configure differering events  
         * which seems to make things better. Im not sure what the best fix is. 
         *
+        * Set MB_AWT_WORKAROUND env var to enable this. 
+        *
         */
 
-       xwc.width  = e->width;
-       xwc.height = e->height;
+       if (w->config->awt_workaround)
+	 {
+	   xwc.width  = e->width;
+	   xwc.height = e->height;
 
-       XConfigureWindow(w->dpy, e->window, e->value_mask, &xwc);
+	   XConfigureWindow(w->dpy, e->window, e->value_mask, &xwc);
 
-       xwc.width  = c->width;
-       xwc.height = c->height;
+	   xwc.width  = c->width;
+	   xwc.height = c->height;
 
-#endif
+	 }
 
        XConfigureWindow(w->dpy, e->window, e->value_mask, &xwc);
 

@@ -1,3 +1,10 @@
+2004-08-17  mallum,,,  <mallum@handhelds.org>
+
+	* src/structs.h:
+	* src/wm.c: (wm_load_config), (wm_handle_configure_request):
+	Make awt workaround set via env var rather than ifdef
+	Safer vaue_mask checks for dialog resizing. 
+
 2004-08-13  mallum,,,  <mallum@handhelds.org>
 
 	* src/ewmh.c: (ewmh_init):

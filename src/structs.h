@@ -474,6 +474,7 @@ typedef struct _wm_config
   char        *ping_handler;
   MBConfigKbd *kb;
 
+  Bool         awt_workaround;
 } Wm_config;
 
 
