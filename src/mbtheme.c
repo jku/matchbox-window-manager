@@ -2246,10 +2246,40 @@ mbtheme_switch (Wm   *w,
       START_CLIENT_LOOP(w, p);   
       {
 	client_buttons_delete_all(p);
+
+	if (p->type == dialog)
+	  {
+	    XRectangle rect;
+	    Region     xregion;
+
+	    /*  Old theme may have been shaped and this one not. 
+             *  Therefore we 'clear' any possible shapes set on 
+             *  the window frames.  
+             *  Im not sure if this is the best way to do this but
+             *  SHAPE docs serverely lacking :(
+	     */
+
+	    xregion = XCreateRegion ();
+
+	    rect.x      = 0;
+	    rect.y      = 0;
+	    rect.width  = p->width  + 100;
+	    rect.height = p->height + 100;
+
+	    XUnionRectWithRegion (&rect, xregion, xregion);
+
+	    XShapeCombineRegion (w->dpy, p->title_frame, ShapeBounding, 0, 0, 
+				 xregion, ShapeSet);
+
+	    XShapeCombineRegion (w->dpy, p->frame,ShapeBounding, 0, 0, 
+				 xregion, ShapeSet);
+
+	    XDestroyRegion (xregion);
+	  }
+
 	p->configure(p);
 	p->move_resize(p);
 	p->redraw(p, False);
-	// comp_engine_client_repair (w, p);
       }
       END_CLIENT_LOOP(w, p);
     }
