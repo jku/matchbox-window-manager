@@ -865,7 +865,7 @@ comp_engine_client_get_trans_prop(Wm *w, Client *client)
    char *data;
 
     XGetWindowProperty(w->dpy, client->window, w->atoms[CM_TRANSLUCENCY], 
-		       0L, 1L, False, w->atoms[INTEGER], &actual, &format, 
+		       0L, 1L, False, XA_INTEGER, &actual, &format, 
 		       &n, &left, (unsigned char **) &data);
 
     if (data != None)
