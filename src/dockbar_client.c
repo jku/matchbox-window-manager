@@ -111,7 +111,7 @@ dockbar_client_configure(Client *c)
    else if (c->flags & CLIENT_DOCK_EAST)
      {
        c->y = 0;
-       c->x = c->wm->dpy_width - e_offset;
+       c->x = c->wm->dpy_width - e_offset - c->width;
        c->height = c->wm->dpy_height;
      }
    else if (c->flags & CLIENT_DOCK_TITLEBAR)

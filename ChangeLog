@@ -1,5 +1,10 @@
 2004-08-30  mallum,,,  <mallum@handhelds.org>
 
+	* src/dockbar_client.c: (dockbar_client_configure):
+	Fix east panel positioning
+
+2004-08-30  mallum,,,  <mallum@handhelds.org>
+
 	* src/main_client.c: (main_client_manage_toolbars_for_fullscreen):
 	Fullscreen fixes for vertical panels
 
