@@ -717,6 +717,9 @@ wm_handle_map_notify(Wm *w, Window win)
 
   if (misc_untrap_xerrors()) return; /* safety on */
 
+  if (attr.class == InputOnly)
+    return;
+
   if (attr.override_redirect)
     {
       dbg("%s() making new overide redirect window\n", __func__);

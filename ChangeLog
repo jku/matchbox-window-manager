@@ -1,3 +1,13 @@
+2005-03-11  mallum,,,  <mallum@openedhand.com>
+
+	* src/base_client.c: (base_client_new):
+	* src/composite-engine.c: (_render_a_client),
+	(comp_engine_destroy_root_buffer), (comp_engine_render):
+	* src/dialog_client.c: (dialog_client_reparent):
+	* src/wm.c: (wm_handle_map_notify):
+	Fix composite lowlighting with blocker win.
+	Also make modal for root dialogs lowlight entire display.
+
 2005-03-01  mallum  <mallum@openedhand.com>
 
 	* src/toolbar_client_alt.c: (toolbar_client_show):

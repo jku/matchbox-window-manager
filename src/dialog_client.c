@@ -382,13 +382,13 @@ dialog_client_reparent(Client *c)
 					    CopyFromParent,
 					    CWOverrideRedirect|CWEventMask,
 					    &attr);
-#ifndef USE_COMPOSITE
-       /* This is breaking dialog dragging in composite
-	*  XXX need to figure better fix.
-       */
+
        XMapWindow(w->dpy, c->win_modal_blocker);
-#endif
+
+       dbg("%s() created blocked win\n", __func__);
+       
        w->stack_n_items++;
+
      }
 
    XClearWindow(w->dpy, c->frame);

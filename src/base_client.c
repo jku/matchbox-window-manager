@@ -65,7 +65,12 @@ base_client_new(Wm *w, Window win)
    /* Basic attributes */
 
    XGetWindowAttributes(w->dpy, win, &attr);
-   
+
+   /*
+    * What todo about attr.class == InputOnly case ?
+    * Should never happen and likely throw X error to untrap.
+    */
+
    c->x      = attr.x;
    c->y      = attr.y;
    c->cmap   = attr.colormap;

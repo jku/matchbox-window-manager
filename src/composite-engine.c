@@ -1073,12 +1073,10 @@ static void
 _render_a_client(Wm           *w, 
 		 Client       *client, 
 		 XserverRegion region, 
-		 Bool          want_lowlight)
+		 int           lowlight_type) /* 0 - none, 1 app, 2 full */
 {
   int x,y,width,height;
   XserverRegion winborder;
-
-  want_lowlight = False; /* disable lowlight for now - seems buggy */
 
   if (client->picture == None) {
     dbg("%s() no pixture for %s\n", __func__, client->name);
@@ -1112,27 +1110,33 @@ _render_a_client(Wm           *w,
 			None, w->root_buffer,
 			0, 0, 0, 0, x, y, width, height);
 
+
     }
 
-  if (want_lowlight 
+  /* Render lowlight dialog modal for app */
+  if (lowlight_type == 1
       && (client->type & (MBCLIENT_TYPE_APP|MBCLIENT_TYPE_DESKTOP)))
     {
       int title_offset = 0;
 
       dbg("%s() rendering lowlight\n", __func__);
 
-      /* XXX maybe it would make more sense to calc geom of client->win */
-
-      /* XXX Should modal for root lowlight entire display ? */
-
       if (client->type == MBCLIENT_TYPE_APP) 
 	title_offset = main_client_title_height(client);
+	  
+	  XRenderComposite (w->dpy, PictOpOver, w->lowlight_picture, None, 
+			    w->root_buffer,
+			    0, 0, 0, 0, x, y + title_offset,
+			    width, height - title_offset);
 
-      XRenderComposite (w->dpy, PictOpOver, w->lowlight_picture, None, 
-			w->root_buffer,
-			0, 0, 0, 0, x, y + title_offset,
-			width, height - title_offset);
     }
+
+  /* Render lowlight dialog modal for root - e.g lowlight everything */
+  if (lowlight_type == 2 && client->win_modal_blocker == None)
+    XRenderComposite (w->dpy, PictOpOver, w->lowlight_picture, None, 
+		      w->root_buffer,
+		      0, 0, 0, 0, x, y,
+		      width, height);
 	
   if (client->border_clip != None)
     {
@@ -1161,7 +1165,7 @@ comp_engine_render(Wm *w, XserverRegion region)
 {
   Client       *client_top_app = NULL, *t = NULL;
   int           x,y,width,height;
-  Bool          have_modal = False;
+  int           lowlight = 0;
 
   if (!w->have_comp_engine || stack_empty(w)) return;
 
@@ -1213,18 +1217,28 @@ comp_engine_render(Wm *w, XserverRegion region)
     }
 #endif
 
+  /* Check initially to see what kind of lowlight todo ( if any ) */
+
+  stack_enumerate_reverse(w, t) 
+    {
+      if (t->type == MBCLIENT_TYPE_DIALOG
+	  && t->flags & CLIENT_IS_MODAL_FLAG)
+	{
+	  lowlight = ((t->win_modal_blocker) ? 2 : 1);
+	}
+
+      if (t == client_top_app)
+	break;
+    }      
+
   /* Render top -> bottom */
 
   stack_enumerate_reverse(w, t) 
     {
       dbg("%s() rendering %s\n", __func__, t->name);
 
-      if (t->type == MBCLIENT_TYPE_DIALOG
-	  && t->flags & CLIENT_IS_MODAL_FLAG)
-	have_modal = True;
+      _render_a_client(w, t, region, lowlight);
 
-      _render_a_client(w, t, region, have_modal);
-      
       if (t == client_top_app)
 	break;
     }
