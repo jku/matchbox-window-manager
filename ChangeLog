@@ -1,0 +1,6 @@
+2004-02-05  Matthew Allum, <mallum@openedhand.com>
+
+	* configure.ac:
+	Fixed GConf checking, added message window option
+	* src/wm.c: (wm_usage):
+	Fixed help output

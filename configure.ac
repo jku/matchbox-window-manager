@@ -30,7 +30,7 @@ AC_ARG_ENABLE(standalone,
   enable_standalone=$enableval, enable_standalone=no)
 
 AC_ARG_ENABLE(composite,
-  [  --enable-composite          enable composite support.],
+  [  --enable-composite        enable composite support.],
   enable_composite=$enableval, enable_composite=no)
 
 AC_ARG_ENABLE(startup-notification,
@@ -62,10 +62,10 @@ AC_ARG_ENABLE(keyboard,
    		enable_keyboard=$enableval, 
 		enable_keyboard=yes)
 
-# message wins, text substitution ?
-#AC_ARG_ENABLE(mbonly-extras,
-#  [  --enable-debug    enable debug ( verbose ) build],
-#     enable_debug=$enableval, enable_debug=no )
+AC_ARG_ENABLE(message_wins,
+  [  --enable-message-wins enable 'message' window support ( see docs )],
+  enable_message_wins=$enableval, enable_message_wins=no)
+
 
 dnl ---- Check we can find libmb 
 
@@ -74,8 +74,15 @@ if test x$enable_standalone != xyes && test x$enable_standalone_xft != xyes; the
    PKG_CHECK_MODULES(LIBMB, libmb >= 1.1, [have_libmb="yes"], [have_libmb="no"])
 
    if test x$have_libmb = xno; then
-      AC_MSG_WARN([*** Cannot find shared matchbox utility library - libmb])
-      AC_MSG_WARN([*** Your build wil be standalone])
+      AC_MSG_WARN([ ])
+      AC_MSG_WARN([****************************************************** ])
+      AC_MSG_WARN([*** ])
+      AC_MSG_WARN([*** Cannot find libmatchbox library ])
+      AC_MSG_WARN([*** Your build wil be _standalone_  ])
+      AC_MSG_WARN([*** ])
+      AC_MSG_WARN([*** Check docs at http://matchbox.handhelds.org ])
+      AC_MSG_WARN([*** ])
+      AC_MSG_WARN([****************************************************** ])
       enable_standalone_xft="yes"
    fi
 
@@ -138,6 +145,12 @@ dnl ------ keyboard support ------------------------------------------------
 if test x$enable_keyboard = xno; then
       LIBMB_CFLAGS="$LIBMB_CFLAGS -DNO_KBD"
       AC_MSG_RESULT([Disabling Keyboard Support.])	
+fi
+
+dnl ------ Message Wins----------------------------------------------------
+
+if test x$enable_message_wins = xyes; then
+      AC_DEFINE(USE_MSG_WIN, [1], [use Message Windows])
 fi
 
 
@@ -262,7 +275,6 @@ fi
 
 dnl ----- Gconf -------------------------------------------------------------
 
-
 if test x$enable_gconf != xno; then
 
   PKG_CHECK_MODULES(GCONF, gconf-2.0, ,
@@ -274,11 +286,11 @@ if test x$enable_gconf != xno; then
      AC_MSG_ERROR([gconftool-2 executable not found in your path - should be installed with GConf])
   fi 
 
-  # AM_GCONF_SOURCE_2
-
   AC_DEFINE(USE_GCONF, [1], [Has GConf Support])	
 
 fi
+
+AM_GCONF_SOURCE_2
 
 AM_CONDITIONAL(ENABLE_SCHEMAS, test x$enable_gconf != xno)
 

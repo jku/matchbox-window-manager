@@ -208,7 +208,7 @@ wm_usage(char *progname)
    printf("\tdebug build                      no\n");
 #endif
 
-#ifdef USE_XFT
+#if defined(USE_XFT) || defined(MB_HAVE_XFT)
    printf("\tXFT support                      yes\n");
 #else
    printf("\tXFT support                      no\n");
@@ -238,13 +238,13 @@ wm_usage(char *progname)
    printf("\tXSettings support                no\n");
 #endif
 
-#ifdef USE_PNG
+#ifdef MB_HAVE_PNG
    printf("\tPNG support                      yes\n");
 #else
    printf("\tPNG support                      no\n");
 #endif
 
-#ifdef USE_JPG
+#ifdef MB_HAVE_JPG
    printf("\tJPG support                      yes\n");
 #else
    printf("\tJPG support                      no\n");
@@ -262,7 +262,7 @@ wm_usage(char *progname)
    printf("\tgconf support                    no\n");
 #endif
 
-#ifdef USE_PANGO
+#ifdef MB_HAVE_PANGO
    printf("\tpango support                    yes\n");
 #else
    printf("\tpango support                    no\n");
@@ -274,7 +274,7 @@ wm_usage(char *progname)
    printf("\tcomposite support                no\n");
 #endif
 
-   printf("\nVisit http://handhelds.org/~mallum/matchbox for more info.\n");
+   printf("\nVisit http://matchbox.handhelds.org for more info.\n");
    printf("(c) 2002 Matthew Allum\n");
    exit(0);
 }
