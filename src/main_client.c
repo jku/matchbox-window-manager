@@ -14,7 +14,7 @@
 */
 
 /*
-  $Id: main_client.c,v 1.1 2004/02/03 14:56:33 mallum Exp $
+  $Id: main_client.c,v 1.2 2004/02/24 21:02:07 mallum Exp $
 */
 
 #include "main_client.h"
@@ -534,6 +534,7 @@ main_client_show(Client *c)
        c->flags &= ~CLIENT_NEW_FOR_DESKTOP;
      }
 
+
    c->wm->main_client = c;
    c->mapped = True;
 
@@ -541,6 +542,7 @@ main_client_show(Client *c)
    if (!(c->wm->flags & DESKTOP_DECOR_FLAG)
        && (desktop = wm_get_desktop(c->wm)) != NULL)
      XLowerWindow(c->wm->dpy, desktop->window);
+
 
    XMapRaised(c->wm->dpy, c->frame);
    XMapSubwindows(c->wm->dpy, c->frame);

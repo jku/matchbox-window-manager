@@ -1,3 +1,13 @@
+2004-02-24  Matthew Allum,,,  <mallum@openedhand.com>
+
+	* src/base_client.c: (base_client_destroy):
+	* src/desktop_client.c: (desktop_client_new):
+	* src/main_client.c: (main_client_show):
+	* src/structs.h:
+	* src/wm.c: (wm_toggle_desktop):
+
+	Fix decorated desktop toggling.
+
 2004-02-18  Matthew Allum,,,  <mallum@handhelds.org>
 
 	* src/composite-engine.c: (comp_engine_client_hide):

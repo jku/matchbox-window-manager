@@ -1901,24 +1901,42 @@ wm_get_offsets_size(Wm*     w,
 void
 wm_toggle_desktop(Wm *w)
 {
-   Client *p;
+  Client *p;
 
-   dbg("%s() called desktop flag is : %i \n", __func__, 
-       (w->flags & DESKTOP_RAISED_FLAG));
+  dbg("%s() called desktop flag is : %i \n", __func__, 
+      (w->flags & DESKTOP_RAISED_FLAG));
 
    if (!wm_get_desktop(w)) 
-     return;
-
-   if (w->flags & DESKTOP_DECOR_FLAG)
      {
-       w->flags ^= DESKTOP_RAISED_FLAG;	
-       wm_activate_client(wm_get_desktop(w));
+       dbg("%s() couldn't find desktop \n", __func__ );
        return;
      }
 
+   /* Toggle decorated desktop */
+   if (w->flags & DESKTOP_DECOR_FLAG)
+     {
+       if (w->flags & DESKTOP_RAISED_FLAG)
+	 {
+	   if (w->prev_main_client)
+	     wm_activate_client(w->prev_main_client);
+	 }
+       else
+	 {
+	   if (w->main_client)
+	     w->prev_main_client = w->main_client;
+	   else
+	     w->prev_main_client = NULL;
+
+	   wm_activate_client(wm_get_desktop(w));
+	   w->flags ^= DESKTOP_RAISED_FLAG;
+	 }
+       return;
+     }
+
+   /* toggle  */
    XGrabServer(w->dpy);
    if (w->flags & DESKTOP_RAISED_FLAG)
-   { 				/* Desktop is visible, raise everything */
+   { 				/* Desktop is visible, raise everything! */
      dbg("%s() Desktop is raised, hiding it\n", __func__);
      if (w->main_client != NULL && w->main_client->type != desktop)
        {
@@ -1955,7 +1973,7 @@ wm_toggle_desktop(Wm *w)
       START_CLIENT_LOOP(w,p)
 	{
 	  if ( p->type == toolbar) 
-	    { /* p->hide(p); */ XMapRaised(w->dpy, p->frame); }
+	    { XMapRaised(w->dpy, p->frame); }
 	  if ( p->type == dock && !(p->flags & CLIENT_DOCK_TITLEBAR)) 
 	    XMapRaised(w->dpy, p->window);
 	  if (p->type == dialog && p->trans == NULL && p->mapped)
@@ -1968,7 +1986,6 @@ wm_toggle_desktop(Wm *w)
       if (!(w->flags & DESKTOP_RAISED_FLAG))
 	w->flags ^= DESKTOP_RAISED_FLAG;	
    }
-
 
    ewmh_update(w);
    ewmh_set_active(w);

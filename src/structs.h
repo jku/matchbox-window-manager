@@ -514,6 +514,7 @@ typedef struct _wm
   Client*           head_client;    /* For ptr to beginning of list   */
   Client*           focused_client; /* currently focused client       */
   Client*           main_client;    /* currently viewable main client */
+  Client*           prev_main_client; /* used for decorated desktop */
 
   Wm_config        *config;  
 

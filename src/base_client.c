@@ -14,7 +14,7 @@
 */
 
 /*
-  $Id: base_client.c,v 1.2 2004/02/10 18:05:44 mallum Exp $
+  $Id: base_client.c,v 1.3 2004/02/24 21:02:05 mallum Exp $
 */
 
 
@@ -486,6 +486,9 @@ base_client_destroy(Client *c)
 
    Client *t = NULL, *prev_client = NULL;
    dbg("%s() called\n", __func__);
+
+   if (c == c->wm->prev_main_client)
+     c->wm->prev_main_client = NULL;
 
    /* destroy any transients */
    for(t = c->prev; t != c; t = prev_client)

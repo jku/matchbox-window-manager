@@ -29,7 +29,7 @@ desktop_client_new(Wm *w, Window win)
      }
 
    c = base_client_new(w, win); 
-   c->type = desktop;
+   c->type         = desktop;
    c->configure    = &desktop_client_configure;
    c->reparent     = &desktop_client_reparent;
    c->move_resize  = &desktop_client_move_resize;
