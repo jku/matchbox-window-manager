@@ -386,6 +386,6 @@ echo "
         Building with composite manager:    ${enable_composite}
         Building with Message Windows:      ${enable_message_wins}
 
-        Building with XSettings:            ${enable_xsettings}
+        Building with XSettings:            ${mb_have_xsettings}
 
 "

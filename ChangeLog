@@ -1,3 +1,10 @@
+2004-02-09  Matthew Allum,,,  <mallum@openedhand.com>
+
+	* configure.ac:
+	Fix xsettings in summary
+	* data/themes/borillo/theme.xml:
+	Change borillo to autofit font
+
 2004-02-08  Matthew Allum,,,  <mallum@handhelds.org>
 
 	* src/wm.c: (wm_usage):

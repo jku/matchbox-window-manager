@@ -9,8 +9,8 @@
 <color id="trans" def="#ffffff00" />
 
 
-<font id="titlefont" def="Bitstream Vera Sans-10:bold|verdana-7|fixed" />
-<font id="barfont"   def="Bitstream Vera Sans-5|verdana-6|5x7|fixed" />
+<font id="titlefont" def="Sans bold 20px" />
+<font id="barfont"   def="Sans 5" />
 
 <pixmap id="close"      filename="close.png" />
 <pixmap id="menu"       filename="blank.png" />
@@ -30,7 +30,7 @@
 
   <layer x="4" y="4" w="16"  h="16" type="icon" />
 
-  <layer x="26" y="4" w="100%-60" h="20" 
+  <layer x="26" y="2" w="100%-60" h="20" 
    type="label" color="textcol" justify="left" font="titlefont" />
 
   <button x="2" y="0" w="100%-60" h="24" action="menu" options="inputonly" />
