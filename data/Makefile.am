@@ -3,7 +3,7 @@ SUBDIRS = themes schemas
 defaultsdir = $(datadir)/matchbox
 
 if WANT_STANDALONE
-defaults_DATA =
+defaults_DATA = kbdconfig
 else
 defaults_DATA = mbnoapp.xpm kbdconfig
 endif

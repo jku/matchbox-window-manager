@@ -1,5 +1,11 @@
 2004-03-09  Matthew Allum,,,  <mallum@handhelds.org>
 
+	* data/Makefile.am:
+	* data/themes/Makefile.am:
+	Install kdbconfig for standalone, dont install themes files
+
+2004-03-09  Matthew Allum,,,  <mallum@handhelds.org>
+
 	* src/composite-engine.c: (comp_engine_time):
 	Disable lowlight timings define - shouldn't be in release 
 	* src/dialog_client.c: (dialog_client_drag), (_draw_outline):
