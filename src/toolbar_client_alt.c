@@ -83,6 +83,46 @@ toolbar_client_configure(Client *c)
   if (c->flags & CLIENT_IS_MINIMIZED)
     return;
 
+  if (c->flags & CLIENT_TB_ALT_TRANS_FOR_APP)
+    {
+      /* resize the main client were transient for */
+	  
+      Client *app_client = c->trans;
+	  
+      if (app_client && (app_client->flags & CLIENT_FULLSCREEN_FLAG))
+	{
+	  c->x      = 0;
+	  c->y      = w->dpy_height - c->height;
+	  c->width  = w->dpy_width;
+	  return;
+	}
+    }
+
+  if (c->flags & CLIENT_TB_ALT_TRANS_FOR_DIALOG)
+    {
+      Client *dialog_client = c->trans;
+      
+      if (dialog_client)
+	{
+	  /*
+	   *  Move transient dialog out of the way.  
+	   */
+	  int req_x = dialog_client->x, req_y = dialog_client->y, 
+	    req_w = dialog_client->width, req_h = dialog_client->height;
+	  
+	  if (!dialog_constrain_geometry(dialog_client, 
+					 &req_x, &req_y, 
+					 &req_w, &req_h))
+	    {
+	      dialog_client->x = req_x; dialog_client->y = req_y; 
+	      dialog_client->width = req_w; dialog_client->height = req_h;
+	      dialog_client->move_resize(dialog_client);
+	      client_deliver_config(dialog_client);
+	    }
+	  
+	}
+    }
+
   c->y = w->dpy_height - wm_get_offsets_size(w, SOUTH, c, True) - c->height;
   c->x = wm_get_offsets_size(w, WEST,  NULL, False);
   c->width = w->dpy_width
@@ -142,7 +182,6 @@ toolbar_client_show(Client *c)
 
   if (!c->mapped)
     {
-
       XMapSubwindows(w->dpy, c->frame);
       XMapWindow(w->dpy, c->frame);
 
@@ -152,39 +191,18 @@ toolbar_client_show(Client *c)
 	  
 	  Client *app_client = c->trans;
 	  
-	  if (app_client) /* possible crasher here, should check exists */
+	  if (app_client)
 	    {
-	      if (app_client->flags & CLIENT_FULLSCREEN_FLAG)
-		{
-		  c->y = w->dpy_height - c->height;
-		  c->width = w->dpy_width;
-		  toolbar_client_move_resize(c);
-		}
-
 	      app_client->height -= c->height;
 	      app_client->move_resize(app_client);
 	      app_client->redraw(app_client, False);
-	      /* XXX Send config ? */
 	    }
 	}
-      
     }
-
+      
   dialog_client_show(c);
 
   c->mapped = True;
-
-  /* XXX for dialog positioning 
-
-  dialog_constrain_geometry(Client *c,
-  int    *req_x,
-  int    *req_y,
-  int    *req_width,
-  int    *req_height)
-  */
-
-
-
 }
 
 void
@@ -231,9 +249,7 @@ toolbar_client_destroy(Client *c)
 void
 toolbar_client_redraw(Client *c, Bool use_cache)
 {
-  Wm *w = c->wm;
-
-
+  ;
 }
 
 #endif /* USE_ALT_INPUT_WIN */

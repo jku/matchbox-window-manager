@@ -14,7 +14,7 @@
 */
 
 /*
-  $Id: main_client.c,v 1.19 2004/11/17 19:34:08 mallum Exp $
+  $Id: main_client.c,v 1.20 2004/11/18 15:56:01 mallum Exp $
 */
 
 #include "main_client.h"
@@ -89,17 +89,8 @@ main_client_manage_toolbars_for_fullscreen(Client *c, Bool main_client_showing)
 	  && p->flags & CLIENT_TB_ALT_TRANS_FOR_APP
 	  && p->trans == c)
 	{
-	  if (c->flags & CLIENT_FULLSCREEN_FLAG)
-	    {
-	      p->y = w->dpy_height - p->height;
-	      p->width = w->dpy_width;
-	      toolbar_client_move_resize(p);
-	    }
-	  else
-	    {
-	      toolbar_client_configure(p);
-	      toolbar_client_move_resize(p);
-	    }
+	  toolbar_client_configure(p);
+	  toolbar_client_move_resize(p);
 
 	  return p->height;
 	}
@@ -749,6 +740,7 @@ main_client_unmap(Client *c)
      }
 
    XUnmapWindow(w->dpy, c->frame); 
+
 
    if (c == w->focused_client)
      w->focused_client = NULL;

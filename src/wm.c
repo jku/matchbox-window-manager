@@ -1977,7 +1977,7 @@ wm_update_layout(Wm         *w,
    }
 
 
- /* Handle dialogs */
+ /* Handle dialog centering etc */
 
  stack_enumerate(w, p)
    {
@@ -1985,6 +1985,20 @@ wm_update_layout(Wm         *w,
        {
 	 int req_x = p->x, req_y = p->y, req_w = p->width, req_h = p->height;
 
+#ifdef USE_ALT_INPUT_WIN
+	 /* Alternate Input windows use the dialog type to 
+	  * fit in with stacking etc. below is a bit of a hack  
+          * to avoid getting repositioned like a dialog.  
+	  */
+	 if (p->flags & (CLIENT_TB_ALT_TRANS_FOR_DIALOG
+	                   |CLIENT_TB_ALT_TRANS_FOR_APP))
+	   {
+	     p->configure(p);
+	     p->move_resize(p);
+	     client_deliver_config(p);
+	     continue;
+	   }
+#endif
 	 if (!dialog_constrain_geometry(p, &req_x, &req_y, &req_w, &req_h))
 	   {
 	     p->x = req_x; p->y = req_y; p->width = req_w; p->height = req_h;
@@ -2115,23 +2129,24 @@ wm_activate_client(Client *c)
 
       if (!(w->flags & DESKTOP_RAISED_FLAG))
 	{
-	  if (wm_get_visible_main_client(w))
+	  Client *top_main_client = NULL;
+
+	  if ((top_main_client = wm_get_visible_main_client(w)) != NULL)
 	    {
 
 	      stack_dump(w);
 
 	      dbg("%s() now raising panels+toolbar above dialog\n", __func__);
 
-
-	      /* Move just above main app win, therefore *below* dialogs */
-	      stack_move_type_above_client(w, MBCLIENT_TYPE_TOOLBAR
-					   |MBCLIENT_TYPE_PANEL, 
-					   wm_get_visible_main_client(w));
+	      if (!(top_main_client->flags & CLIENT_FULLSCREEN_FLAG))
+		/* Move just above main app win, therefore *below* dialogs */
+		stack_move_type_above_client(w, MBCLIENT_TYPE_TOOLBAR
+					     |MBCLIENT_TYPE_PANEL, 
+					     top_main_client);
 	    }
 	  else 	 /* move type above nothing - eg to bottom */
 	    stack_move_type_above_client(w, MBCLIENT_TYPE_TOOLBAR
 					 |MBCLIENT_TYPE_PANEL, NULL);
-	  /* ABOVE is broken as no Wm reference !!! */
 	}
     }
 
