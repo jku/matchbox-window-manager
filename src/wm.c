@@ -1099,8 +1099,9 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
    Client         *c = wm_find_client(w, e->window, WINDOW);
    XWindowChanges  xwc;
    Bool            need_comp_update = False;
+   Bool            no_configure     = False;
 
-   if (!c) 
+   if (!c ) 
      {
        dbg("%s() could find source client\n", __func__ );
        xwc.x = e->x;
@@ -1110,6 +1111,7 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
        xwc.sibling = e->above;
        xwc.stack_mode = e->detail;
        XConfigureWindow(w->dpy, e->window, e->value_mask, &xwc);
+
        return;
      }
    
@@ -1146,26 +1148,33 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
      } 
    
    /* allow decoration free dialogs to move themselves */
-   if (c->type == dialog  	
-       && ( c->flags & CLIENT_TITLE_HIDDEN_FLAG 
+   if ((c->type == dialog  	
+	&& ( c->flags & CLIENT_TITLE_HIDDEN_FLAG 
 	    || c->flags & CLIENT_IS_MESSAGE_DIALOG
 	    || c->flags & CLIENT_IS_MESSAGE_DIALOG_HI
 	    || c->flags & CLIENT_IS_MESSAGE_DIALOG_LO
-	    || c->wm->config->dialog_stratergy == WM_DIALOGS_STRATERGY_FREE)
-       )
+	     || c->wm->config->dialog_stratergy == WM_DIALOGS_STRATERGY_FREE))
+       || c->type == MBCLIENT_TYPE_OVERRIDE)
      {
+       /* render any existing  */
+       comp_engine_render(c->wm, c->wm->all_damage);
+
        c->width  = xwc.width  = e->width;
        c->height = xwc.height = e->height;
+
+       dbg("%s setting widthxheight = %ix%i\n", __func__, e->width, e->height);
+
        c->x      = xwc.x = e->x;
+				
        c->y      = xwc.y = e->y;
 
        dbg("%s() moving window\n", __func__);
 
-       /* Make sure we get the damage before the move.. */
-       comp_engine_client_hide(c->wm, c);
-       comp_engine_render(c->wm, c->wm->all_damage);
+       no_configure = True; 	/* use below instead XXX find better fix */
 
        dialog_client_move_resize(c);
+
+       /* Make sure we get the damage before the move.. */
 
        need_comp_update = True;
        
@@ -1179,9 +1188,9 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
    xwc.border_width = 0;
    xwc.sibling = e->above;
    xwc.stack_mode = e->detail;
-   
-   XConfigureWindow(w->dpy, e->window,
-		    e->value_mask, &xwc);
+
+   if (!no_configure) 
+     XConfigureWindow(w->dpy, e->window, e->value_mask, &xwc);
 
    /* XXX Only raise a client if it size is constant and above is set 
       This may be broken                                             */

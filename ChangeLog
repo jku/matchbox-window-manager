@@ -1,3 +1,8 @@
+2004-06-01  Matthew Allum,,,  <mallum@handhelds.org>
+
+	* src/wm.c: (wm_handle_configure_request):
+	Fixes for dialog self moving in 'free dialog mode'
+
 2004-05-28  Matthew Allum,,,  <mallum@handhelds.org>
 
 	* data/themes/blondie/theme.xml:
