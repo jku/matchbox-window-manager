@@ -678,7 +678,7 @@ dialog_client_drag(Client *c) /* drag box */
       != GrabSuccess)
     return;
     
-  XGrabServer(c->wm->dpy);
+
 
   /* Let the comp know theres gonna be damage in out old position.
    * XXX Must be a better way need to figure it out.    
@@ -719,22 +719,27 @@ dialog_client_drag(Client *c) /* drag box */
 #endif
     XUnmapWindow(c->wm->dpy, c->frame);
 
-
-  XFlush(c->wm->dpy);
+  // XFlush(c->wm->dpy);
 
   c->ignore_unmap++;
 #endif
+
+
     
   for (;;) 
     {
-      int wanted_x = 0, wanted_y = 0;
-
-    XMaskEvent(c->wm->dpy, ButtonPressMask|ButtonReleaseMask|PointerMotionMask,
-	       &ev);
+      int wanted_x = 0, wanted_y = 0, have_grab = 0;
+      
+      XMaskEvent(c->wm->dpy, 
+		 ButtonPressMask|ButtonReleaseMask|PointerMotionMask,
+		 &ev);
 
     switch (ev.type) 
       {
       case MotionNotify:
+	if (!have_grab) 
+	  { XGrabServer(c->wm->dpy); have_grab = 1; }
+	  
 	_draw_outline(c, 
 		      c->x - offset_west, 
 		      c->y - frm_size,
@@ -773,8 +778,6 @@ dialog_client_drag(Client *c) /* drag box */
 	  default:
 	    break;
 	  }
-
-
 
 
 #else  /* Dialog drag mode disabled below */
