@@ -1,3 +1,9 @@
+2005-01-06  mallum,,,  <mallum@openedhand.com>
+
+	* configure.ac:
+	Only build an standalone build if specifically requested,
+	otherwise if libmb is not found through a useful error.
+
 2005-01-05  Ross Burton  <ross@burtonini.com>
 
 	* src/wm.c:

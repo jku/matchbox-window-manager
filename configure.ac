@@ -1,5 +1,5 @@
 AC_PREREQ(2.53)
-AC_INIT([matchbox-window-manager], 0.9, [mallum@handhelds.org])
+AC_INIT([matchbox-window-manager], 0.9.1, [mallum@handhelds.org])
 AC_CONFIG_SRCDIR([src/wm.c])
 
 AM_INIT_AUTOMAKE()
@@ -96,19 +96,27 @@ dnl ---- Check we can find libmb
 
 if test x$enable_standalone != xyes && test x$enable_standalone_xft != xyes; then
 
-   PKG_CHECK_MODULES(LIBMB, libmb >= 1.3, [have_libmb="yes"], [have_libmb="no"])
+   PKG_CHECK_MODULES(LIBMB, libmb >= 1.5, [have_libmb="yes"], [have_libmb="no"])
 
    if test x$have_libmb = xno; then
-      AC_MSG_WARN([ ])
-      AC_MSG_WARN([****************************************************** ])
-      AC_MSG_WARN([*** ])
-      AC_MSG_WARN([*** Cannot find libmatchbox library ])
-      AC_MSG_WARN([*** Your build wil be _standalone_  ])
-      AC_MSG_WARN([*** ])
-      AC_MSG_WARN([*** Check docs at http://matchbox.handhelds.org ])
-      AC_MSG_WARN([*** ])
-      AC_MSG_WARN([****************************************************** ])
-      enable_standalone_xft="yes"
+echo "
+******************************************************************* 
+*** 
+*** Cannot find libmatchbox ( >= 1.5 ) library, please check it is 
+*** correctly installed. 
+***
+*** If you want to build without libmatchbox, you can build a 'standalone'
+*** matchbox. To do so rerun configure with;
+*** 
+***   --enable-standalone, or --enable-standalone-xft 
+*** 
+*** NOTE: a 'standalone' build does _not_ support themeing. It will be ugly.
+*** 
+*** ( See manual at http://projects.o-hand.com/matchbox for more info )
+*** 
+*******************************************************************
+"
+      AC_MSG_ERROR([Unable to find libMatchbox and standalone build not requested.])
    fi
 
 else
