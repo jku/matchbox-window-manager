@@ -14,7 +14,7 @@
 */
 
 /*
-  $Id: main_client.c,v 1.12 2004/10/28 17:13:28 mallum Exp $
+  $Id: main_client.c,v 1.13 2004/10/29 09:46:09 mallum Exp $
 */
 
 #include "main_client.h"
@@ -403,6 +403,9 @@ main_client_redraw(Client *c, Bool use_cache)
    theme_frame_button_paint(w->mbtheme, c, BUTTON_ACTION_HIDE, 
 			    INACTIVE, FRAME_MAIN, width, height);
 
+   theme_frame_button_paint(w->mbtheme, c, BUTTON_ACTION_MIN, 
+			    INACTIVE, FRAME_MAIN, width, height);
+
    if (!(w->flags & SINGLE_FLAG))
    {
       dbg("%s() painting next / prev buttons\n", __func__);
@@ -536,6 +539,9 @@ void main_client_button_press(Client *c, XButtonEvent *e)
 	 break;
       case BUTTON_ACTION_HIDE:
 	 main_client_toggle_title_bar(c);
+	 break;
+      case BUTTON_ACTION_MIN:
+	 main_client_iconize(c);
 	 break;
       case BUTTON_ACTION_HELP:
 	client_deliver_wm_protocol(c, w->atoms[_NET_WM_CONTEXT_HELP]);

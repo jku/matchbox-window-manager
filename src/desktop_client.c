@@ -81,9 +81,6 @@ desktop_client_show(Client *c)
 
    stack_move_top(c);
 
-   stack_enumerate_transients(w,cur,c)
-     c->show(cur);
-
    /* All clients use the above move to base */
 
    if (!c->mapped)

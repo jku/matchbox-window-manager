@@ -1,3 +1,14 @@
+2004-10-29  mallum <mallum@handhelds.org>
+
+	* src/desktop_client.c: (desktop_client_show):
+	* src/main_client.c: (main_client_redraw),
+	(main_client_button_press):
+	* src/wm.c: (wm_handle_button_event), (wm_activate_client):
+	More transient stacking dialog fixes.
+	Initial support for minimize button on app windows ( untested ).
+	Embedded panel in titlebar fixes. 
+	Other stacking fixes.
+
 2004-10-28  <mallum@handhelds.org>
 
 	* src/base_client.c: (base_client_new), (base_client_process_name),

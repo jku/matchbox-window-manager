@@ -805,7 +805,7 @@ wm_handle_button_event(Wm *w, XButtonEvent *e)
 
        XAllowEvents(w->dpy, ReplayPointer, CurrentTime);
        /* forward grabbed events */
-       return;
+
      }
 
    c = wm_find_client(w, e->window, FRAME);
@@ -2124,6 +2124,15 @@ wm_activate_client(Client *c)
       else
 	{
 	  w->flags |= DESKTOP_RAISED_FLAG;
+
+	  /* Make sure embedded titlebar panels arn't visible for desktop 
+	   */
+	  if (w->have_titlebar_panel 
+	      && mbtheme_has_titlebar_panel(w->mbtheme)
+	      && !(w->have_titlebar_panel->flags & CLIENT_DOCK_TITLEBAR_SHOW_ON_DESKTOP))
+	    {
+	      stack_move_below_client(w->have_titlebar_panel, c);
+	    }
 	}
     }
   else if (c->type == MBCLIENT_TYPE_DIALOG)
@@ -2133,8 +2142,21 @@ wm_activate_client(Client *c)
        */
 
       /* XXX below breaks when desktop is showing */
-      stack_move_type_below_client(MBCLIENT_TYPE_TOOLBAR|MBCLIENT_TYPE_PANEL, 
-				   c->trans ? c->trans : wm_get_visible_main_client(w));
+      if (!w->flags & DESKTOP_RAISED_FLAG)
+	stack_move_type_below_client(MBCLIENT_TYPE_TOOLBAR|MBCLIENT_TYPE_PANEL, 
+				     c->trans ? c->trans : wm_get_visible_main_client(w) ? wm_get_visible_main_client(w) : c);
+    }
+  else if (c->type == MBCLIENT_TYPE_PANEL)
+    {
+      /* Make sure embedded titlebar panels arn't visible for desktop 
+       */
+      if (c == w->have_titlebar_panel 
+	  && w->flags & DESKTOP_RAISED_FLAG
+	  && mbtheme_has_titlebar_panel(w->mbtheme)
+	  && !(w->have_titlebar_panel->flags & CLIENT_DOCK_TITLEBAR_SHOW_ON_DESKTOP))
+	    {
+	      stack_move_below_client(c, w->client_desktop);
+	    }
     }
 
   ewmh_update(c->wm);
