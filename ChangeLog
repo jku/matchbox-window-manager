@@ -1,3 +1,11 @@
+2005-02-22  mallum,,,  <mallum@openedhand.com>
+
+	* src/dialog_client.c: (dialog_get_available_area):
+	Fix dialog positioning for fullscreen windows
+	* src/toolbar_client.c: (toolbar_client_new):
+	Fix toolbar wins getting in correctly handled between
+	mb wm restarts.
+
 2005-02-21  mallum,,,  <mallum@openedhand.com>
 
 	* src/base_client.c: (base_client_destroy):

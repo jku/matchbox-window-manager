@@ -426,7 +426,7 @@ dialog_get_available_area(Client *c,
     }
   else
     {
-      Client *p = NULL;
+      Client *p = NULL, *main_client = wm_get_visible_main_client(w);
       Bool    have_toolbar = False;
 
      stack_enumerate(w, p)
@@ -436,18 +436,34 @@ dialog_get_available_area(Client *c,
 	  { have_toolbar = True; break; }
       }
 
-      *y      = wm_get_offsets_size(w, NORTH, NULL, True);
+      *y = wm_get_offsets_size(w, NORTH, NULL, True);
 
-      /* if toolbar ( input window present ) dialogs can cover titlebars 
-       * as can transient for root dialogs. 
-       */
-      if (!have_toolbar)
-	*y  += main_client_title_height(c->trans);
-
-      *height = w->dpy_height - *y - wm_get_offsets_size(w, SOUTH, NULL, True);
-      *x      = wm_get_offsets_size(w, WEST, NULL, True);
-      *width  = w->dpy_width - *x - wm_get_offsets_size(w, EAST, NULL, True);
-
+      if (main_client && (main_client->flags & CLIENT_FULLSCREEN_FLAG))
+	{
+	  /* Fullscreen window present, allow dialogs to position themselves
+           * move or less anywhere
+           * 
+           * XXX: should we check is this dialog is trans for it or trans for
+           *      root ?
+	  */
+	  *height = w->dpy_height - *y;
+	  *x = 0;
+	  *width  = w->dpy_width;
+	}
+      else
+	{
+	  /* if toolbar ( input window present ) dialogs can cover titlebars 
+	   * as can transient for root dialogs. 
+	   */
+	  if (!have_toolbar)
+	    *y  += main_client_title_height(c->trans);
+	  
+	  *height = w->dpy_height - *y - wm_get_offsets_size(w, SOUTH, 
+							     NULL, True);
+	  *x      = wm_get_offsets_size(w, WEST, NULL, True);
+	  *width  = w->dpy_width - *x - wm_get_offsets_size(w, EAST, 
+							    NULL, True);
+	}
 
       dbg("%s() (toolbar) offsets south is %i\n", 
 	  __func__, wm_get_offsets_size(w, SOUTH, NULL, True));
