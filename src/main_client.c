@@ -14,7 +14,7 @@
 */
 
 /*
-  $Id: main_client.c,v 1.3 2004/02/25 13:10:48 mallum Exp $
+  $Id: main_client.c,v 1.4 2004/06/29 13:41:01 mallum Exp $
 */
 
 #include "main_client.h"
@@ -105,9 +105,10 @@ main_client_configure(Client *c)
        c->height = c->wm->dpy_height - c->y - h - offset_south;
      }
 
-   dbg("%s() configured as %i*%i+%i+%i, frame size is %i\n", __func__, c->width, c->height, c->x, c->y, frm_size);
+   dbg("%s() configured as %i*%i+%i+%i, frame size is %i\n", 
+       __func__, c->width, c->height, c->x, c->y, frm_size);
    
-   c->wm->main_client = c;  /* XXX Should this be here ?  */
+   c->wm->main_client = c;
 }
 
 int
@@ -168,7 +169,8 @@ main_client_reparent(Client *c)
 		     CWOverrideRedirect|CWEventMask|CWBackPixel,
 		     &attr);
 
-   dbg("%s frame created : %i*%i+%i+%i\n", __func__, c->width, c->height + frm_size, c->x, c->y);
+   dbg("%s frame created : %i*%i+%i+%i\n",
+       __func__, c->width, c->height + frm_size, c->x, c->y);
 
     attr.background_pixel = BlackPixel(c->wm->dpy, c->wm->screen);
     
@@ -177,15 +179,14 @@ main_client_reparent(Client *c)
 		     c->width + ( offset_east + offset_west), 
 		     frm_size + c->height + offset_south, 0,
 		     CopyFromParent, CopyFromParent, CopyFromParent,
-		     /*CWOverrideRedirect|*/CWBackPixel|CWEventMask, &attr);
+		     CWBackPixel|CWEventMask, &attr);
     
    XSetWindowBorderWidth(c->wm->dpy, c->window, 0);
    XAddToSaveSet(c->wm->dpy, c->window);
-   XSelectInput(c->wm->dpy, c->window,
-		/*ButtonPressMask|*/ ColormapChangeMask|PropertyChangeMask);
-   
+   XSelectInput(c->wm->dpy, c->window, ColormapChangeMask|PropertyChangeMask);
    XReparentWindow(c->wm->dpy, c->window, c->frame, offset_west, frm_size);
 }
+
 
 void
 main_client_move_resize(Client *c)
@@ -196,24 +197,23 @@ main_client_move_resize(Client *c)
 						   FRAME_MAIN_EAST );
   int offset_west  = theme_frame_defined_width_get(c->wm->mbtheme, 
 						   FRAME_MAIN_WEST );
-   base_client_move_resize(c);
-   //XResizeWindow(c->wm->dpy, c->window, c->width, c->height);
+  base_client_move_resize(c);
 
-   XMoveResizeWindow(c->wm->dpy, c->window, 
-		     offset_west, main_client_title_height(c), 
-		     c->width, c->height);
-
-   XResizeWindow(c->wm->dpy, c->title_frame, 
-		 c->width + (offset_east + offset_west),
-		 c->height + main_client_title_height(c) + offset_south);
-
-   XMoveResizeWindow(c->wm->dpy, c->frame, 
-		     c->x - offset_west,
-		     c->y - main_client_title_height(c), 
-		     c->width + ( offset_east + offset_west),
-		     c->height + main_client_title_height(c) + offset_south);
-
+  XMoveResizeWindow(c->wm->dpy, c->window, 
+		    offset_west, main_client_title_height(c), 
+		    c->width, c->height);
+  
+  XResizeWindow(c->wm->dpy, c->title_frame, 
+		c->width + (offset_east + offset_west),
+		c->height + main_client_title_height(c) + offset_south);
+  
+  XMoveResizeWindow(c->wm->dpy, c->frame, 
+		    c->x - offset_west,
+		    c->y - main_client_title_height(c), 
+		    c->width + ( offset_east + offset_west),
+		    c->height + main_client_title_height(c) + offset_south);
 }
+
 
 void
 main_client_toggle_fullscreen(Client *c)
@@ -238,9 +238,9 @@ main_client_toggle_fullscreen(Client *c)
 	}
 
     }
-
   XUngrabServer(c->wm->dpy);
 }
+
 
 /* redraws the frame */
 void
@@ -403,8 +403,8 @@ main_client_redraw(Client *c, Bool use_cache)
 #endif
 
    c->have_set_bg = True;
-
 }
+
 
 void main_client_button_press(Client *c, XButtonEvent *e)
 {
@@ -453,14 +453,15 @@ void main_client_button_press(Client *c, XButtonEvent *e)
       case BUTTON_ACTION_CUSTOM:
 	client_deliver_wm_protocol(c, c->wm->atoms[_NET_WM_CONTEXT_CUSTOM]);
 	 break;
-
-      case -1: 		 /* Cancelled  */
+      case -1: 		 
+	/* Cancelled  */
 	 break;
       case 0:
 	 /* Not on button */
 	 break;
    }
 }
+
 
 void
 main_client_toggle_title_bar(Client *c)
@@ -511,6 +512,7 @@ main_client_toggle_title_bar(Client *c)
    XUngrabServer(c->wm->dpy);
 }
 
+
 void
 main_client_hide(Client *c)
 {
@@ -519,6 +521,7 @@ main_client_hide(Client *c)
    /* lower window to bottom of stack */
    XLowerWindow(c->wm->dpy, c->frame);
 }
+
 
 void
 main_client_iconize(Client *c)
@@ -536,8 +539,6 @@ main_client_show(Client *c)
 {
   Client *desktop = NULL;
    dbg("%s() called on %s\n", __func__, c->name);
-   
-   /* client_set_state(c, NormalState); XXX moved to wm_client_new */
    
    if (c->wm->flags & DESKTOP_RAISED_FLAG) 
      {
@@ -578,6 +579,7 @@ main_client_show(Client *c)
    /* deal with transients etc */
    base_client_show(c);
 }
+
 
 void
 main_client_destroy(Client *c)

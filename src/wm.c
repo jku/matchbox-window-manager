@@ -36,11 +36,11 @@ static void wm_sn_cycle_update_root_prop(Wm *w);
 static SnCycle *wm_sn_cycle_new(Wm *w, const char *bin_name);
 
 static void wm_sn_cycle_add(Wm *w, const char *bin_name);
-
-
 #endif
 
+
 static Cursor blank_curs;
+
 
 Wm*
 wm_new(int argc, char **argv)
@@ -73,22 +73,16 @@ wm_new(int argc, char **argv)
                        |SubstructureNotifyMask
                        |StructureNotifyMask
                        |PropertyChangeMask;
-                       /* |KeymapStateMask; */
 
    /* Tell root win we wanna be wm */
 
    XChangeWindowAttributes(w->dpy, w->root, CWEventMask, &sattr);
 
 #if defined(USE_GCONF) || defined(USE_PANGO)
-
    g_type_init() ;
-
 #endif 
 
 #ifdef USE_GCONF
-
-   /* gconf_init(argc, argv, NULL); */
-
    w->gconf_client  = gconf_client_get_default();
    w->gconf_context = g_main_context_default ();
 
@@ -108,7 +102,6 @@ wm_new(int argc, char **argv)
 			       NULL);
      }
    else fprintf(stderr, "matchbox: failed to initialise gconf client\n");
-
 #endif
 
 #ifdef USE_XSETTINGS
@@ -139,13 +132,8 @@ wm_new(int argc, char **argv)
    ewmh_init(w);
 
 #ifdef USE_PANGO
-
    w->pgo = pango_xft_get_context (w->dpy, w->screen);
    w->pgo_fontmap = pango_xft_get_font_map (w->dpy, w->screen);
-
-   /* -- Needed ?
-   pango_context_set_language (w->pgo, pango_language_from_string ("ar_AE"));
-   */
 #endif
 
    comp_engine_init (w);
@@ -180,11 +168,9 @@ wm_new(int argc, char **argv)
 
    w->flags ^= STARTUP_FLAG; 	/* Remove startup flag */
 
-   /* XXX Temp XXX Remember to delete XXX Temp XXX */
-
-
    return w;
 }
+
 
 void
 wm_usage(char *progname)
@@ -290,14 +276,15 @@ wm_usage(char *progname)
    exit(0);
 }
 
+
 void
 wm_load_config (Wm   *w, 
 		int  *argc, 
 		char *argv[])
 {
    static XrmDatabase rDB, cmdlnDB, srDB;
-   char *type;
-   XrmValue value;
+   char              *type;
+   XrmValue          value;
    
    static int opTableEntries = 8;
    static XrmOptionDescRec opTable[] = {
@@ -308,9 +295,6 @@ wm_load_config (Wm   *w,
       {"-use_lowlight",    ".lowlight",    XrmoptionSepArg, (XPointer) NULL},
       {"-use_dialog_mode", ".dialog",      XrmoptionSepArg, (XPointer) NULL},
       {"-use_desktop_mode",".desktop",     XrmoptionSepArg, (XPointer) NULL},
-      /*
-      {"-ping_handler",    ".pinghandler",     XrmoptionSepArg, (XPointer) NULL},
-      */
       {"-titlebar_panel",  ".titlebarpanel", XrmoptionSepArg, (XPointer) NULL},
    };
    
@@ -396,7 +380,7 @@ wm_load_config (Wm   *w,
      }   
 
    /* 
-    *  Composite matchbox always uses lowlighting ... 
+    *  Composite matchbox always uses lowlighting 
     */
 #ifndef USE_COMPOSITE
    if (XrmGetResource (rDB, "matchbox.lowlight", "Matchbox.Lowlight",
@@ -443,17 +427,6 @@ wm_load_config (Wm   *w,
 	 }
      } 
 
-   /*
-   if (XrmGetResource(rDB, "matchbox.pinghandler", "Matchbox.Pinghandler",
-		      &type, &value) == True)
-   {
-     w->config->ping_handler = (char *)malloc(sizeof(char)*(value.size+1));
-     strncpy(w->config->ping_handler, value.addr, (int) value.size);
-     w->config->ping_handler[value.size] = '\0';
-     dbg("%s() got ping handler :%s ", __func__, w->config->ping_handler);
-   }
-   */
-
 #ifdef STANDALONE
    if (XrmGetResource(rDB, "matchbox.titlebarpanel", "Matchbox.Titlebarpanel",
 		      &type, &value) == True)
@@ -477,9 +450,8 @@ wm_load_config (Wm   *w,
      free(geom);
    }
 #endif
-
-
 }
+
 
 void
 wm_init_existing(Wm *w)
@@ -503,9 +475,8 @@ wm_init_existing(Wm *w)
       }
    }
    XFree(wins);
- 
-   // comp_engine_render(w, None);
 }
+
 
 Client*
 wm_find_client(Wm *w, Window win, int mode)
@@ -525,10 +496,12 @@ wm_find_client(Wm *w, Window win, int mode)
     return NULL;
 }
 
-static Bool
-get_xevent_timed(Display* dpy, XEvent* event_return, struct timeval *tv)
-{
 
+static Bool
+get_xevent_timed(Display        *dpy, 
+		 XEvent         *event_return, 
+		 struct timeval *tv)
+{
   if (tv->tv_usec == 0 && tv->tv_sec == 0)
     {
       XNextEvent(dpy, event_return);
@@ -557,12 +530,12 @@ get_xevent_timed(Display* dpy, XEvent* event_return, struct timeval *tv)
     }
 }
 
+
 #ifdef USE_COMPOSITE
 
 /*  For the compositing engine we need to track overide redirect  
  *  windows. 
  */
-
 void 
 wm_handle_map_notify(Wm *w, Window win)
 {
@@ -634,8 +607,8 @@ wm_handle_map_notify(Wm *w, Window win)
     }
 
 }
-
 #endif
+
 
 void
 wm_event_loop(Wm* w)
@@ -753,8 +726,6 @@ wm_event_loop(Wm* w)
    
       }
 
-      //    } while (XEventsQueued (w->dpy, QueuedAfterReading));
-
 #ifdef USE_COMPOSITE
       if (w->all_damage)
       	{
@@ -777,11 +748,6 @@ wm_handle_button_event(Wm *w, XButtonEvent *e)
 
    if (c && c->type != menu && c->type != dock && client_want_focus(c))
      {
-       /* XXX
-        *  o This needs work .. should work for desktop type too 
-        *  o check for _NET_WM_STATE_MODAL - set modal flag ?
-        *  o test test test ...
-        */
        XSetInputFocus(c->wm->dpy, c->window,
 		      RevertToPointerRoot, CurrentTime);
        c->wm->focused_client = c;
@@ -790,7 +756,7 @@ wm_handle_button_event(Wm *w, XButtonEvent *e)
 
    c = wm_find_client(w, e->window, FRAME);
 
-   /* find out if this is a double click */
+   /* find out if this is a double click - FIXME not used */
    if (w->next_click_is_not_double) {
       w->last_click_window = e->window;
       w->last_click_time   = e->time;
@@ -831,6 +797,7 @@ wm_handle_button_event(Wm *w, XButtonEvent *e)
    /* clear double click flag if set */
    if (w->flags & DBL_CLICK_FLAG) w->flags ^= DBL_CLICK_FLAG;
 }
+
 
 void
 wm_handle_keypress(Wm *w, XKeyEvent *e)
@@ -968,6 +935,7 @@ wm_handle_keypress(Wm *w, XKeyEvent *e)
 #endif
 }
 
+
 void
 wm_handle_configure_notify(Wm *w, XConfigureEvent *e)
 {
@@ -1092,6 +1060,7 @@ wm_handle_configure_notify(Wm *w, XConfigureEvent *e)
       }
    }
 }
+
 
 void
 wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
@@ -1234,10 +1203,11 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 	 }
      }
 
-   /* A bit hacky */
+   /* make sure composite does any needed updates */
    if (need_comp_update == True)
      comp_engine_client_show(c->wm, c); 
 }
+
 
 void
 wm_handle_map_request(Wm *w, XMapRequestEvent *e)
@@ -1251,6 +1221,7 @@ wm_handle_map_request(Wm *w, XMapRequestEvent *e)
       wm_activate_client(c);
    }
 }
+
 
 void
 wm_handle_unmap_event(Wm *w, XUnmapEvent *e)
@@ -1282,6 +1253,7 @@ wm_handle_unmap_event(Wm *w, XUnmapEvent *e)
      }
 }
 
+
 void
 wm_handle_expose_event(Wm *w, XExposeEvent *e)
 {
@@ -1300,6 +1272,7 @@ wm_handle_expose_event(Wm *w, XExposeEvent *e)
    }
 }
 
+
 void
 wm_handle_destroy_event(Wm *w, XDestroyWindowEvent *e)
 {
@@ -1310,6 +1283,7 @@ wm_handle_destroy_event(Wm *w, XDestroyWindowEvent *e)
 
     wm_remove_client(w, c);
 }
+
 
 void
 wm_handle_client_message(Wm *w, XClientMessageEvent *e)
@@ -1399,6 +1373,7 @@ wm_handle_client_message(Wm *w, XClientMessageEvent *e)
    ewmh_handle_root_message(w, e);   
 }
 
+
 void
 wm_handle_property_change(Wm *w, XPropertyEvent *e)
 {
@@ -1407,6 +1382,7 @@ wm_handle_property_change(Wm *w, XPropertyEvent *e)
   Client *c = wm_find_client(w, e->window, WINDOW);
 
   if (!c) return; 
+
   if (c->type == MBCLIENT_TYPE_OVERRIDE) return;
 
   dbg("%s() on %s, atom is %li\n", __func__, c->name, e->atom );
@@ -1448,6 +1424,7 @@ wm_handle_property_change(Wm *w, XPropertyEvent *e)
   
   if (update_titlebar)  c->redraw(c, False);
 }
+
 
 Client*
 wm_make_new_client(Wm *w, Window win)
@@ -1507,9 +1484,7 @@ wm_make_new_client(Wm *w, Window win)
 	       c = dialog_client_new(w, win, NULL);
 	       if (c == NULL) goto end;
 	     }
-
 #ifdef USE_MSG_WIN
-	   
 	   else if (value[0] == w->atoms[WINDOW_TYPE_MESSAGE])
 	     {
 
@@ -1551,7 +1526,6 @@ wm_make_new_client(Wm *w, Window win)
 		   if (c == NULL) goto end;
 		   c->flags ^= CLIENT_IS_MESSAGE_DIALOG|CLIENT_IS_MESSAGE_DIALOG_LO; 
 	     }
-
 #endif
 	   
 	 } 
@@ -1679,7 +1653,6 @@ wm_make_new_client(Wm *w, Window win)
 
    client_set_state(c, NormalState);
 
-
    /* This is really only for an lowlighting panels to make sure 
       they get really hidden. 
    */
@@ -1695,25 +1668,24 @@ wm_make_new_client(Wm *w, Window win)
    return c;
 }
 
+
 void
 wm_remove_client(Wm *w, Client *c)
 {
   dbg("%s() called for %s\n", __func__, c->name);
 
   XGrabServer(c->wm->dpy);
-
   XSetErrorHandler(ignore_xerror);
-
   c->destroy(c);
-
   XSetErrorHandler(handle_xerror);
-
   XUngrabServer(w->dpy);
 }
 
 
 void
-wm_restack(Wm *w, Client *client_changed, signed int change_amount)
+wm_restack(Wm         *w, 
+	   Client     *client_changed, 
+	   signed int  change_amount)
 {
  Client *p;
 
@@ -1904,6 +1876,7 @@ wm_restack(Wm *w, Client *client_changed, signed int change_amount)
  ewmh_update_rects(w);
 }
 
+
 void 
 wm_activate_client(Client *c)
 {
@@ -1924,7 +1897,8 @@ wm_activate_client(Client *c)
   ewmh_set_active(c->wm);
 }
 
-Client * 			/* Returns either desktop or main app client */
+
+Client*   /* Returns either desktop or main app client */
 wm_get_visible_main_client(Wm *w)
 {
   if (w->flags & DESKTOP_RAISED_FLAG)
@@ -1934,6 +1908,7 @@ wm_get_visible_main_client(Wm *w)
  
   return NULL;
 }
+
 
 int
 wm_get_offsets_size(Wm*     w, 
@@ -1991,6 +1966,7 @@ wm_get_offsets_size(Wm*     w,
 
    return result;
 }
+
 
 void
 wm_toggle_desktop(Wm *w)
@@ -2197,14 +2173,6 @@ wm_xsettings_notify_cb (const char       *name,
 	  else
 	      mbtheme_switch(w, setting->data.v_string);
 	  break;
-	  /*
-	case XSET_LOWLIGHT:
-	  if (!strcasecmp("true", setting->data.v_string))
-	      w->config->dialog_shade = True;
-	  else
-	      w->config->dialog_shade = False;
-	  break;
-	  */
 	case XSET_CURSOR:
 	  if (!strcasecmp("true", setting->data.v_string))
 	    wm_set_cursor_visibility(w, True);
@@ -2254,10 +2222,9 @@ wm_sn_exec(Wm *w, char* name, char* bin_name, char *desc)
       _exit (1);
       break;
     }
-  //wm_sn_cycle_add(w, bin_name);
   sn_launcher_context_unref (context);
-
 }
+
 
 static void 
 wm_sn_timeout_check (Wm *w)
@@ -2283,6 +2250,7 @@ wm_sn_timeout_check (Wm *w)
       XDeleteProperty(w->dpy, w->root, w->atoms[MB_CLIENT_STARTUP_LIST]);
     }
 }
+
 
 static void 
 wm_sn_cycle_update_root_prop(Wm *w)
@@ -2354,6 +2322,7 @@ wm_sn_cycle_update_root_prop(Wm *w)
   XUngrabServer(w->dpy);
 }
 
+
 static SnCycle * 
 wm_sn_cycle_new(Wm *w, const char *bin_name)
 {
@@ -2364,6 +2333,7 @@ wm_sn_cycle_new(Wm *w, const char *bin_name)
   new_cycle->next     = NULL;
   return new_cycle;
 }
+
 
 static void 
 wm_sn_cycle_add(Wm *w, const char *bin_name)
@@ -2398,6 +2368,7 @@ wm_sn_cycle_add(Wm *w, const char *bin_name)
     }
   wm_sn_cycle_update_root_prop(w);
 }
+
 
 void
 wm_sn_cycle_remove(Wm *w, Window xid)
@@ -2463,7 +2434,6 @@ static void
 wm_sn_monitor_event_func (SnMonitorEvent *event,
 			  void            *user_data)
 {
-  /* SnMonitorContext *context; */
   SnStartupSequence *sequence;
   Wm *w = (Wm *)user_data;
   const char *seq_id = NULL, *bin_name = NULL;
@@ -2471,10 +2441,9 @@ wm_sn_monitor_event_func (SnMonitorEvent *event,
 
   dbg("%s() called\n", __func__);
 
-  /* context = sn_monitor_event_get_context (event); */
   sequence = sn_monitor_event_get_startup_sequence (event);
 
-  if (/* context == NULL || */ sequence == NULL)
+  if (sequence == NULL)
     {
       dbg("%s() failed, context / sequence is NULL\n", __func__);
       return;
@@ -2656,8 +2625,6 @@ wm_msg_win_queue_add(Wm *w, Window win)
   
   dbg("%s() queue has items, adding to back \n", __func__);
 
-
-
   while (tmp->next != NULL) tmp = tmp->next;
 
   tmp->next = malloc(sizeof(MsgWinQueue));
@@ -2665,6 +2632,7 @@ wm_msg_win_queue_add(Wm *w, Window win)
   tmp->next->win = win;
   tmp->next->timeout = timeout;
 }
+
 
 void
 wm_msg_win_queue_pop(Wm *w)
@@ -2695,6 +2663,7 @@ wm_msg_win_queue_pop(Wm *w)
     }
 }
 
+
 void
 wm_msg_win_queue_process(Wm *w)
 {
@@ -2715,11 +2684,9 @@ wm_msg_win_queue_process(Wm *w)
 	wm_remove_client(w, client_msg);
       }
 }
-
 #endif
 
 #ifdef USE_GCONF
-
 void
 gconf_key_changed_callback (GConfClient *client,
 			    guint        cnxn_id,
@@ -2790,32 +2757,6 @@ gconf_key_changed_callback (GConfClient *client,
 	  dbg("%s() value is useless to me...\n", __func__ );
 	}
     } 
-
-  /* XX no free */
-  /*
-  value = GConfValue *gconf_entry_get_value (const GConfEntry *entry);
-  const char* gconf_entry_get_key (const GConfEntry *entry);
-
-  value->type
-
-    typedef enum {
-      GCONF_VALUE_INVALID,
-      GCONF_VALUE_STRING,
-      GCONF_VALUE_INT,
-      GCONF_VALUE_FLOAT,
-      GCONF_VALUE_BOOL,
-      GCONF_VALUE_SCHEMA,
-      GCONF_VALUE_LIST,
-      GCONF_VALUE_PAIR
-  
-    } GConfValueType;
-  */
-  /* dont free */
-  /*
-  const char* gconf_value_get_string          (const GConfValue *value);
-  int         gconf_value_get_int             (const GConfValue *value);
-  gboolean    gconf_value_get_bool            (const GConfValue *value);
-  */
 }
 
 #endif

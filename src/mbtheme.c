@@ -22,7 +22,6 @@ layer_lookup[] = {
 
 #define layer_lookup_cnt (sizeof(layer_lookup)/sizeof(struct layer_lookup_t))
 
-
 static struct button_lookup_t
 {
   char* name;
@@ -43,7 +42,6 @@ button_lookup[] = {
 };
 
 #define button_lookup_cnt (sizeof(button_lookup)/sizeof(struct button_lookup_t))
-
 
 static struct frame_lookup_t
 {
@@ -97,9 +95,9 @@ void theme_frame_icon_paint(MBTheme *t, Client *c,
 			    MBPixbufImage *img_dest, 
 			    int x, int y)
 {
-  int i = 0;
+  int            i = 0;
   MBPixbufImage *img = NULL;
-  int *data = NULL;
+  int           *data = NULL;
   unsigned char *p;
 
   if (c->icon_rgba_data != NULL)
@@ -277,14 +275,6 @@ theme_frame_button_paint(MBTheme *theme,
 		  button_w, button_h, 
 		  mb_pixbuf_img_get_width(theme->img_caches[frame_type]),
 		  mb_pixbuf_img_get_height(theme->img_caches[frame_type]));
-
-	      /*
-	      mb_pixbuf_img_copy(theme->wm->pb, img_backing,
-				 theme->img_caches[frame_type],
-				 button_x, button_y,
-				 button_w, button_h,
-				 0, 0 );
-	      */
 
 	      if (c->type == mainwin || c->type == toolbar )
 		{
@@ -538,7 +528,6 @@ _theme_paint_core( MBTheme *theme, Client *c, MBThemeFrame *frame,
 
 	case LAYER_ICON:
 	  /* We cant cache the icon  */
-
 	  break;
 	}
       
@@ -668,30 +657,6 @@ theme_frame_paint( MBTheme *theme,
     } 
 
 #ifdef USE_EXTRAS
-  /*  
-   * We can substitue in an image for a defined character.
-   * 
-   *
-   *
-   */
-   /*
-     plan. 
-
-     - go through c->name ( using 'char *strchr(const char *s, int c);' )
-     - if no instance found set/unset a flag - render text normally.
-     - if found set offset = c->name - strchr_result 
-     - measure distance it pixels to that offset from last and store
-       ( mb_font_get_txt_width (MBFont        *font, 
-		       unsigned char *txt, 
-		       int            byte_len, 
-		       int            encoding);
-        )
-     - stop if distance is too long
-     - set n_chars to 0 on lasy offset
-
-     XXX need to measure length from last offset + include image widths + padding
-     - finally render images at offsets. 
-   */
 
   n_offsets = 0;
 
@@ -699,8 +664,7 @@ theme_frame_paint( MBTheme *theme,
        && c->name 
        && !(c->flags & CLIENT_BORDERS_ONLY_FLAG)
        && c->type != dialog
-       && theme->subst_img
-       /* && strchr(c->name, (int)theme->subst_char) */)
+       && theme->subst_img)
      {
        MBPixbufImage *img_tmp = NULL;
        unsigned char *cur_offsetp = NULL, *orig_name = NULL, *name = NULL;
@@ -935,10 +899,6 @@ theme_frame_menu_get_dimentions(MBTheme* theme, int *w, int *h)
   if (width > space_avail)
     width = space_avail;
 
-  /*
-  if (frame->set_width)
-    *w = frame->set_width;
-  */
   if (frame->fixed_width)
     *w = frame->fixed_width;
   else
@@ -962,7 +922,7 @@ _theme_frame_menu_paint_text_entry(MBTheme      *theme,
   int item_h = MBMAX( c->wm->config->use_icons + MENU_ICON_PADDING,
 		      mb_font_get_height(font) + MENU_ENTRY_PADDING );
 
-  int  offset = (item_h - (mb_font_get_height(font) /*+ MENU_ENTRY_PADDING */))/2;
+  int  offset = (item_h - (mb_font_get_height(font)))/2;
 
   mb_font_set_color (font, color);
 

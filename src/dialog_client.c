@@ -66,24 +66,21 @@ dialog_client_new(Wm *w, Window win, Client *trans)
    c->get_coverage = &dialog_client_get_coverage;
    c->trans = trans;
 
-   // c->flags ^= CLIENT_TITLE_HIDDEN_FLAG; 
-
    dialog_client_check_for_state_hints(c);
 
    return c;
 }
 
+
 static void
 dialog_client_get_offsets(Client *c, int *e, int *s, int *w)
 {
-
   /* no decor dialogs */
   if (c->flags & CLIENT_TITLE_HIDDEN_FLAG)
     {
       *s = 0; *e = 0; *w = 0;
       return;
     }
-
 
 #ifdef USE_MSG_WIN
   if (c->flags & CLIENT_IS_MESSAGE_DIALOG)
@@ -106,6 +103,7 @@ dialog_client_get_offsets(Client *c, int *e, int *s, int *w)
 				      FRAME_DIALOG_WEST );
 }
 
+
 static void
 dialog_client_check_for_state_hints(Client *c)
 {
@@ -118,7 +116,6 @@ dialog_client_check_for_state_hints(Client *c)
 
       /* Call comp_engine_client_show to add damage to main window 
        * so it gets fully lowlighted ok. 
-       *
        */
       if ((damaged = wm_get_visible_main_client(c->wm)) != NULL)
 	{
@@ -141,6 +138,7 @@ dialog_client_get_coverage(Client *c, int *x, int *y, int *w, int *h)
    *w = c->width + east + west;
    *h = c->height + frm_size + south;
 }
+
 
 void
 dialog_client_move_resize(Client *c)
@@ -189,6 +187,7 @@ dialog_client_move_resize(Client *c)
      }
 }
 
+
 void
 dialog_client_hide(Client *c)
 {
@@ -204,6 +203,7 @@ dialog_client_hide(Client *c)
 
   comp_engine_client_hide(c->wm, c);
 }
+
 
 int
 dialog_client_title_height(Client *c)
@@ -238,12 +238,9 @@ dialog_client_show(Client *c)
   if (client_get_state(c) != NormalState)
     dialog_client_redraw(c, False);
 
-  /* XFlush(c->wm->dpy); Not needed ? */
-
   client_set_state(c, NormalState); 
   XMapSubwindows(c->wm->dpy, c->frame);
   XMapRaised(c->wm->dpy, c->frame);
-
 
   if (client_want_focus(c) && (!(c->flags & CLIENT_IS_MESSAGE_DIALOG)))
     {
@@ -255,7 +252,6 @@ dialog_client_show(Client *c)
   comp_engine_client_show(c->wm, c);
 
 #ifdef USE_MSG_WIN 	
-
   if (c->flags & CLIENT_IS_MESSAGE_DIALOG_LO)
     {
       Client *t = NULL;
@@ -273,25 +269,20 @@ dialog_client_show(Client *c)
       END_CLIENT_LOOP(c->wm, t);
     }
 
-
-  if (/* c->wm->config->dialog_shade 
-       && (c->flags & CLIENT_IS_MODAL_FLAG) 
-	 && */ c->wm->msg_win_queue_head)
+  if (c->wm->msg_win_queue_head)
     {
-        Client *msg_client = NULL;
-	if ((msg_client = wm_find_client(c->wm, 
-					 c->wm->msg_win_queue_head->win, 
-					 WINDOW)) != NULL)
-	  if (msg_client != c) 
-	    {
-	      msg_client->show(msg_client);
-	      /* We need to call show to get the composite stacking right */
-	      comp_engine_client_show(c->wm, msg_client);
-	    }
+      Client *msg_client = NULL;
+      if ((msg_client = wm_find_client(c->wm, 
+				       c->wm->msg_win_queue_head->win, 
+				       WINDOW)) != NULL)
+	if (msg_client != c) 
+	  {
+	    msg_client->show(msg_client);
+	    /* We need to call show to get the composite stacking right */
+	    comp_engine_client_show(c->wm, msg_client);
+	  }
     }
 #endif
-
-
 
   c->mapped = True;
 }
@@ -330,16 +321,11 @@ dialog_client_reparent(Client *c)
 	   c->frame = c->window;
 	 }
        else c->frame = XCreateWindow(c->wm->dpy, 
-					  c->wm->root, 
-					  0, 0,
-					  c->width + offset_east + offset_west, 
-					  c->height + offset_north + offset_south, 
+				     c->wm->root, 
+				     0, 0,
+				     c->width + offset_east + offset_west, 
+				     c->height + offset_north + offset_south, 
 				     0,
-				     /*
-					  32,
-					  InputOutput,  
-					  c->visual,
-				     */
 #ifdef USE_COMPOSITE
 				     c->is_argb32 ? 32  : CopyFromParent,
 				     InputOutput,  
@@ -350,9 +336,8 @@ dialog_client_reparent(Client *c)
 				     CopyFromParent,
 
 #endif
-
-
-				     CWOverrideRedirect|CWEventMask|CWBackPixel|CWBorderPixel|CWColormap, 
+				     CWOverrideRedirect|CWEventMask
+				     |CWBackPixel|CWBorderPixel|CWColormap, 
 				     &attr);
      }
 
@@ -550,7 +535,6 @@ dialog_client_redraw(Client *c, Bool use_cache)
   if (is_shaped) client_init_backing_mask(c, total_w, c->height, 
 					  offset_north, offset_south,
 					  offset_east, offset_west);
-
 #ifdef STANDALONE
   /* Should prevent some flicker */
   XSetForeground(c->wm->dpy, c->wm->mbtheme->gc, 
@@ -606,7 +590,7 @@ dialog_client_redraw(Client *c, Bool use_cache)
       XShapeCombineRectangles ( c->wm->dpy, c->title_frame, 
 				ShapeBounding,
 				0, 0, rects, 1, ShapeSet, 0 );
-
+      
 #ifndef USE_COMPOSITE
       if (c->wm->config->dialog_shade && (c->flags & CLIENT_IS_MODAL_FLAG)) 
 	{
@@ -649,10 +633,8 @@ dialog_client_redraw(Client *c, Bool use_cache)
 			       ShapeBounding, 0, 0, 
 			       c->title_frame,
 			       ShapeBounding, ShapeSet);
-
 	}
     }
-
 
 #ifdef STANDALONE
    XSetWindowBackgroundPixmap(c->wm->dpy, c->title_frame, c->backing);
@@ -765,8 +747,6 @@ dialog_client_drag(Client *c) /* drag box */
   else 
 #endif
     XUnmapWindow(c->wm->dpy, c->frame);
-
-  // XFlush(c->wm->dpy);
 
   c->ignore_unmap++;
 #endif

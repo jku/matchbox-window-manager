@@ -1,3 +1,27 @@
+2004-06-29  Matthew Allum,,,  <mallum@handhelds.org>
+
+	* src/dialog_client.c: (dialog_client_new),
+	(dialog_client_get_offsets), (dialog_client_check_for_state_hints),
+	(dialog_client_show), (dialog_client_reparent),
+	(dialog_client_redraw), (dialog_client_drag):
+	* src/main_client.c: (main_client_configure),
+	(main_client_reparent), (main_client_move_resize),
+	(main_client_toggle_fullscreen), (main_client_redraw),
+	(main_client_button_press), (main_client_show):
+	* src/mbtheme.c: (theme_frame_icon_paint),
+	(theme_frame_button_paint), (_theme_paint_core),
+	(theme_frame_paint), (theme_frame_menu_get_dimentions),
+	(_theme_frame_menu_paint_text_entry):
+	* src/wm.c: (wm_new), (wm_load_config), (wm_init_existing),
+	(get_xevent_timed), (wm_handle_map_notify), (wm_event_loop),
+	(wm_handle_button_event), (wm_handle_configure_request),
+	(wm_handle_property_change), (wm_make_new_client),
+	(wm_remove_client), (wm_restack), (wm_xsettings_notify_cb),
+	(wm_sn_exec), (wm_sn_monitor_event_func), (wm_msg_win_queue_add),
+	(wm_msg_win_queue_process), (gconf_key_changed_callback):
+
+	minor source cleanups. 
+
 2004-06-18  Matthew Allum,,,  <mallum@handhelds.org>
 
 	* src/wm.c: (wm_handle_configure_request), (wm_make_new_client):
