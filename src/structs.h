@@ -306,7 +306,6 @@ typedef struct _client
 
 #if USE_XFT
   unsigned char    *name;
-  XftDraw          *xftdraw;
 #else
   char	           *name;
 #endif

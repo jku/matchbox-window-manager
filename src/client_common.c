@@ -425,49 +425,7 @@ client_decor_frames_init(Client *c,
 
 #ifdef STANDALONE
 
-  for(i=0; i<N_DECOR_FRAMES; i++)
-    if (c->pixmaps_decor[i] != None)
-      XFreePixmap(w->dpy, c->pixmaps_decor[i]);
 
-  /* OLD TOGO */
-  if (c->backing != None) XFreePixmap(w->dpy, c->backing);
-
-  c->pixmaps_decor[NORTH] = XCreatePixmap(w->dpy, w->root, 
-					  c->width + width_east + width_west, 
-					  height_north,
-					  DefaultDepth(w->dpy, w->screen));
-
-  /* XXX should only need a north one...
-  c->pixmaps_decor[EAST]  = XCreatePixmap(w->dpy, w->root,
-					  width_east, 
-					  c->height, 
-					  DefaultDepth(w->dpy, w->screen));
-
-  c->pixmaps_decor[WEST]  = XCreatePixmap(w->dpy, w->root,
-					  width_west, 
-					  c->height, 
-					  DefaultDepth(w->dpy, w->screen));
-
-  c->pixmaps_decor[SOUTH] = XCreatePixmap(w->dpy, w->root,
-					  c->width + width_east + width_west, 
-					  height_south, 
-					  DefaultDepth(w->dpy, w->screen));
-  */
-
-  /* OLD TOGO */
-  c->backing = XCreatePixmap(w->dpy, w->root, width, height ,
-			     DefaultDepth(w->dpy, w->screen));
-
-#if defined (USE_XFT) 
-
-  /* Only NORTH frame has text */
-
-  if (c->xftdraw != NULL) XftDrawDestroy(c->xftdraw);
-
-  c->xftdraw = XftDrawCreate(w->dpy, (Drawable) c->pixmaps_decor[NORTH], 
-			     DefaultVisual(w->dpy, w->screen),
-			     DefaultColormap(w->dpy, w->screen));
-#endif
 #else
 
 #ifdef USE_COMPOSITE

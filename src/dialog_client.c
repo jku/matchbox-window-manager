@@ -666,13 +666,6 @@ dialog_client_redraw(Client *c, Bool use_cache)
   if (is_shaped) client_init_backing_mask(c, total_w, c->height, 
 					  offset_north, offset_south,
 					  offset_east, offset_west);
-#ifdef STANDALONE
-  /* Should prevent some flicker */
-  XSetForeground(c->wm->dpy, c->wm->mbtheme->gc, 
-		 BlackPixel(c->wm->dpy, c->wm->screen));
-  XFillRectangle(c->wm->dpy, c->backing, c->wm->mbtheme->gc, 
-		 0, 0, total_w, total_h);
-#endif
 
   theme_frame_paint(c->wm->mbtheme, c, frame_ref_top, total_w, offset_north); 
     

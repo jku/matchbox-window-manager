@@ -1,5 +1,17 @@
 2004-12-09  mallum <mallum@openedhand.com>
 
+	* src/base_client.c: (base_client_destroy):
+	* src/client_common.c: (client_decor_frames_init):
+	* src/dialog_client.c: (dialog_client_redraw):
+	* src/mbtheme-standalone.c: (theme_frame_button_paint),
+	(_theme_paint_pixmap_border), (theme_frame_paint),
+	(_theme_frame_menu_paint_text_entry), (theme_frame_menu_paint):
+	* src/mbtheme-standalone.h:
+	* src/structs.h:
+	Fix up standalone builds for new lower memory decoration code.
+
+2004-12-09  mallum <mallum@openedhand.com>
+
 	* configure.ac:
 	* src/wm.c: (wm_usage), (wm_load_config):
 	Minor tweaks to XRM option layout. 

@@ -204,8 +204,6 @@ Bool
 theme_frame_paint (MBTheme       *theme,
 		   Client        *c,
 		   int            frame_ref,
-		   int            dx,
-		   int            dy,
 		   int            dw,
 		   int            dh );
 

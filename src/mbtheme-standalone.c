@@ -27,6 +27,17 @@
 #define BUTTON_CROSS 1
 #define BUTTON_ARROW 2
 
+typedef struct MBMiniDrawable 
+{
+  Pixmap   pxm;
+  
+#ifdef USE_XFT
+  XftDraw *xftdraw;
+#endif
+
+} MBMiniDrawable;
+
+
 /* Simple font abstraction - previously in font.c*/
 
 #ifdef USE_XFT
@@ -319,7 +330,7 @@ void theme_frame_button_paint(MBTheme *theme,
 	    if (button == NULL)
 	      {
 		button = client_button_new (c, 
-					    c->title_frame,
+					    client_title_frame(c),
 					    dest_w - button_size - 4,
 					    (FRAME_MAIN_HEIGHT-button_size)/2,
 					    button_size,
@@ -338,7 +349,7 @@ void theme_frame_button_paint(MBTheme *theme,
 	      {
 		dbg("%s() button is NULL\n", __func__ );
 		button = client_button_new (c, 
-					    c->title_frame,
+					    client_title_frame(c),
 					    4,
 					    (FRAME_MAIN_HEIGHT-button_size)/2,
 					    button_size,
@@ -356,7 +367,7 @@ void theme_frame_button_paint(MBTheme *theme,
 		attr.override_redirect = True;
 		attr.event_mask = ExposureMask;
 	      
-		button->win = XCreateWindow(c->wm->dpy, c->title_frame,
+		button->win = XCreateWindow(c->wm->dpy, client_title_frame(c),
 					    4,
 					    (FRAME_MAIN_HEIGHT-button_size)/2,
 					    button_size,
@@ -382,7 +393,7 @@ void theme_frame_button_paint(MBTheme *theme,
 	    if (button == NULL)
 	      {
 		button = client_button_new (c, 
-					    c->title_frame,
+					    client_title_frame(c),
 					    dest_w - button_size - 4,
 					    (FRAME_MAIN_HEIGHT-button_size)/2,
 					    button_size,
@@ -401,7 +412,7 @@ void theme_frame_button_paint(MBTheme *theme,
 	    if (button == NULL)
 	      {
 		button = client_button_new (c, 
-					    c->title_frame,
+					    client_title_frame(c),
 					    2,
 					    2,
 					    button_small_size,
@@ -421,7 +432,7 @@ void theme_frame_button_paint(MBTheme *theme,
 	    if (button == NULL)
 	      {
 		button = client_button_new (c, 
-					    c->title_frame,
+					    client_title_frame(c),
 					    dest_w - FRAME_TOOLBAR_MIN_SIZE + 2,
 					    2,
 					    button_small_size,
@@ -439,7 +450,7 @@ void theme_frame_button_paint(MBTheme *theme,
 	    if (button == NULL)
 	      {
 		button = client_button_new (c, 
-					    c->title_frame,
+					    client_title_frame(c),
 					    0,
 					    2,
 					    dest_w - FRAME_TOOLBAR_MIN_SIZE,
@@ -456,14 +467,66 @@ void theme_frame_button_paint(MBTheme *theme,
 
 }
 
-Bool theme_frame_paint( MBTheme *theme, 		   
-			Client  *c, 
-			int frame_ref, 
-			int dx,
-			int dy, 
-			int dw, 
-			int dh )
+static void
+_theme_paint_pixmap_border( MBTheme *theme,
+			    Pixmap   pxm_backing,
+			    int      dw,
+			    int      dh)
 {
+  XSetForeground(theme->wm->dpy, theme->gc, theme->col_fg_highlight.pixel);
+  XFillRectangle(theme->wm->dpy, pxm_backing, theme->gc, 
+		 0, 0, dw, dh);
+  XSetForeground(theme->wm->dpy, theme->gc, theme->col_fg_lowlight.pixel);
+  XFillRectangle(theme->wm->dpy, pxm_backing, theme->gc, 
+		 1, 1, dw-1, dh-1);
+  XSetForeground(theme->wm->dpy, theme->gc, theme->col_fg.pixel);
+  XFillRectangle(theme->wm->dpy, pxm_backing, theme->gc, 
+		 1, 1, dw-2, dh-3);
+
+  /* XXX line at bottom */
+  XSetForeground(theme->wm->dpy, theme->gc, 
+		 BlackPixel(theme->wm->dpy, theme->wm->screen));
+  XFillRectangle(theme->wm->dpy, pxm_backing, theme->gc, 
+		 0, dh-1, dw, 1);
+}
+
+Bool 
+theme_frame_paint( MBTheme *theme, 		   
+		   Client  *c, 
+		   int frame_ref, 
+		   int dw, 
+		   int dh )
+{
+  Wm    *w = theme->wm;
+  int    decor_idx = 0;
+  Pixmap pxm_backing  = None; 
+
+  pxm_backing = XCreatePixmap(theme->wm->dpy, theme->wm->root, dw, dh, 
+			      DefaultDepth(theme->wm->dpy, theme->wm->screen));
+
+  switch(frame_ref)
+    {
+    case FRAME_MAIN_SOUTH:
+    case FRAME_DIALOG_SOUTH:
+    case FRAME_MSG_SOUTH:
+      decor_idx = SOUTH;
+      break;
+    case FRAME_MAIN_EAST: 
+    case FRAME_DIALOG_EAST:
+    case FRAME_MSG_EAST:
+      decor_idx = EAST;
+      break;
+    case FRAME_MAIN_WEST: 
+    case FRAME_DIALOG_WEST:
+    case FRAME_MSG_WEST:
+      decor_idx = WEST;
+      break;
+      /* FRAME_MAIN, FRAME_DIALOG, FRAME_MSG, FRAME_DIALOG_NORTH: */
+    default:
+      decor_idx = NORTH;
+      break;
+    }
+
   if (frame_ref == FRAME_DIALOG_EAST 
       || frame_ref == FRAME_DIALOG_WEST
       || frame_ref == FRAME_DIALOG_SOUTH
@@ -474,28 +537,12 @@ Bool theme_frame_paint( MBTheme *theme,
     {
       XSetForeground(theme->wm->dpy, theme->gc, 
 		     BlackPixel(theme->wm->dpy, theme->wm->screen));
-      XFillRectangle(theme->wm->dpy, c->backing, theme->gc, 
-		     dx, dy, dw, dh);
-      return True;
+      XFillRectangle(theme->wm->dpy, pxm_backing, theme->gc, 0, 0, dw, dh);
+
+      goto SetBackground;
     }
  
-
-  XSetForeground(theme->wm->dpy, theme->gc, theme->col_fg_highlight.pixel);
-  XFillRectangle(theme->wm->dpy, c->backing, theme->gc, 
-		 dx, dy, dw, dh);
-  XSetForeground(theme->wm->dpy, theme->gc, theme->col_fg_lowlight.pixel);
-  XFillRectangle(theme->wm->dpy, c->backing, theme->gc, 
-		 dx+1, dy+1, dw-1, dh-1);
-  XSetForeground(theme->wm->dpy, theme->gc, theme->col_fg.pixel);
-  XFillRectangle(theme->wm->dpy, c->backing, theme->gc, 
-		 dx+1, dy+1, dw-2, dh-3);
-
-  /* XXX line at bottom */
-  XSetForeground(theme->wm->dpy, theme->gc, 
-		 BlackPixel(theme->wm->dpy, theme->wm->screen));
-  XFillRectangle(theme->wm->dpy, c->backing, theme->gc, 
-		 dx, dy+dh-1, dw, 1);
-
+  _theme_paint_pixmap_border( theme, pxm_backing, dw, dh);
 
   if (c->name && ( frame_ref == FRAME_MAIN 
 		   || frame_ref == FRAME_DIALOG 
@@ -505,6 +552,7 @@ Bool theme_frame_paint( MBTheme *theme,
       int tmp_w = 0, space_avail;
 #ifdef USE_XFT
       XftFont *font;
+      XftDraw *xftdraw;
 #else
       XFontStruct* font;
 #endif
@@ -534,18 +582,28 @@ Bool theme_frame_paint( MBTheme *theme,
 	title_bytes--;
 
 #ifdef USE_XFT
-      font_paint (theme->wm,  
-		  c->xftdraw,
-		  &theme->xftcol, 
-		  font,
-		  c->name,
-		  title_bytes,
-		  c->name_is_utf8,
-		  xoffset, 
-		  font->ascent + 2);
+
+      xftdraw = XftDrawCreate(w->dpy, (Drawable) pxm_backing,
+			      DefaultVisual(w->dpy, w->screen),
+			      DefaultColormap(w->dpy, w->screen));
+
+      if (xftdraw != NULL)
+	{
+	  font_paint (theme->wm,  
+		      xftdraw,
+		      &theme->xftcol, 
+		      font,
+		      c->name,
+		      title_bytes,
+		      c->name_is_utf8,
+		      xoffset, 
+		      font->ascent + 2);
+	  
+	  XftDrawDestroy(xftdraw);
+	}
 #else
       font_paint (theme->wm,
-		  c->backing, 
+		  pxm_backing, 
 		  &theme->col_text,
 		  font,
 		  theme->gc,
@@ -556,12 +614,23 @@ Bool theme_frame_paint( MBTheme *theme,
 #endif		  
     }
 
+ SetBackground:
+
+  XSetWindowBackgroundPixmap(w->dpy, c->frames_decor[decor_idx], 
+			     pxm_backing);
+  XClearWindow(w->dpy, c->frames_decor[decor_idx]);
+  XSync(w->dpy, False);
+
+  XFreePixmap(w->dpy, pxm_backing);
+
   return True;
 }
 
 static void
 _theme_frame_menu_paint_text_entry(MBTheme* theme, 
-				   Client *c, Client *entry, int y)
+				   Client *c, Client *entry, 
+				   MBMiniDrawable *drw,
+				   int y)
 {
   MBClientButton* button = NULL;
   int offset = ( 16 + theme->font->ascent ) / 2;
@@ -583,7 +652,7 @@ _theme_frame_menu_paint_text_entry(MBTheme* theme,
 
 #ifdef USE_XFT
       font_paint (theme->wm,  
-		  c->xftdraw,
+		  drw->xftdraw,
 		  &theme->xftcol, 
 		  theme->font,
 		  entry->name,
@@ -593,7 +662,7 @@ _theme_frame_menu_paint_text_entry(MBTheme* theme,
 		  y + offset);
 #else
       font_paint (theme->wm,
-		  c->backing, 
+		  drw->pxm, 
 		  &theme->col_text,
 		  theme->font,
 		  theme->gc,
@@ -615,16 +684,28 @@ _theme_frame_menu_paint_text_entry(MBTheme* theme,
 void 
 theme_frame_menu_paint(MBTheme* theme, Client *c)
 {
+  Wm     *w = c->wm;
   Client *p;
   MBList *item;
   int item_h = 0, item_current_y = 0;
+  MBMiniDrawable drw;
 
   item_h = theme->font->ascent + theme->font->descent + MENU_ENTRY_PADDING;
 
    /* Now render fonts */
    item_current_y = 0;
 
-   theme_frame_paint( theme, c, FRAME_MENU, 0, 0, c->width, c->height);
+  drw.pxm = XCreatePixmap(w->dpy, w->root, c->width, c->height, 
+			  DefaultDepth(w->dpy, w->screen));
+
+#ifdef USE_XFT
+  drw.xftdraw = XftDrawCreate(w->dpy, (Drawable) drw.pxm,
+			      DefaultVisual(w->dpy, w->screen),
+			      DefaultColormap(w->dpy, w->screen));
+
+#endif
+
+  _theme_paint_pixmap_border( theme, drw.pxm, c->width, c->height);
 
   list_enumerate(w->client_age_list, item)
     {
@@ -633,7 +714,8 @@ theme_frame_menu_paint(MBTheme* theme, Client *c)
       if (p->type == MBCLIENT_TYPE_APP && p->name
 	  && client_get_state(p) == NormalState )
       {
-	_theme_frame_menu_paint_text_entry(theme, c, p, item_current_y);
+	_theme_frame_menu_paint_text_entry(theme, c, p, &drw,
+					   item_current_y);
 	item_current_y += item_h;
       }
     }
@@ -645,16 +727,29 @@ theme_frame_menu_paint(MBTheme* theme, Client *c)
       if (p->type == MBCLIENT_TYPE_APP && p->name
 	  && client_get_state(p) == IconicState )
       {
-	_theme_frame_menu_paint_text_entry(theme, c, p, item_current_y);
+	_theme_frame_menu_paint_text_entry(theme, c, p, &drw,
+					   item_current_y);
 	item_current_y += item_h;
       }
     }
 
    if ((p = wm_get_desktop(c->wm)) != NULL) 
      {
-       _theme_frame_menu_paint_text_entry(theme, c, p, item_current_y);
+       _theme_frame_menu_paint_text_entry(theme, c, p, &drw,
+					  item_current_y);
      }
-  return;
+
+#ifdef USE_XFT
+   XftDrawDestroy(drw.xftdraw);   
+#endif
+
+   XSetWindowBackgroundPixmap(w->dpy, c->frame, drw.pxm);
+
+   XClearWindow(w->dpy, c->frame);
+   XSync(w->dpy, False);
+
+   XFreePixmap(w->dpy, drw.pxm);
+   return;
 }
 
 Bool 

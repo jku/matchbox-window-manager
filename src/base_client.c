@@ -513,9 +513,6 @@ base_client_destroy(Client *c)
        
        ewmh_update(w);
 
-#if defined (USE_XFT)
-       if (c->xftdraw != NULL) XftDrawDestroy(c->xftdraw);
-#endif
 
        for (i=0; i<N_DECOR_FRAMES; i++)
 	 if (c->frames_decor[i] != None && c->frames_decor[i] != c->frame)
