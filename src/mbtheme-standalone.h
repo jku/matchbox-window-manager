@@ -218,6 +218,10 @@ theme_frame_menu_highlight_entry(Client *c,
 				 MBClientButton *button, 
 				 int mode);
 
+Bool
+theme_has_message_decor( MBTheme *theme );
+
+
 MBTheme* 
 mbtheme_new (Wm            *w);
 

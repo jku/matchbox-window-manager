@@ -1,3 +1,19 @@
+2004-11-15 0.9rc1 released. 
+
+2004-11-15  mallum,,,  <mallum@handhelds.org>
+
+	* src/wm.c: (wm_handle_configure_request), (wm_make_new_client):
+	* src/dialog_client.c: (dialog_client_get_offsets),
+	(dialog_client_title_height), (dialog_client_redraw):
+	Tweak configure request event handling a little.
+
+	* src/mbtheme-standalone.c: (theme_has_message_decor):
+	* src/mbtheme-standalone.h:
+	* src/mbtheme.c: (theme_has_message_decor):
+	* src/mbtheme.h:
+	Make message window decor fall back to normal dialog decor 
+	if none defined in theme.
+
 2004-11-12  mallum,,,  <mallum@handhelds.org>
 
 	* src/client_common.c: (client_get_transient_list):

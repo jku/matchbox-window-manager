@@ -849,3 +849,9 @@ mbtheme_get_titlebar_panel_rect(MBTheme    *theme,
 
   return True;
 }
+
+Bool
+theme_has_message_decor( MBTheme *theme )
+{
+  return False;
+}

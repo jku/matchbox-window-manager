@@ -1047,23 +1047,45 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 {
    Client         *c = wm_find_client(w, e->window, WINDOW);
    XWindowChanges  xwc;
-   Bool            need_comp_update = False;
-   Bool            no_configure     = False;
-   unsigned long   value_mask       = 0;
+   Bool            no_configure       = False;
+   unsigned long   value_mask         = 0;
+   Bool            need_config_notify = False;
+   Bool            need_comp_update   = False;
+
+   int             req_x = e->x;
+   int             req_y = e->y;
+   int             req_w = e->width;
+   int             req_h = e->height;
 
    /* TODO: Really need to check ICCCM on this code. 
     *       Should be able to make it more compact too 
     *       ( maybe configure_request() methods for each client type ? )
-    */
+    *
+    * see http://tronche.com/gui/x/icccm/sec-4.html#s-4.1.5
+    *
+    * XXX Too many fake configure notifys are being sent. 
+    *     - Only send one when no change takes place
+    *     - Do not send when real configure used
+    *         - *but* do we need to send one if XSYNC is used ?    
+    *           - dont think so ? just block until wm has resized. 
+    *             need to figure this out. 
+    *       How is flicker therefore reduced ? Becuase wm wont resize
+    *       its frames or do anything else till client has finished 
+    *       painting. 
+    *     - CHeck any changes still work with awt. 
+    */  
 
    if (!c ) 
      {
+       /* Dont know any thing about this window. Let it have what it 
+        * wants and leave. 
+        */
        dbg("%s() could find source client %ix%i\n", __func__,
 	   e->width, e->height);
-       xwc.x = e->x;
-       xwc.y = e->y;
-       xwc.width = e->width;
-       xwc.height = e->height;
+       xwc.x       = req_x;
+       xwc.y       = req_y;
+       xwc.width   = req_w;
+       xwc.height  = req_h;
        xwc.sibling = e->above;
        xwc.stack_mode = e->detail;
        XConfigureWindow(w->dpy, e->window, e->value_mask, &xwc);
@@ -1074,6 +1096,14 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
        "vs %i, x: %i vs %i, y: %i vs %i,\n", 
        __func__, c->name, c->height, e->height, c->width, 
        e->width, c->x, e->x, c->y, e->y );
+
+   /* Process exactly what changes have been reuested */
+   if (!(e->value_mask & CWWidth))  req_w = c->width;
+   if (!(e->value_mask & CWHeight)) req_h = c->height;
+   
+   if (e->x <= 0 || !(e->value_mask & CWX)) req_x = c->x;
+   if (e->y <= 0 || !(e->value_mask & CWY)) req_y = c->y;
+   
 
    /* Defualts, main clients will likely end up with this 
     * MB is a pretty restrictive WM, so much stuff allowed to change. 
@@ -1126,10 +1156,10 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
      }
 
    
-   if (c->type == MBCLIENT_TYPE_PANEL) 	/* Docks can move */
+   if (c->type == MBCLIENT_TYPE_PANEL) 	/* Panels can move */
      {
-       if ( c->height != e->height || c->width != e->width
-	    || c->x != e->x || c->y != e->y )
+       if ( c->height != req_h || c->width != req_w
+	    || c->x != req_x || c->y != req_y )
 	 {
 	   Window win_tmp   = c->window;
 	   xwc.width        = e->width;
@@ -1142,10 +1172,12 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 	   
 	   XConfigureWindow(w->dpy, e->window, value_mask, &xwc);
 
-	   client_deliver_config(c);
+	   client_deliver_config(c); /* TODO: Not needed */
 	   client_set_state(c, WithdrawnState);
 
-	   /* Now we destroy the window and re-birth it */
+	   /* Now we destroy the window and re-birth it.
+            * A bit of a cheat, but works.
+	    */
 
 	   XReparentWindow(w->dpy, c->window, w->root, e->x, e->y); 
 	   c->destroy(c);
@@ -1159,14 +1191,13 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 
    if (c->type == MBCLIENT_TYPE_TOOLBAR) 	/* can change height */
      {
-       if ((e->value_mask & CWHeight) && e->height 
-	   && e->height != c->height && !(c->flags & CLIENT_IS_MINIMIZED))
+       if (req_h != c->height && !(c->flags & CLIENT_IS_MINIMIZED))
 	 {
 	   int change_amount = c->height - e->height;
 	   c->y += change_amount;
 	   c->height = e->height;
-	   c->move_resize(c);
 	   client_deliver_config(c);
+	   c->move_resize(c);
 	   wm_update_layout(w, c, change_amount); 
 	   return;
 	 }
@@ -1174,15 +1205,6 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 
    if (c->type == MBCLIENT_TYPE_DIALOG)
      {
-       int req_x = e->x, req_y = e->y, req_w = e->width, req_h = e->height;
-
-       /* Process exactly what changes have been reuested */
-       if (!(e->value_mask & CWWidth))  req_w = c->width;
-       if (!(e->value_mask & CWHeight)) req_h = c->height;
-
-       if (e->x <= 0 || !(e->value_mask & CWX)) req_x = c->x;
-       if (e->y <= 0 || !(e->value_mask & CWY)) req_y = c->y;
-
        /* Update the size the dialog is trying to get too eventually
         * - eg toolbar/panel/input windows may dissapear and make
         *      more space available. 
@@ -1196,6 +1218,7 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 	 c->init_height = e->height;
 
        /* If any changes, now make them fit it into avaialable area. */
+
        if (req_x != c->x || req_y != c->y 
 	   || req_w != c->width || req_h != c->height)
 	 {
@@ -1204,27 +1227,29 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 	   /* make sure buttons get repositioned */
 	   if (c->width != req_w)
 	     client_buttons_delete_all(c);
-
+	   
 	   comp_engine_client_hide(c->wm, c);
-
+	   
 	   xwc.width  = c->width  = req_w;
 	   xwc.height = c->height = req_h;
 	   xwc.x      = c->x      = req_x;
 	   xwc.y      = c->y      = req_y; 
-
+	   
 	   /* for below - kind of dumb */
 	   no_configure = True; 
 
 	   dialog_client_move_resize(c);
 
-	   client_deliver_config(c);
+	   client_deliver_config(c); /* XXX Needed ? */
 
 	   /* Make sure we get the damage before the move.. */
 
 	   need_comp_update = True;
 	 }
+       /* XXX else nothing has changed but ICCCM still send synthetic config 
+        * Code should fall back to this.
+        */
      }
-
 
    if (!no_configure) 
      {
@@ -1734,11 +1759,9 @@ wm_make_new_client(Wm *w, Window win)
 
    dbg("%s() showing new client\n", __func__);
 
-   c->redraw(c, False);		/* draw the decorations */
+   c->redraw(c, False);		/* draw the decorations ready */
 
    wm_activate_client(c);       /* Map it into stack, ( will call show()) */
-
-   /* below is probably now mostly uneeded ? */
 
    XGrabButton(c->wm->dpy, Button1, 0, c->window, True, ButtonPressMask,
 	       GrabModeSync, GrabModeSync, None, None);

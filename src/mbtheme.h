@@ -218,6 +218,9 @@ int
 theme_frame_defined_height_get (MBTheme       *theme,
 				int            frame_ref );
 
+Bool
+theme_has_message_decor( MBTheme *theme );
+
 void     
 theme_img_cache_clear (MBTheme       *theme,
 		       int            frame_ref );

@@ -413,6 +413,17 @@ theme_frame_wants_shaped_window( MBTheme *theme, int frame_type)
   return frame->wants_shape;
 }
 
+Bool
+theme_has_message_decor( MBTheme *theme )
+{
+  MBThemeFrame *frame = (MBThemeFrame *)list_find_by_id(theme->frames, 
+							FRAME_MSG);
+  if (frame == NULL) 
+    return False;
+  else
+    return True;
+}
+
 static void
 _theme_paint_gradient(MBTheme*       theme, 
 		      MBThemeLayer*  layer_cur, 

@@ -78,7 +78,8 @@ dialog_client_get_offsets(Client *c, int *e, int *s, int *w)
       return;
     }
 
-  if (c->flags & CLIENT_HAS_URGENCY_FLAG)
+  if (c->flags & CLIENT_HAS_URGENCY_FLAG
+      && theme_has_message_decor(c->wm->mbtheme))
     {
       *s = theme_frame_defined_height_get(c->wm->mbtheme, 
 				       FRAME_MSG_SOUTH);
@@ -191,19 +192,22 @@ dialog_client_hide(Client *c)
 int
 dialog_client_title_height(Client *c)
 {
-   if (c->flags & CLIENT_TITLE_HIDDEN_FLAG)
-      return 0;
+  Wm *w = c->wm;
 
-  if (c->flags & CLIENT_HAS_URGENCY_FLAG)
+  if (c->flags & CLIENT_TITLE_HIDDEN_FLAG)
+    return 0;
+  
+  if (c->flags & CLIENT_HAS_URGENCY_FLAG 
+      && theme_has_message_decor(w->mbtheme))
     {
       return theme_frame_defined_height_get(c->wm->mbtheme, FRAME_MSG);
     }
-
+  
   if (c->flags & CLIENT_BORDERS_ONLY_FLAG
       && theme_has_frame_type_defined(c->wm->mbtheme, FRAME_DIALOG_NORTH))    
     return theme_frame_defined_height_get(c->wm->mbtheme, FRAME_DIALOG_NORTH);
-
-   return theme_frame_defined_height_get(c->wm->mbtheme, FRAME_DIALOG);
+  
+  return theme_frame_defined_height_get(c->wm->mbtheme, FRAME_DIALOG);
 }
 
 
@@ -635,6 +639,8 @@ dialog_client_configure(Client *c)
 void
 dialog_client_redraw(Client *c, Bool use_cache)
 {
+  Wm *w = c->wm;
+
   Bool is_shaped = False;
 
   int offset_north = 0, offset_south = 0, offset_west = 0, offset_east = 0;
@@ -662,7 +668,8 @@ dialog_client_redraw(Client *c, Bool use_cache)
     frame_ref_top   = FRAME_DIALOG_NORTH;
 
   /* 'message dialogs have there own decorations */
-  if (c->flags & CLIENT_HAS_URGENCY_FLAG)
+  if (c->flags & CLIENT_HAS_URGENCY_FLAG
+      && theme_has_message_decor(w->mbtheme))
     {
       frame_ref_top   = FRAME_MSG;
       frame_ref_east  = FRAME_MSG_EAST;
