@@ -1,3 +1,12 @@
+2005-01-18  mallum,,,  <mallum@openedhand.com>
+
+	* src/ewmh.c: (ewmh_init):
+	* src/structs.h:
+	* src/wm.c: (wm_make_new_client):
+	Make _MB_WM_WINDOW_TYPE_MESSAGE work again.
+	This is a workaround as it seems GTK2 cannot set
+	the XUrgency flag.
+
 2005-01-17  mallum,,,  <mallum@openedhand.com>
 
 	* src/ewmh.c: (ewmh_handle_root_message):

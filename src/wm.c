@@ -1745,6 +1745,12 @@ wm_make_new_client(Wm *w, Window win)
 		   c = dialog_client_new(w, win, NULL);
 		   if (c == NULL) goto end;
 		 }
+	       else if (value[0] == w->atoms[WINDOW_TYPE_MESSAGE])
+		 {
+		   c = dialog_client_new(w, win, NULL);
+		   if (c == NULL) goto end;
+		   c->flags |= CLIENT_HAS_URGENCY_FLAG;
+		 }
 	     } 
 	 }
        

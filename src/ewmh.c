@@ -97,9 +97,6 @@ ewmh_init(Wm *w)
     "_WIN_SUPPORTING_WM_CHECK",
 
     "_MB_WM_WINDOW_TYPE_MESSAGE",
-    "_MB_WM_WINDOW_TYPE_MESSAGE_TIMEOUT",
-    "_MB_WM_WINDOW_TYPE_MESSAGE_STATIC_0", /* Message wins which have the  */
-    "_MB_WM_WINDOW_TYPE_MESSAGE_STATIC_1", /* decor but not timing         */
 
     "_NET_WM_WINDOW_TYPE",
 
