@@ -16,6 +16,8 @@
 
 #include "dialog_client.h"
 
+#define DIALOG_WANT_HIDDEN_DRAG 1
+
 static void dialog_client_check_for_state_hints(Client *c);
 static void dialog_client_drag(Client *c);
 static void _get_mouse_position(Wm *w, int *x, int *y);
@@ -669,6 +671,10 @@ dialog_client_drag(Client *c) /* drag box */
   _draw_outline(c, c->x - offset_west, c->y - frm_size,
 		c->width + offset_west + offset_east,
 		c->height + frm_size + offset_south);
+
+#if (DIALOG_WANT_HIDDEN_DRAG)
+  dialog_client_hide(c);
+#endif
     
   for (;;) 
     {
@@ -682,8 +688,19 @@ dialog_client_drag(Client *c) /* drag box */
 	_draw_outline(c, c->x - offset_west, c->y - frm_size,
 		      c->width + offset_west + offset_east,
 		      c->height + frm_size + offset_south);
+
 	if (c->wm->config->dialog_stratergy != WM_DIALOGS_STRATERGY_CONSTRAINED_HORIZ)
 	  c->x = old_cx + (ev.xmotion.x - x1);
+
+#if 0
+	if ( (old_cx + (ev.xmotion.x - x1)) <= 0
+	     || (old_cx + (ev.xmotion.x - x1) + c->width + offset_east) > c->wm->dpy_width
+	     || (old_cy + (ev.xmotion.y - y1)) <= 0
+	     || (old_cy + (ev.xmotion.y - y1) + c->height + offset_south) > c->wm->dpy_height )
+	  break;
+
+#endif 
+
 	c->y = old_cy + (ev.xmotion.y - y1);
 
 	_draw_outline(c, c->x - offset_west, c->y - frm_size,
@@ -759,8 +776,8 @@ _get_mouse_position(Wm *w, int *x, int *y)
 static void
 _draw_outline(Client *c, int x, int y, int width, int height)
 {
-  XDrawRectangle(c->wm->dpy, c->wm->root, c->wm->mbtheme->band_gc, x, y, 
-		 width, height);
+  XDrawRectangle(c->wm->dpy, c->wm->root, c->wm->mbtheme->band_gc, x-1, y-1, 
+		 width+2, height+2);
 }
  
 void dialog_client_destroy(Client *c)

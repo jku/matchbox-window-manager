@@ -1,3 +1,10 @@
+2004-03-09  Matthew Allum,,,  <mallum@handhelds.org>
+
+	* src/composite-engine.c: (comp_engine_time):
+	Disable lowlight timings define - shouldn't be in release 
+	* src/dialog_client.c: (dialog_client_drag), (_draw_outline):
+	Initial hiding dialog when dragged experiments
+
 2004-03-08  Matthew Allum,,,  <mallum@handhelds.org>
 
 	* src/wm.c: (wm_usage), (wm_load_config):

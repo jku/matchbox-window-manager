@@ -1,6 +1,6 @@
 #include "composite-engine.h"
 
-#define DO_TIMINGS 1
+#define DO_TIMINGS 0 		/* enable this for lowlight timings */
 
 #if DO_TIMINGS
 #include <sys/time.h>
@@ -1455,5 +1455,9 @@ comp_engine_time(Wm *w)
 
 #endif /* USE_COMPOSITE */
 
-#endif
+#else
+
+  fprintf(stderr, "matchbox-window-manager: timing functionality disabled\n");
+
+#endif /* DO TIMINGS */
 }
