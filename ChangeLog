@@ -1,5 +1,14 @@
 2004-12-23  mallum,,,  <mallum@openedhand.com>
 
+	* src/main_client.c: (main_client_manage_toolbars_for_fullscreen):
+	Max sure toolbar for fullscreen window is resized correctly on toggle.
+
+	* src/matchbox-remote.c: (mbcommand), (send_input_manager_request),
+	(usage), (main):
+	Add new option for toggling input manager method
+
+2004-12-23  mallum,,,  <mallum@openedhand.com>
+
 	* src/main_client.c: (main_client_reparent):
 	Fix frames getting set up right for fullscreen windows
 

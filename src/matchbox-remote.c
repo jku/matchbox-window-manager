@@ -169,6 +169,31 @@ mbcommand(int cmd_id, char *data) {
 
 }
 
+void
+send_input_manager_request(int show)
+{
+   XEvent	ev;
+   Window	root;
+   Atom         atom_input;
+
+   atom_input = XInternAtom(dpy, "_MB_INPUT_REQUEST",False);
+
+   root = DefaultRootWindow(dpy);
+
+   memset(&ev, '\0', sizeof ev);
+
+   ev.xclient.type = ClientMessage;
+   ev.xclient.window = root; 	/* we send it _from_ root as we have no win  */
+   ev.xclient.message_type = atom_input;
+   ev.xclient.format = 8;
+
+   ev.xclient.data.l[0] = show;
+
+   printf("valie : %i\n", show);
+
+   XSendEvent(dpy, root, False, 
+	      SubstructureRedirectMask|SubstructureNotifyMask, &ev);
+}
 
 
 static void
@@ -184,6 +209,7 @@ usage(char *progname)
    printf("  -desktop                 Toggle desktop visibility\n");
    printf("  -menu                    Activate mb-applet-menu-launcher\n");
    printf("  -panel-toggle [panel id] Toogle panel visibility\n");
+   printf("  -input-toggle [1|0]      Toggle Input method ( requires input-manager )\n");
 
    /*
    printf("  -panel-size <int>\n");
@@ -250,13 +276,19 @@ int main(int argc, char* argv[])
 	   case 'x':
 	      mbcommand(MB_CMD_MISC, NULL);
 	      break;
+	   case 'i':
+	      if (argv[i+1] != NULL)
+		send_input_manager_request(atoi(argv[i+1]));
+	      else
+		usage(argv[0]);
+	      break;
 	   default:
 	      usage(argv[0]);
 	      break;
 	}
      }
   }
-  XSync(dpy, True);
+  XSync(dpy, False);
   XCloseDisplay(dpy);
 
   return 0;

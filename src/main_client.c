@@ -135,9 +135,10 @@ main_client_manage_toolbars_for_fullscreen(Client *c, Bool main_client_showing)
 		  /* uncover any vertical panels */
 		  p->x = toolbar_win_offset(p) 
 		    + wm_get_offsets_size(w, WEST,  NULL, False);
-		  p->width = w->dpy_width - toolbar_win_offset(c)
+		  p->width = w->dpy_width - toolbar_win_offset(p)
 		    - wm_get_offsets_size(w, WEST,  NULL, False)
 		    - wm_get_offsets_size(w, EAST,  NULL, False);
+
 
 		  p->y -= south_panel_size; 
 
