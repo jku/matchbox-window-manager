@@ -1,0 +1,199 @@
+<?xml version="1.0"?>
+<theme name="gorilla" author="Matthew Allum - mallum@handhelds.org"
+       desc="" version="1.0" engine_version="1" >
+
+<color id="bgcol" def="#7297ce" />
+<color id="black" def="#11111d" />
+<color id="bg" def="#7297ce" />
+<color id="textcol" def="white" />
+<color id="trans" def="#ffffff" alpha="0"/>
+
+
+<font id="titlefont" def="Bitstream Vera Sans-10:bold|verdana-7|fixed" />
+<font id="barfont"   def="Bitstream Vera Sans-5|verdana-6|5x7|fixed" />
+
+<pixmap id="close"      filename="close.png" />
+<pixmap id="menu"       filename="blank.png" />
+<pixmap id="minimize"   filename="minimise.png" />
+<pixmap id="next"       filename="next.png" />
+
+<frame id="main" height="24">
+
+  <layer x="0" y="0" w="100%"  h="100%" 
+   type="plain" color="black" />
+
+  <layer x="1" y="1" w="100%-2"  h="100%-1" 
+   type="plain" color="bg" />
+
+  <layer x="4" y="-1" w="100%-8"  h="1" 
+   type="plain" color="black" />
+
+  <layer x="4" y="4" w="16"  h="16" type="icon" />
+
+  <layer x="26" y="4" w="100%-60" h="20" 
+   type="label" color="textcol" justify="left" font="titlefont" />
+
+  <button x="2" y="0" w="100%-60" h="24" action="menu" options="inputonly" />
+
+  <button x="-22" y="2" w="20" h="20" action="close" >
+   <active pixmap="close" />
+   <inactive pixmap="close" blend="-150"/>
+  </button>
+
+</frame>
+
+<frame id="main-east"  width="4" >
+
+  <layer x="0" y="0" w="100%"  h="100%" 
+   type="plain" color="black" />
+
+  <layer x="1" y="0" w="100%-2"  h="100%" 
+   type="plain" color="bgcol" />
+
+</frame>
+
+<frame id="main-west"  width="4" >
+
+  <layer x="0" y="0" w="100%"  h="100%" 
+   type="plain" color="black" />
+
+  <layer x="1" y="0" w="100%-2"  h="100%" 
+   type="plain" color="bgcol" />
+
+</frame>
+
+<frame id="main-south" height="4" >
+
+  <layer x="0" y="0" w="100%"  h="100%" 
+   type="plain" color="black" />
+
+  <layer x="1" y="0" w="100%-2"  h="100%-1" 
+   type="plain" color="bgcol" />
+
+  <layer x="4" y="0" w="100%-8"  h="1" 
+   type="plain" color="black" />
+
+  <layer x="0" y="-1" w="1"  h="1" 
+   type="plain" color="bgcol" />
+
+  <layer x="-1" y="-1" w="1"  h="1" 
+   type="plain" color="bgcol" />
+
+
+</frame>
+
+<frame id="dialog" height="24" options="shaped">
+
+  <layer x="0" y="0" w="100%"  h="100%" 
+   type="plain" color="black" />
+
+  <layer x="1" y="1" w="100%-2"  h="100%-1" 
+   type="plain" color="bgcol" />
+
+  <layer x="4" y="-1" w="100%-8"  h="1" 
+   type="plain" color="black" />
+
+
+  <layer x="8" y="6" w="100%-30" h="20" 
+   type="label" color="textcol" justify="left" font="titlefont" />
+
+  <button x="-22" y="2" w="20" h="20" action="close" >
+   <active pixmap="close" />
+   <inactive pixmap="close" blend="-150"/>
+  </button>
+
+
+</frame>
+
+<frame id="dialog-east" width="4" >
+
+  <layer x="0" y="0" w="100%"  h="100%" 
+   type="plain" color="black" />
+
+  <layer x="1" y="0" w="100%-2"  h="100%" 
+   type="plain" color="bgcol" />
+
+
+</frame>
+
+<frame id="dialog-west" width="4" >
+
+  <layer x="0" y="0" w="100%"  h="100%" 
+   type="plain" color="black" />
+
+  <layer x="1" y="0" w="100%-2"  h="100%" 
+   type="plain" color="bgcol" />
+
+</frame>
+
+<frame id="dialog-south" height="4" >
+
+  <layer x="0" y="0" w="100%"  h="100%-1" 
+   type="plain" color="black" />
+
+  <layer x="1" y="0" w="100%-2"  h="100%-1" 
+   type="plain" color="bgcol" />
+
+  <layer x="4" y="0" w="100%-8"  h="1" 
+   type="plain" color="black" />
+
+  <layer x="1" y="-1" w="100%-2"  h="1" 
+   type="plain" color="black" />
+
+</frame>
+
+<frame id="utility-max" width="24">
+
+  <layer x="0" y="0" w="100%"  h="100%" 
+   type="plain" color="black" />
+
+  <layer x="1" y="1" w="100%-2"  h="100%-1" 
+   type="plain" color="bgcol" />
+
+  <layer x="4" y="-1" w="100%-8"  h="1" 
+   type="plain" color="black" />
+
+  <button x="2" y="2" w="20" h="20" action="minimize" >
+   <active pixmap="next" />
+   <inactive pixmap="next" blend="-150"/>
+  </button>
+
+
+</frame>
+
+<frame id="utility-min" height="24">
+
+  <layer x="0" y="0" w="100%"  h="100%" 
+   type="plain" color="black" />
+
+  <layer x="1" y="1" w="100%-2"  h="100%-1" 
+   type="plain" color="bgcol" />
+
+  <layer x="4" y="-1" w="100%-8"  h="1" 
+   type="plain" color="black" />
+
+  <layer x="8" y="5" w="100%-30" h="20" 
+   type="label" color="textcol" justify="left" font="titlefont" />
+
+  <button x="0" y="0" w="100%-25" h="100%" 
+  action="maximize" options="inputonly"/>
+
+  <button x="-22" y="2" w="20" h="20" action="close" >
+   <active pixmap="close" />
+   <inactive pixmap="close" blend="-150"/>
+  </button>
+
+</frame>
+
+<frame id="menu" height="1" font="titlefont" color="textcol" >
+
+  <layer x="0" y="0" w="100%"  h="100%" 
+   type="plain" color="black" />
+
+  <layer x="1" y="1" w="100%-2"  h="100%-2" 
+   type="plain" color="bg" />
+
+
+</frame>
+
+</theme>

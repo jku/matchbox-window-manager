@@ -1,0 +1,43 @@
+#
+# This is an example keyboard config file for matchbox
+#
+
+### Window operation short cuts 
+
+<Alt>n=next
+<Alt>p=prev
+<Alt>c=close
+<Alt>d=desktop
+<Alt>m=!mbcontrol -mbmenu
+
+### App launching.
+
+<ctrl><alt>x=!xterm
+<ctrl><alt>r=!rxvt
+
+### App launching with startup notify
+
+<ctrl><alt>e=!!gpe-calender
+
+### windows style key shortcuts
+
+<alt>Tab=next
+<alt><shift>Tab=prev
+
+<alt>space=taskmenu
+<alt>escape=!mbcontrol -mbmenu
+<alt>f4=close
+
+f11=fullscreen
+
+### super should be windows keys 
+
+<super>d=desktop
+<super>r=!xterm
+<super>e=!!nautilus
+
+### Special keys
+
+App=!mbcontrol -mbmenu
+Menu=!mbcontrol -mbmenu
+

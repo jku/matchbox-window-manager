@@ -1,0 +1,156 @@
+<?xml version="1.0"?>
+<theme name="bluebox" author="Matthew Allum - mallum@handhelds.org"
+       desc="" version="1.1" engine_version="1">
+
+<!-- used by dock/menu -->
+
+<color id="menuhlcol" def="#828282" />
+<color id="bgcol"     def="#d2d2d2" />
+<color id="bordercol" def="#828282" />
+
+<!-- main/dialog decor -->
+
+<color id="blackcol"  def="black"   />
+<color id="whitecol"  def="white"   />
+<color id="gradstart" def="#516979" />
+<color id="gradend"   def="#718ab6" />
+
+<!-- Showdow -->
+
+<color id="shadowcol"   def="#66666666" />
+
+<font id="titlefont" def="Sans bold shadow 20px" />
+<font id="menufont"  def="Sans bold 20px" />
+<font id="barfont"   def="Sans 6" />
+
+<pixmap id="buttclosedown" filename="buttclosedown.xpm" />
+<pixmap id="buttcloseup" filename="buttcloseup.xpm" />
+<pixmap id="buttmenudown" filename="buttmenudown.xpm" />
+<pixmap id="buttmenuup" filename="buttmenuup.xpm" />
+<pixmap id="titlebg" filename="titlebg.xpm" />
+<pixmap id="titleleft" filename="titleleft.xpm" />
+<pixmap id="titleright" filename="titleright.xpm" />
+<pixmap id="buttsmallclosedown" filename="buttsmallclosedown.xpm" />
+<pixmap id="buttsmallcloseup" filename="buttsmallcloseup.xpm" />
+<pixmap id="buttsmallmindown" filename="buttsmallmindown.xpm" />
+<pixmap id="buttsmallminup" filename="buttsmallminup.xpm" />
+<pixmap id="buttsmallmaxdown" filename="buttsmallmaxdown.xpm" />
+<pixmap id="buttsmallmaxup" filename="buttsmallmaxup.xpm" />
+
+<frame id="main" size="20">
+
+  <layer x="0" y="0" w="100%"  h="100%" 
+   type="plain" color="blackcol" />
+
+  <layer x="26" y="1" w="100%-52"  h="100%-2" 
+   type="gradient-vert" startcol="gradstart" endcol="gradend"/>
+
+  <layer x="0" y="0" w="object" h="object" 
+   type="pixmap" pixmap="titleleft" />
+
+  <layer x="-25" y="0" w="object" h="object" 
+   type="pixmap" pixmap="titleright" />
+
+  <layer x="29" y="0" w="100%-60" h="20" 
+   type="label" color="whitecol" justify="left" font="titlefont" />
+
+  <button x="5" y="0" w="14" h="20" action="menu" >
+   <active pixmap="buttmenudown" />
+   <inactive pixmap="buttmenuup" />
+  </button>
+
+  <button x="labelx" y="0" w="labelw" h="20" 
+          action="menu" options="inputonly" />
+
+  <button x="-20" y="1" w="14" h="19" action="close" >
+   <active pixmap="buttclosedown" />
+   <inactive pixmap="buttcloseup" />
+  </button>
+
+</frame>
+
+<frame id="main-south" size="1" >
+  <layer x="0" y="0" w="100%"  h="100%" 
+   type="plain" color="bordercol" />
+</frame>
+
+
+<frame id="dialog" size="20" >
+
+  <layer x="1" y="0" w="100%-2"  h="100%" 
+   type="pixmap-tiled" pixmap="titlebg" />
+
+  <layer x="6" y="0" w="100%-60" h="16" 
+   type="label" color="blackcol" justify="left" font="menufont" />
+
+  <button x="-16" y="1" w="14" h="19" action="close" >
+   <active pixmap="buttclosedown" />
+   <inactive pixmap="buttcloseup" />
+  </button>
+
+</frame>
+
+<frame id="dialog-east"  width="1" />
+<frame id="dialog-west"  width="1" />
+<frame id="dialog-south" height="1" />
+
+<frame id="utility-max" width="12">
+  <layer x="0" y="0" w="100%"  h="100%" 
+   type="plain" color="bgcol" />
+
+  <button x="1" y="2" w="10" h="10" action="minimize" >
+   <active pixmap="buttsmallmindown" />
+   <inactive pixmap="buttsmallminup" />
+  </button>
+
+  <button x="0" y="0" w="14" h="80%" action="minimize" options="inputonly"/>
+
+</frame>
+
+<frame id="utility-min" height="13">
+
+  <layer x="0" y="0" w="100%"  h="100%" 
+   type="plain" color="bgcol" />
+
+  <layer x="0" y="12" w="100%"  h="1" 
+   type="plain" color="bordercol" />
+
+  <layer x="29" y="0" w="100%-32" h="23" 
+   type="label" color="bordercol" justify="left" font="barfont" />
+
+  <button x="16" y="0" w="100%-32" h="23" action="maximize" 
+   options="inputonly"/>
+
+  <button x="100%-12" y="1" w="10" h="23" action="close" >
+   <inactive pixmap="buttsmallcloseup" />
+   <active pixmap="buttsmallclosedown" />
+  </button>
+
+  <button x="2" y="1" w="10" h="10" action="maximize" >
+   <inactive pixmap="buttsmallmaxup" />
+   <active pixmap="buttsmallmaxdown" />
+  </button>
+
+</frame>
+
+<frame   id="menu" 
+        font="menufont" 
+       color="blackcol" 
+   highlight="menuhlcol"
+     fixed_x="5"
+ border_east="2"
+ border_west="2"
+border_north="2"
+border_south="2"
+>
+  
+ <layer x="0" y="0" w="100%"  h="100%" 
+   type="plain" color="bordercol" />
+
+  <layer x="1" y="1" w="100%-2"  h="100%-2" 
+   type="plain" color="bgcol" />
+</frame>
+
+<shadow style="simple" dx="5" dy="5" color="shadowcol"/>
+
+</theme>

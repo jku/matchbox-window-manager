@@ -1,0 +1,19 @@
+/* XPM */
+static char * unknown[] = {
+"10 10 6 1",
+". c #b3bbc3",
+"# c #b7bec6",
+"a c #b0b8c1",
+"b c #dfe6ee",
+"c c #6c8db1",
+"d c #ffffff",
+"bddddddddb",
+"dccccccccd",
+"dcdaccadcd",
+"dc#d##d#cd",
+"dcc#dd#ccd",
+"dcc#dd#ccd",
+"dc#d##d#cd",
+"dcd.cc#dcd",
+"dccccccccd",
+"bddddddddb"};

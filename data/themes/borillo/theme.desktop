@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=MBTheme
+Name=Blondie
+Preview=XXX
+Comment=Blondie theme 
+ThemePath=@prefix@/themes/blondie
+DockBgColor=#e0e0e0
+MenuBgColor=#e0e0e0
+MenuFgColor=#11111d
+MenuBdColor=#7297ce
+#MenuTransparency=240
+MenuHlColor=black
+PanelFgColor=black
+DesktopBgSpec=col-solid:#e0e0e0
