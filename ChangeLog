@@ -1,5 +1,24 @@
 2004-08-17  mallum,,,  <mallum@handhelds.org>
 
+	* src/client_common.c: (client_button_do_ops):
+	* src/dialog_client.c: (dialog_client_destroy):
+	* src/mbtheme.c: (theme_frame_button_paint), (mbtheme_button_new):
+	* src/mbtheme.h:
+	* src/structs.h:
+	Fix for button press-only crazziness. 
+
+2004-08-17  mallum,,,  <mallum@handhelds.org>
+
+	reviewed by: <delete if not using a buddy>
+
+	* src/client_common.c: (client_button_do_ops):
+	* src/dialog_client.c: (dialog_client_destroy):
+	* src/mbtheme.c: (theme_frame_button_paint), (mbtheme_button_new):
+	* src/mbtheme.h:
+	* src/structs.h:
+
+2004-08-17  mallum,,,  <mallum@handhelds.org>
+
 	* src/structs.h:
 	* src/wm.c: (wm_load_config), (wm_handle_configure_request):
 	Make awt workaround set via env var rather than ifdef

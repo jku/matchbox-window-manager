@@ -258,6 +258,8 @@ theme_frame_button_paint(MBTheme *theme,
 						     | */CWEventMask,
 						  &attr);
 
+	      b->press_activates = button->press_activates;
+
 	      /* We didn't findn't find this in the list so add it  */
 	      if (!found)
 		list_add(&c->buttons, NULL, action, (void *)b);
@@ -1421,6 +1423,7 @@ mbtheme_button_new (MBTheme *theme,
   button->wants_dbl_click    = False;
   button->img_active_blend   = active_blend;
   button->img_inactive_blend = inactive_blend;
+  button->press_activates    = False;
 
   if (options != NULL)
     {
@@ -1433,6 +1436,7 @@ mbtheme_button_new (MBTheme *theme,
 
       if (strstr(options, "pressonly"))
 	{
+	  dbg("%s(), pressonly : %s\n", __func__, options);
 	  button->press_activates = True;
 	}
 

@@ -69,9 +69,8 @@ typedef struct _mb_theme_button {
   int action;
 
   Bool inputonly;
-  Bool wants_dbl_click;
-
   Bool press_activates; 
+  Bool wants_dbl_click;
    
   MBThemeParam *x;
   MBThemeParam *y;

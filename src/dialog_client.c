@@ -1204,7 +1204,6 @@ void dialog_client_destroy(Client *c)
 	comp_engine_client_show (w, d); 
     }
 
-
 #ifdef USE_MSG_WIN
 
    if (was_msg) 

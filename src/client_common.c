@@ -425,6 +425,7 @@ client_button_do_ops(Client *c, XButtonEvent *e, int frame_type, int w, int h)
 {
   int button_action;
   struct list_item* button_item = NULL;
+  MBClientButton *b = NULL;
   XEvent ev;
 
   if ((button_item = client_get_button_list_item_from_event(c, e)) != NULL
@@ -437,17 +438,15 @@ client_button_do_ops(Client *c, XButtonEvent *e, int frame_type, int w, int h)
 	 && ( !wm_get_desktop(c->wm) || c->wm->flags & DESKTOP_DECOR_FLAG))
        return -1;
 
-#ifndef STANDALONE
+     b = (MBClientButton *)button_item->data;
 
-       if (mbtheme_button_press_activates(button_item->data))
-	 {
-	   XUngrabPointer(c->wm->dpy, CurrentTime); 
-	   client_deliver_message(c, c->wm->atoms[MB_GRAB_TRANSFER],
-				  e->subwindow, 0, 0, 0);
-	   return button_item->id;
-	 }
-
-#endif
+     if (b->press_activates)
+       {
+	 XUngrabPointer(c->wm->dpy, CurrentTime); 
+	 client_deliver_message(c, c->wm->atoms[MB_GRAB_TRANSFER],
+				e->subwindow, 0, 0, 0);
+	 return button_item->id;
+       }
 
      if (XGrabPointer(c->wm->dpy, e->subwindow, False,
 		      ButtonPressMask|ButtonReleaseMask|

@@ -252,6 +252,7 @@ typedef struct _mb_client_button
   int    y;
   int    w;
   int    h;
+  Bool   press_activates;
   void  *data;
 
 } MBClientButton;
