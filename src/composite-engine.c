@@ -918,6 +918,7 @@ comp_engine_client_hide(Wm *w, Client *client)
       comp_engine_add_damage (w, t->extents); 
     }
 
+
   if (client->damage != None)
     {
       XDamageDestroy (w->dpy, client->damage);
@@ -930,11 +931,13 @@ comp_engine_client_hide(Wm *w, Client *client)
       client->extents = None;
     }
 
+
   if (client->picture)
     {
       XRenderFreePicture (w->dpy, client->picture);
       client->picture = None;
     }
+
 }
 
 void
@@ -1186,6 +1189,8 @@ comp_engine_render(Wm *w, XserverRegion region)
 
   stack_enumerate_reverse(w, t) 
     {
+      dbg("%s() rendering %s\n", __func__, t->name);
+
       _render_a_client(w, t, region, False);
       
       if (t == c)
@@ -1262,21 +1267,31 @@ comp_engine_render(Wm *w, XserverRegion region)
 
   /* Now render shadows */
 
+  dbg("%s() now rendering shadows\n", __func__);
+
   stack_enumerate_reverse(w,t)
     {
+      dbg("%s() rendering shadow for %s\n", __func__, t->name);
+
       if ((t->type == MBCLIENT_TYPE_DIALOG && t->mapped) 
 	  || t->type == MBCLIENT_TYPE_TASK_MENU 
 	  || t->type == MBCLIENT_TYPE_OVERRIDE)
 	{
-	  if (!t->picture) {
-	    dbg("%s() no pixture for %s\n", __func__, t->name);
-	    continue;
-	  }
+
+	  dbg("%s() rendering shadow for %s\n", __func__, t->name);
+
+	  if (!t->picture) 
+	    {
+	      dbg("%s() no pixture for %s\n", __func__, t->name);
+	      continue;
+	    }
 	
 	  if (w->config->shadow_style)
 	    {
 	      Picture shadow_pic;
 	  
+
+
 	      t->get_coverage(t, &x, &y, &width, &height);  
 
 	  
@@ -1286,8 +1301,6 @@ comp_engine_render(Wm *w, XserverRegion region)
 
 		  /* Grab 'shape' region of window */
 		  shadow_region = client_border_size (w, t, x, y);
-		  
-
 		  
 		  /* Offset it. */
 		  XFixesTranslateRegion (w->dpy, shadow_region, 

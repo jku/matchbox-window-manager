@@ -1,3 +1,8 @@
+2004-11-09  mallum <mallum@handhelds.org>
+
+	* src/misc.c: (handle_xerror):
+	Fix silly mistake in xerror handler causing random segfaults	      
+
 2004-11-08  mallum  <mallum@handhelds.org>
 
 	* src/composite-engine.c: (client_win_extents), (_render_a_client),

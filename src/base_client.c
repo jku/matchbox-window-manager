@@ -14,7 +14,7 @@
 */
 
 /*
-  $Id: base_client.c,v 1.10 2004/11/02 16:18:18 mallum Exp $
+  $Id: base_client.c,v 1.11 2004/11/09 17:04:56 mallum Exp $
 */
 
 
@@ -511,30 +511,17 @@ base_client_destroy(Client *c)
    if (c->has_ping_protocol && c->pings_pending != -1) 
      w->n_active_ping_clients--;
 
-#if 0
-
-   /* remove from circular list */
-   if (c->prev != c)
-     {
-       if (w->head_client == c) 
-	 w->head_client = c->next;
-       if (c->prev != NULL) c->prev->next = c->next;
-       if (c->next != NULL) c->next->prev = c->prev;
-    } else {
-      w->head_client = NULL;
-      if (c->type == MBCLIENT_TYPE_APP) w->main_client = NULL;
-    }
-
-#endif
+   comp_engine_client_destroy(w, c);
 
    stack_remove(c);
 
    if (c->type != MBCLIENT_TYPE_OVERRIDE)
      {
+
        client_buttons_delete_all(c);
        
        ewmh_update(w);
-   
+
 #if defined (USE_XFT)
        if (c->xftdraw != NULL) XftDrawDestroy(c->xftdraw);
 #endif
@@ -557,22 +544,20 @@ base_client_destroy(Client *c)
        for (i=0; i<MSK_COUNT; i++)
 	 if (c->backing_masks[i] != None)
 	   XFreePixmap(w->dpy, c->backing_masks[i]);
-       
+
        if (c->icon != None && c->icon != w->generic_icon)
 	 XFreePixmap(w->dpy, c->icon);
        if (c->icon_mask != None && c->icon_mask != w->generic_icon_mask)
 	 XFreePixmap(w->dpy, c->icon_mask);
-       
+
        if (c->icon_rgba_data) XFree(c->icon_rgba_data);
+
      }    
 
     if (c->name) XFree(c->name);
     if (c->startup_id) XFree(c->startup_id);
     if (c->size) XFree(c->size);
     if (c->host_machine) free(c->host_machine);
-
-    comp_engine_client_hide(w, c);
-    comp_engine_client_destroy(w, c);
 
     free(c);
 }
