@@ -1,3 +1,8 @@
+2004-08-12  mallum,,,  <mallum@handhelds.org>
+
+	* src/dialog_client.c: (dialog_init_geometry):
+	Eek, fix typo. 
+
 2004-08-11  mallum,,,  <mallum@handhelds.org>
 
 	* src/composite-engine.c: (comp_engine_theme_init),
