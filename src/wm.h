@@ -139,7 +139,7 @@ Client
 void wm_sn_cycle_remove(Wm *w, Window xid);
 #endif
 
-#ifdef USE_MSG_WIN
+#ifdef MSG_Q
 void
 wm_msg_win_queue_add(Wm *w, Window win);
 

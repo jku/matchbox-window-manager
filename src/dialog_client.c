@@ -1034,18 +1034,43 @@ void dialog_client_destroy(Client *c)
   Wm     *w = c->wm; 
   Client *d = NULL;
 
+#ifdef MSG_Q
+  int was_msg = 0;
+
+  if (c->flags & CLIENT_IS_MESSAGE_DIALOG)
+    {
+      if (w->msg_win_queue_head 
+	  && w->msg_win_queue_head->win == c->window);
+      was_msg = 1;
+    }
+#endif
+
   if (c->next_focused_client)
     client_set_focus(c->next_focused_client);
   else
-    d = wm_get_visible_main_client(w);
+    {
+      if (w->focused_client == c)
+	w->focused_client = NULL;
+      d = wm_get_visible_main_client(w);
+    }
 
   base_client_destroy(c);
+
+#ifdef MSG_Q
+if (was_msg)
+  {
+    dbg("%s() was message poping queue\n", __func__);
+    wm_msg_win_queue_pop(w);
+  }
+#endif
+
 
   /* 
      We call activate_client mainly to figure out what to focus next.
      This probably only happens in the case of transient for root
      dialogs which likely have no real focus history.
   */
-  if (d) wm_activate_client(d);
+  if (d) 
+      wm_activate_client(d);
 
 }

@@ -73,6 +73,8 @@
 #include <X11/extensions/Xrender.h>
 #endif
 
+#define MSG_Q 1  		/* TO go for 0.9 FULL */
+
 #define GENERIC_ICON        PKGDATADIR "/mbnoapp.xpm"
 
 #ifdef MB_HAVE_PNG
@@ -508,7 +510,7 @@ typedef struct _sn_execmapping_item
 } SnExecMappingItem;
 #endif
 
-#ifdef USE_MSG_WIN
+#ifdef MSG_Q
 typedef struct MsgWinQueue
 {
   Window              win;
@@ -597,7 +599,7 @@ typedef struct _wm
   XSettingsClient  *xsettings_client;
 #endif 
 
-#ifdef USE_MSG_WIN
+#ifdef MSG_Q
   MsgWinQueue      *msg_win_queue_head;
 #endif
 

@@ -1,3 +1,14 @@
+2004-11-12  mallum,,,  <mallum@handhelds.org>
+
+	* src/dialog_client.c: (dialog_client_destroy):
+	* src/structs.h:
+	* src/wm.c: (wm_event_loop), (wm_make_new_client),
+	(wm_msg_win_queue_add), (wm_msg_win_queue_pop),
+	(wm_msg_win_queue_process):
+	* src/wm.h:
+	Re-add message window queueing code and old message hint. 
+	Fix segv on dialog closing with no 'focus' history. 
+
 2004-11-11  mallum,,,  <mallum@handhelds.org>
 
 	* src/main_client.c: (main_client_unmap):
