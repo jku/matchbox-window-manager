@@ -1,3 +1,8 @@
+2004-09-01  mallum,,,  <mallum@handhelds.org>
+
+	* src/wm.c: (wm_handle_property_change):
+	Actually update client sub name prop on change. 
+
 2004-08-30  mallum,,,  <mallum@handhelds.org>
 
 	* src/toolbar_client.c: (toolbar_client_show):

@@ -1450,7 +1450,8 @@ wm_handle_property_change(Wm *w, XPropertyEvent *e)
     }
   else if (e->atom == w->atoms[MB_WIN_SUB_NAME])
     {
-      ewmh_get_utf8_prop(w, c->window, w->atoms[MB_WIN_SUB_NAME]);
+      if (c->subname) XFree(c->subname);
+      c->subname =ewmh_get_utf8_prop(w, c->window, w->atoms[MB_WIN_SUB_NAME]);
       update_titlebar = True;
     }
   else if (e->atom == w->atoms[_NET_WM_NAME])
