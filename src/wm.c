@@ -193,7 +193,9 @@ wm_usage(char *progname)
    printf("\t-theme            <string> \n");
    printf("\t-use_titlebar     <yes|no>\n");
    printf("\t-use_cursor       <yes|no>\n");
+#ifndef USE_COMPOSITE
    printf("\t-use_lowlight     <yes|no>\n");
+#endif
    printf("\t-use_dialog_mode  <free|const|const-horiz>\n");
    printf("\t-use_desktop_mode <decorated|plain>\n");
    printf("\t-ping_handler     <string>\n");
@@ -382,11 +384,16 @@ wm_load_config (Wm   *w,
 	 }
      }   
 
+   /* 
+    *  Composite matchbox always uses lowlighting ... 
+    */
+#ifndef USE_COMPOSITE
    if (XrmGetResource (rDB, "matchbox.lowlight", "Matchbox.Lowlight",
 		       &type, &value) == True)
      {
        if (strncmp (value.addr, "yes", (int) value.size) == 0)
 	 {
+#endif
 	   dbg("%s() TURNING LOWLIGHT ON\n", __func__);
 	   w->config->dialog_shade = True;   
 
@@ -395,8 +402,10 @@ wm_load_config (Wm   *w,
 	   w->config->lowlight_params[1] = 0; 
 	   w->config->lowlight_params[2] = 0; 
 	   w->config->lowlight_params[3] = 100; 
+#ifndef USE_COMPOSITE
      	 }
      }
+#endif
 
    if (XrmGetResource (rDB, "matchbox.dialog", "Matchbox.Dialog",
 		       &type, &value) == True)

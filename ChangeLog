@@ -1,3 +1,8 @@
+2004-03-08  Matthew Allum,,,  <mallum@handhelds.org>
+
+	* src/wm.c: (wm_usage), (wm_load_config):
+	Remove -use_lowlight option for composite and make it always on.
+
 2004-03-08  Matthew Allum,,,  <mallum@openedhand.com>
 
 	* src/composite-engine.c: (comp_engine_render):
