@@ -194,10 +194,11 @@ ewmh_handle_root_message(Wm *w, XClientMessageEvent *e)
    } else if (e->message_type == w->atoms[_NET_SHOW_DESKTOP]
 	      && wm_get_desktop(w) ) {
      dbg("%s() got desktop message\n", __func__);
-     if (e->data.l[0] == 1 && !(w->flags & DESKTOP_RAISED_FLAG))
-       { 			/* Show the desktop */
-	 wm_toggle_desktop(w);
-       } else {                 /* Hide the desktop */
+     if (e->data.l[0] == 1)
+       { 			/* Show the desktop, if not shown */
+	 if (!(w->flags & DESKTOP_RAISED_FLAG))
+	   wm_toggle_desktop(w);
+       } else {                 /* Hide the desktop, if shown */
 	 if (w->flags & DESKTOP_RAISED_FLAG)
 	   wm_toggle_desktop(w);
        }

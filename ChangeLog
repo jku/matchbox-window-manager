@@ -1,5 +1,11 @@
 2004-06-04  Matthew Allum,,,  <mallum@handhelds.org>
 
+	* src/ewmh.c: (ewmh_handle_root_message):
+	fix for _NET_SHOWING_DESKTOP - dont hide desktop if already showing
+	and show is requested. 
+
+2004-06-04  Matthew Allum,,,  <mallum@handhelds.org>
+
 	* src/mbtheme.c: (_theme_paint_core):
 	Clip pixmap image if calculated dimentions bigger than
 	are to be painted on. Attempted fix for bug #81
