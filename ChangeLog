@@ -1,5 +1,12 @@
 2004-12-20  mallum <mallum@openedhand.com>
 
+	* data/Makefile.am:
+	* src/Makefile.am:
+	* src/keys.c: (keys_load_config):
+	Move kdbconfig to /etc/matchbox so more visible. 
+
+2004-12-20  mallum <mallum@openedhand.com>
+
 	* src/mbtheme.c: (theme_frame_icon_paint), (_theme_paint_gradient):
 	Fixups for new 16bpp pixbuf stuff
 

@@ -294,7 +294,7 @@ keys_load_config(Wm *w)
 	}
     }
 
-  if (conf_path == NULL) conf_path = strdup(PKGDATADIR "/kbdconfig");
+  if (conf_path == NULL) conf_path = strdup(CONFDIR "/kbdconfig");
 
   if (!(fp = fopen(conf_path, "r"))) 
     {
