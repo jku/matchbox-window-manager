@@ -108,7 +108,6 @@
 
 /* General Defines */
 
-
 #define EAST   0
 #define SOUTH  1
 #define WEST   2

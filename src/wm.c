@@ -1097,6 +1097,9 @@ wm_handle_configure_notify(Wm *w, XConfigureEvent *e)
 	/* Clear all caches so everything gets redrawn ok */
 	theme_img_cache_clear_all( w->mbtheme );
 
+	theme_pixmap_cache_clear_all( w->mbtheme );
+
+
 	stack_enumerate(w, p)
 	 {
 	   switch (p->type)
@@ -1968,6 +1971,7 @@ wm_update_layout(Wm         *w,
 		 theme_img_cache_clear( w->mbtheme, FRAME_MAIN );
 		 client_deliver_config(p);
 		 client_buttons_delete_all(p);
+		 theme_pixmap_cache_clear_all(w->mbtheme);
 		 main_client_redraw(p, False); /* force title redraw */
 		 break;
 	       case MBCLIENT_TYPE_TOOLBAR :
@@ -2015,6 +2019,7 @@ wm_update_layout(Wm         *w,
 		 p->move_resize(p);
 		 client_deliver_config(p);
 		 theme_img_cache_clear( w->mbtheme, FRAME_MAIN );
+		 theme_pixmap_cache_clear_all(w->mbtheme);
 		 client_buttons_delete_all(p);
 		 main_client_redraw(p, False); /* force title redraw */
 		 break;
@@ -2067,6 +2072,7 @@ wm_update_layout(Wm         *w,
 		 p->y      -= change_amount;
 		 p->move_resize(p);
 		 theme_img_cache_clear( w->mbtheme, FRAME_MAIN );
+		 theme_pixmap_cache_clear_all(w->mbtheme);
 		 client_deliver_config(p);
 		 main_client_redraw(p, False); /* force title redraw */
 		 break;
@@ -2099,6 +2105,7 @@ wm_update_layout(Wm         *w,
 		 p->height += change_amount;
 		 p->move_resize(p);
 		 theme_img_cache_clear( w->mbtheme, FRAME_MAIN );
+		 theme_pixmap_cache_clear_all(w->mbtheme);
 		 client_deliver_config(p);
 		 main_client_redraw(p, False); /* force title redraw */
 		 break;

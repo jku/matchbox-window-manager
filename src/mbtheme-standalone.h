@@ -250,4 +250,8 @@ mbtheme_get_titlebar_panel_rect(MBTheme    *theme,
 Bool
 mbtheme_has_titlebar_panel(MBTheme *theme);
 
+void
+theme_pixmap_cache_clear_all( MBTheme *theme );
+
+
 #endif

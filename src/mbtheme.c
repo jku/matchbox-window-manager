@@ -309,16 +309,17 @@ theme_frame_button_paint(MBTheme *theme,
 					   button_w, button_h, 
 					   theme->wm->pb->depth);
 
-	      dbg("%s() copying +%i+%i %ix%i cache %ix%i\n", __func__,
-		  button_x, button_y,
-		  button_w, button_h, 
-		  mb_pixbuf_img_get_width(theme->img_caches[frame_type]),
-		  mb_pixbuf_img_get_height(theme->img_caches[frame_type]));
 
 	      if (c->type == MBCLIENT_TYPE_APP 
 		  || c->type == MBCLIENT_TYPE_TOOLBAR 
 		  || c->type == MBCLIENT_TYPE_DIALOG)
 		{
+		  dbg("%s() copying +%i+%i %ix%i cache %ix%i\n", __func__,
+		      button_x, button_y,
+		      button_w, button_h, 
+		      mb_pixbuf_img_get_width(theme->img_caches[frame_type]),
+		      mb_pixbuf_img_get_height(theme->img_caches[frame_type]));
+
 		  img_backing = mb_pixbuf_img_rgb_new(theme->wm->pb, 
 						      button_w, button_h);
 		  mb_pixbuf_img_copy(theme->wm->pb, img_backing,
@@ -327,37 +328,6 @@ theme_frame_button_paint(MBTheme *theme,
 				     button_w, button_h,
 				     0, 0 );
 		}
-	      /*
-	      else
-		{
-#ifdef USE_COMPOSITE
-		  if (c->is_argb32)
-		    img_backing 
-		      = mb_pixbuf_img_new_from_x_drawable (theme->wm->argb_pb, 
-							   mb_drawable_pixmap(c->backing), 
-							   None,
-							   button_x, button_y,
-							   button_w, button_h,
-							   False);
-   else
-#endif
-		  img_backing 
-		    = mb_pixbuf_img_new_from_x_drawable (theme->wm->pb, 
-							 mb_drawable_pixmap(c->backing), 
-							 None,
-							 button_x, button_y,
-							 button_w, button_h,
-							 False);
-		  
-		  if (img_backing == NULL)
-		    {
-		      img_backing = mb_pixbuf_img_rgba_new(theme->wm->pb,
-							   button_w, button_h);
-		      mb_pixbuf_img_fill (theme->wm->pb, img_backing, 
-					  0,0,0,0xff);
-		    }
-		}
-	      */
 
 	      if (state == ACTIVE)
 		{
@@ -411,15 +381,16 @@ theme_frame_button_paint(MBTheme *theme,
 						 pxm_button, 0, 0);
 	      
 	      dbg("%s painting button\n", __func__);
-	      
+
 	      XSetWindowBackgroundPixmap(c->wm->dpy, button_xid,
 					 pxm_button);
-	      
 	      XClearWindow(c->wm->dpy, button_xid);   
 	      XFreePixmap(c->wm->dpy, pxm_button);
 	      mb_pixbuf_img_free(theme->wm->pb, img_backing);
 	      
 	    }
+	  dbg("%s mapping window\n", __func__);
+
 	  XMapWindow(c->wm->dpy, button_xid);
 	}
       theme_button_list = theme_button_list->next;
@@ -1423,11 +1394,9 @@ theme_img_cache_clear( MBTheme *theme,  int frame_ref )
 } 
 
 void
-theme_img_cache_clear_all( MBTheme *theme )
+theme_pixmap_cache_clear_all( MBTheme *theme )
 {
   int i;
-  for (i=0; i < N_FRAME_TYPES; i++)
-    theme_img_cache_clear( theme, i );
 
   for (i=0; i < 3; i++)
     if (theme->app_win_pxm_cache[i] != None)
@@ -1436,6 +1405,14 @@ theme_img_cache_clear_all( MBTheme *theme )
 	XFreePixmap(theme->wm->dpy, theme->app_win_pxm_cache[i]);
 	theme->app_win_pxm_cache[i] = None;
       }
+}
+
+void
+theme_img_cache_clear_all( MBTheme *theme )
+{
+  int i;
+  for (i=0; i < N_FRAME_TYPES; i++)
+    theme_img_cache_clear( theme, i );
 }
 
 
@@ -2362,6 +2339,8 @@ mbtheme_free (Wm      *w,
   if (theme->mask_gc) XFreeGC(w->dpy, theme->mask_gc);
 
   theme_img_cache_clear_all (theme);
+
+  theme_pixmap_cache_clear_all( theme );
 
   free(theme);
 

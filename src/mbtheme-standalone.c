@@ -423,7 +423,7 @@ void theme_frame_button_paint(MBTheme *theme,
 	      }
 	    _draw_button(theme, button->win, BUTTON_ARROW, 
 			 button_small_size, state);
-	    dbg("%s() painting close button at %i\n", __func__, dest_w - 20 );
+	    dbg("%s() painting min button at %i\n", __func__, dest_w - 20 );
 	  }
 	break;
     case FRAME_UTILITY_MIN:
@@ -962,4 +962,10 @@ Bool
 theme_has_message_decor( MBTheme *theme )
 {
   return False;
+}
+
+void
+theme_pixmap_cache_clear_all( MBTheme *theme )
+{
+  return; /* No caching here */
 }

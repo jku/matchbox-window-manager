@@ -1,5 +1,5 @@
 AC_PREREQ(2.53)
-AC_INIT([matchbox-window-manager], 0.9rc3, [mallum@handhelds.org])
+AC_INIT([matchbox-window-manager], 0.9rc4, [mallum@handhelds.org])
 AC_CONFIG_SRCDIR([src/wm.c])
 
 AM_INIT_AUTOMAKE()
@@ -50,7 +50,7 @@ AC_ARG_WITH(expat-lib,
 	   expat_lib=$withval, expat_lib=yes)
 
 AC_ARG_ENABLE(xsync,
-  [  --enable-xsync                enable XSYNC X extension support],
+  [  --enable-xsync                enable XSYNC X extension support ( Experimental )],
      enable_xsync=$enableval, enable_xsync=no )
 
 AC_ARG_ENABLE(gconf,

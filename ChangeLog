@@ -1,3 +1,22 @@
+2004-12-15  mallum,,,  <mallum@openedhand.com>
+
+	* configure.ac:
+	Add some more info to --enable-* options
+
+	* src/mbtheme-standalone.c: (theme_frame_button_paint),
+	(theme_has_message_decor):
+	* src/mbtheme-standalone.h:
+	* src/mbtheme.c: (theme_frame_button_paint):
+	* src/mbtheme.h:
+	* src/structs.h:
+	* src/wm.c: (wm_handle_configure_notify), (wm_update_layout):
+	Kill pixmap cache if main win is resized ( by layout change )
+
+	* src/toolbar_client.c: (toolbar_client_reparent),
+	(toolbar_client_show), (toolbar_client_hide),
+	(toolbar_client_redraw):
+	Fix toolbars painting there buttons.
+
 2004-12-14  mallum <mallum@openedhand.com>
 
 	* src/mbtheme.c: (theme_frame_paint),

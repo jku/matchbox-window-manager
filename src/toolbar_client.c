@@ -139,14 +139,12 @@ toolbar_client_reparent(Client *c)
 		  CWOverrideRedirect|CWBackPixel|CWEventMask, &attr);
   
   XSetWindowBorderWidth(w->dpy, c->window, 0);
+
   XAddToSaveSet(w->dpy, c->window);
-  XSelectInput(w->dpy, c->window,
-	       ButtonPressMask|ColormapChangeMask|PropertyChangeMask);
-  
-  dbg("%s() reparenting at %i\n", __func__, toolbar_win_offset(c));
-  
-  XReparentWindow(w->dpy, c->window, c->frame,
-		  toolbar_win_offset(c), 0);
+
+  XSelectInput(w->dpy, c->window, PropertyChangeMask);
+
+  XReparentWindow(w->dpy, c->window, c->frame, toolbar_win_offset(c), 0);
 }
 
 
@@ -185,13 +183,14 @@ toolbar_client_show(Client *c)
 	 c->x = theme_frame_defined_width_get(w->mbtheme,
 					      FRAME_UTILITY_MAX )
 	   + wm_get_offsets_size(c->wm, WEST,  NULL, False);
+
+       /* destroy buttons so they get recreated ok */   
+       client_buttons_delete_all(c);   
+
+       toolbar_client_move_resize(c);
+
+       toolbar_client_redraw(c, False);
      } 
-   else return; /* were already shown */ 
-
-   /* destroy any eisting buttons */
-   client_buttons_delete_all(c);   
-
-   toolbar_client_move_resize(c);
 
    stack_move_client_above_type(c, MBCLIENT_TYPE_APP|MBCLIENT_TYPE_DESKTOP);
 
@@ -220,6 +219,8 @@ toolbar_client_hide(Client *c)
   c->y = c->y +(c->height - theme_frame_defined_height_get(c->wm->mbtheme,
 							   FRAME_UTILITY_MIN));
   toolbar_client_move_resize(c);
+
+  toolbar_client_redraw(c, False);
   
   dbg("hiding toolbar y is now %i", c->y);
 
@@ -361,16 +362,20 @@ toolbar_client_redraw(Client *c, Bool use_cache)
       
       theme_frame_paint( w->mbtheme, c, FRAME_UTILITY_MAX, 
 			 max_offset, c->height);
+
+      dbg("%s() painting close button\n", __func__);
       
+
       theme_frame_button_paint(w->mbtheme, c, BUTTON_ACTION_CLOSE, 
 			       INACTIVE, FRAME_UTILITY_MAX, 
 			       max_offset, c->height);
-      
+
+      dbg("%s() painting min button\n", __func__);
+
       theme_frame_button_paint(w->mbtheme, c, BUTTON_ACTION_MIN, 
 			       INACTIVE, FRAME_UTILITY_MAX, 
 			       max_offset, c->height);
     }
-  
 }
 
 

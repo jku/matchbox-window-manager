@@ -231,6 +231,10 @@ theme_img_cache_clear (MBTheme       *theme,
 void     
 theme_img_cache_clear_all (MBTheme       *theme );
 
+void
+theme_pixmap_cache_clear_all( MBTheme *theme );
+
+
 void     
 theme_frame_button_paint (MBTheme       *theme,
 			  Client        *c,
