@@ -1418,6 +1418,7 @@ wm_handle_unmap_event(Wm *w, XUnmapEvent *e)
    if (!c) return;
 
    dbg("%s() for client %s\n", __func__, c->name);
+
    if (c->ignore_unmap)
      {
        c->ignore_unmap--;
@@ -1571,26 +1572,37 @@ wm_handle_property_change(Wm *w, XPropertyEvent *e)
   if (e->atom == XA_WM_NAME && !c->name_is_utf8)
     {
       if (c->name) XFree(c->name);
+
+      misc_trap_xerrors(); 
+
       XFetchName(w->dpy, c->window, (char **)&c->name);
-      base_client_process_name(c);
-      dbg("%s() XA_WM_NAME change, name is %s\n", __func__, c->name);
-      update_titlebar = True;
+
+      if (!misc_untrap_xerrors())
+	{
+	  base_client_process_name(c);
+	  dbg("%s() XA_WM_NAME change, name is %s\n", __func__, c->name);
+	  update_titlebar = True;
+	}
     }
   else if (e->atom == w->atoms[WM_TRANSIENT_FOR])
     {
       Client *new_trans_client;
       Window  trans_win = 0;
+      int     success = 0;
 
-      if (!XGetTransientForHint(w->dpy, c->window, &trans_win))
-	dbg("%s() transient hint failed\n", __func__);
+      misc_trap_xerrors(); 
 
-      if ((new_trans_client = wm_find_client(w, trans_win, WINDOW)) != NULL)
-	c->trans = new_trans_client;
-      else
-	c->trans = NULL;
+      success = XGetTransientForHint(w->dpy, c->window, &trans_win);
 
-      dbg("%s transient changed to %li, ( %s )\n", __func__, 
-	  trans_win, c->trans ? c->trans->name : "root" );
+      if (!misc_untrap_xerrors() && success)
+	if ((new_trans_client = wm_find_client(w, trans_win, WINDOW)) != NULL)
+	  {
+	    c->trans = new_trans_client;
+	    return;
+	  }
+
+      c->trans = NULL;
+
     }
   else if (e->atom == w->atoms[MB_WIN_SUB_NAME])
     {
@@ -1601,20 +1613,29 @@ wm_handle_property_change(Wm *w, XPropertyEvent *e)
   else if (e->atom == w->atoms[_NET_WM_NAME])
     {
       if (c->name) 
-	XFree(c->name);
+	{
+	  XFree(c->name);
+	  c->name = NULL;
+	}
+
+      misc_trap_xerrors(); 	/* avoid possible X Errors */
 
       c->name = ewmh_get_utf8_prop(w, c->window, w->atoms[_NET_WM_NAME]);
 
-      if (c->name)
-	c->name_is_utf8 = True;
-      else
+      if (!misc_untrap_xerrors())
 	{
-	  c->name_is_utf8 = False;
-	  XFetchName(w->dpy, c->window, (char **)&c->name);
+	  if (c->name)
+	    c->name_is_utf8 = True;
+	  else
+	    {
+	      c->name_is_utf8 = False;
+	      XFetchName(w->dpy, c->window, (char **)&c->name);
+	    }
+
+	  base_client_process_name(c);
+	  dbg("%s() NET_WM_NAME change, name is %s\n", __func__, c->name);
+	  update_titlebar = True;
 	}
-      base_client_process_name(c);
-      dbg("%s() NET_WM_NAME change, name is %s\n", __func__, c->name);
-      update_titlebar = True;
     }
   else  if (e->atom == w->atoms[WM_CHANGE_STATE])
     {
@@ -2162,6 +2183,7 @@ wm_activate_client(Client *c)
   dbg("%s() DESKTOP_RAISED_FLAG is %i\n", 
       __func__, (w->flags & DESKTOP_RAISED_FLAG));
 
+
   if (c->type == MBCLIENT_TYPE_APP || c->type == MBCLIENT_TYPE_DESKTOP) 
     {
       /* As matchbox works around 'main' windows ( apps/main and desktop wins).
@@ -2185,7 +2207,10 @@ wm_activate_client(Client *c)
       if (w->focused_client 
 	  && w->focused_client->type == MBCLIENT_TYPE_DIALOG
 	  && w->focused_client->trans == NULL)
-	client_to_focus = w->focused_client;
+	{
+	  dbg("%s() keeping focus to root dialog\n", __func__);
+	  client_to_focus = w->focused_client;
+	}
 
       /* Raise panel + toolbars just above app but below app dialogs */
 
@@ -2222,15 +2247,16 @@ wm_activate_client(Client *c)
       /* Deal with desktop flag etc */
       if (c->type != MBCLIENT_TYPE_DESKTOP
 	  && !(c->flags & CLIENT_IS_DESKTOP_FLAG) )
-	 /*    ^^^^^^^^^  hack for decprated desktop */
+	 /*    ^^^^^^^^^  hack for decorated desktop */
 	{
+	  dbg("%s() clearing desktop flag\n", __func__);
 	  w->flags &= ~DESKTOP_RAISED_FLAG;
 	  w->stack_top_app = c;      
 	}
       else
 	{
 	  /* Desktop being activated */
-
+	  dbg("%s() setting desktop raised flag\n", __func__);
 	  w->flags |= DESKTOP_RAISED_FLAG;
 
 	  /* Make sure embedded titlebar panels arn't visible for desktop */
@@ -2410,7 +2436,6 @@ wm_toggle_desktop(Wm *w)
      {
        dbg("%s() showing desktop\n", __func__);
        wm_activate_client(wm_get_desktop(w));
-
      }
 }
 

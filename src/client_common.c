@@ -196,10 +196,21 @@ client_want_focus(Client *c)
   Wm *w = c->wm;
 
   int       ret = 1;
-  XWMHints *hints;
+  XWMHints *hints = NULL;
+
+  misc_trap_xerrors(); 
 
   hints = XGetWMHints(w->dpy, c->window);
-  
+
+  /* TODO: Oddly the above will sometimes fire an X Error, yet hints get set. 
+   *       Check this.   
+  */
+  if (misc_untrap_xerrors())
+    {
+      dbg("%s() called, gave X Error for %s but going to focus it anyway\n", 
+	  __func__, c->name);
+    }
+
   if (hints != NULL)
     {
       if ((hints->flags & InputHint) && (hints->input == False)) 
@@ -372,9 +383,6 @@ client_decor_frames_init(Client *c,
 
   XSetWindowAttributes attr;
   int                  i;
-#ifndef STANDALONE
-  MBPixbuf            *pb = w->pb;
-#endif
 
   for(i=0; i<N_DECOR_FRAMES; i++)
     if (c->frames_decor[i] != None)
@@ -382,7 +390,7 @@ client_decor_frames_init(Client *c,
 
   attr.override_redirect = True;
   attr.background_pixel  = w->grey_col.pixel;  
-  attr.event_mask = ChildMask|ButtonMask|ExposureMask;
+  attr.event_mask = ButtonMask;
 
   c->frames_decor[NORTH] =
     XCreateWindow(w->dpy, 
@@ -401,8 +409,7 @@ client_decor_frames_init(Client *c,
 		  width_east, 
 		  c->height, 
 		  0, CopyFromParent, CopyFromParent, CopyFromParent,
-		  CWBackPixel/*|CWEventMask*/, &attr);
-
+		  CWBackPixel, &attr);
 
   c->frames_decor[WEST] = 
     XCreateWindow(w->dpy, c->frame,
@@ -411,7 +418,7 @@ client_decor_frames_init(Client *c,
 		  width_west, 
 		  c->height, 
 		  0, CopyFromParent, CopyFromParent, CopyFromParent,
-		  CWBackPixel/*|CWEventMask*/, &attr);
+		  CWBackPixel, &attr);
 
   c->frames_decor[SOUTH] = 
     XCreateWindow(w->dpy, c->frame,
@@ -420,28 +427,7 @@ client_decor_frames_init(Client *c,
 		  c->width + width_east + width_west, 
 		  height_south, 
 		  0, CopyFromParent, CopyFromParent, CopyFromParent,
-		  CWBackPixel/*|CWEventMask*/, &attr);
-
-
-#ifdef STANDALONE
-
-
-#else
-
-#ifdef USE_COMPOSITE
-   if (c->is_argb32)
-     {
-       pb = w->argb_pb;
-
-       c->backing = mb_drawable_new(w->argb_pb, width, height);
-       dbg("%s() XXXXX creating 32bit drawable ( %i, %ix%i ) XXXX\n", 
-	   __func__, w->argb_pb->depth, width, height);
-     }
-#endif
-
-
-#endif
-
+		  CWBackPixel, &attr);
 
 }
 

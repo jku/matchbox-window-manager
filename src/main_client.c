@@ -48,8 +48,7 @@ main_client_new(Wm *w, Window win)
 void
 main_client_check_for_state_hints(Client *c)
 {
-  dbg("%s() checking for fullscreen: %s\n", __func__,
-      XGetAtomName(c->wm->dpy, c->wm->atoms[WINDOW_STATE_FULLSCREEN]));
+  dbg("%s() checking for fullscreen hint\n", __func__);
 
   if (ewmh_state_check(c, c->wm->atoms[WINDOW_STATE_FULLSCREEN]))
     {
@@ -388,8 +387,8 @@ main_client_redraw(Client *c, Bool use_cache)
 
    if (w->flags & TITLE_HIDDEN_FLAG)
    {
-     // XUnmapWindow(w->dpy, c->title_frame);
-      return;
+     XUnmapWindow(w->dpy, client_title_frame(c));
+     return;
    }
 
    if (use_cache && c->have_set_bg)  return ;
@@ -692,7 +691,10 @@ main_client_hide(Client *c)
   else 
     {
       c->next_focused_client = NULL;
-      w->focused_client      = NULL;
+
+      /* If were focused, unset focus for something better to be found */
+      if (w->focused_client == c)
+	w->focused_client = NULL;
     }
 }
 
@@ -778,16 +780,25 @@ main_client_unmap(Client *c)
             * go back there. 
 	    */
 	   if (c->flags & CLIENT_NEW_FOR_DESKTOP)
-	     next_client = wm_get_desktop(w);
+	     {
+	       /* Make sure we set stack_top_app so desktop 
+                * toggling still works.
+                */
+	       w->stack_top_app = next_client; 
+	       next_client = wm_get_desktop(w);
+	     }
 	 }
 
-       w->stack_top_app = NULL; /* wm_activate_client(next_client) below
-				   will update this if need be           */
+       /* if we havn't set stack_top_app to something else let 
+	* wm_activate_client(next_client) below update this */
+       if (c == w->stack_top_app)
+	 w->stack_top_app = NULL;
      }
 
    c->mapped = False;
 
    if (next_client /* only 1 main_client left ? */
+       && next_client->type == MBCLIENT_TYPE_APP
        && (next_client == stack_get_below(next_client, MBCLIENT_TYPE_APP)))
      {
        dbg("%s() turning on single flag\n", __func__);
@@ -796,7 +807,6 @@ main_client_unmap(Client *c)
      }
 
    XUnmapWindow(w->dpy, c->frame); 
-
 
    if (c == w->focused_client)
      w->focused_client = NULL;

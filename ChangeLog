@@ -1,3 +1,21 @@
+2004-12-09  mallum  <mallum@openedhand.com>
+
+	* src/base_client.c: (base_client_destroy):
+	Trap X errors. 
+
+	* src/client_common.c: (client_want_focus),
+	(client_decor_frames_move_resize), (client_decor_frames_init):
+	Remove uneeded calls. Trap errors in want focus.  
+
+	* src/stack.c: (stack_get_above), (stack_get_below):
+	Add some commenting.
+
+	* src/main_client.c: (main_client_redraw), (main_client_hide),
+	(main_client_unmap):
+	* src/wm.c: (wm_handle_unmap_event), (wm_handle_property_change),
+	(wm_activate_client), (wm_get_offsets_size), (wm_toggle_desktop):
+	Focus/desktop handling fixes. Trap some more X errors. 
+
 2004-12-09  mallum <mallum@openedhand.com>
 
 	* src/base_client.c: (base_client_destroy):

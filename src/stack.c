@@ -280,17 +280,13 @@ stack_get_above(Client* client_below, MBClientTypeEnum wanted_type)
   return client_below;
 }
 
+/* Returns client_above if nothing below */
 Client*
 stack_get_below(Client*          client_above, 
 		MBClientTypeEnum wanted_type)
 {
   Wm     *w = client_above->wm;
   Client *c = client_above->below;
-
-  /*
-  if (wanted_type == MBCLIENT_TYPE_ANY)
-    return (client_above->below) ? client_above->below : w->stack_top; 
-  */
 
   while ( c != client_above )
     {
