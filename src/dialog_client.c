@@ -626,14 +626,19 @@ dialog_client_redraw(Client *c, Bool use_cache)
 {
   Bool is_shaped = False;
 
-  int offset_north = dialog_client_title_height(c);
-  int offset_south = 0, offset_west = 0, offset_east = 0;
+  int offset_north = 0, offset_south = 0, offset_west = 0, offset_east = 0;
   int total_w = 0, total_h = 0;
 
   int frame_ref_top   = FRAME_DIALOG;
   int frame_ref_east  = FRAME_DIALOG_EAST;
   int frame_ref_west  = FRAME_DIALOG_WEST;
   int frame_ref_south = FRAME_DIALOG_SOUTH;
+
+  if (c->flags & CLIENT_TITLE_HIDDEN_FLAG) return;
+
+  if (use_cache && c->backing != None) return;
+
+  offset_north = dialog_client_title_height(c);
 
   dialog_client_get_offsets(c, &offset_east, &offset_south, &offset_west);
 
@@ -657,9 +662,6 @@ dialog_client_redraw(Client *c, Bool use_cache)
   dbg("%s() c->width : %i , offset_east : %i, offset_west : %i\n",
       __func__, c->width, offset_east, offset_west );
 
-  if (c->flags & CLIENT_TITLE_HIDDEN_FLAG) return;
-
-   if (use_cache && c->backing != None) return;
 
   is_shaped = theme_frame_wants_shaped_window( c->wm->mbtheme, frame_ref_top);
   

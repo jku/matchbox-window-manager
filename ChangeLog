@@ -1,3 +1,12 @@
+2004-09-22 0.8.4 released. 
+
+2004-09-28  mallum,,,  <mallum@handhelds.org>
+
+	* configure.ac:
+	Bump up version
+	* src/dialog_client.c: (dialog_client_redraw):
+	Avoid uneeded call on redraw.
+
 2004-09-24  mallum,,,  <mallum@handhelds.org>
 
 	* src/base_client.c: (base_client_new):
