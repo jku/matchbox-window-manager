@@ -1,5 +1,5 @@
 AC_PREREQ(2.53)
-AC_INIT([matchbox-window-manager], 0.8.2, [mallum@handhelds.org])
+AC_INIT([matchbox-window-manager], 0.8.3, [mallum@handhelds.org])
 AC_CONFIG_SRCDIR([src/wm.c])
 
 AM_INIT_AUTOMAKE()
@@ -86,7 +86,7 @@ dnl ---- Check we can find libmb
 
 if test x$enable_standalone != xyes && test x$enable_standalone_xft != xyes; then
 
-   PKG_CHECK_MODULES(LIBMB, libmb >= 1.1, [have_libmb="yes"], [have_libmb="no"])
+   PKG_CHECK_MODULES(LIBMB, libmb >= 1.3, [have_libmb="yes"], [have_libmb="no"])
 
    if test x$have_libmb = xno; then
       AC_MSG_WARN([ ])

@@ -1,3 +1,8 @@
+2004-08-23  mallum,,,  <mallum@handhelds.org>
+
+	* configure.ac:
+	bump of version. check for libmb1.3
+
 2004-08-21  mallum,,,  <mallum@handhelds.org>
 
 	* src/dialog_client.c: (dialog_client_configure):
