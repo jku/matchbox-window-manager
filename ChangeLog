@@ -1,3 +1,33 @@
+2004-12-09  mallum <mallum@openedhand.com>
+
+	* configure.ac:
+	* src/wm.c: (wm_usage), (wm_load_config):
+	Minor tweaks to XRM option layout. 
+
+	* src/base_client.c: (base_client_new), (base_client_move_resize),
+	(base_client_destroy):
+	* src/client_common.c: (client_decor_frames_init):
+	* src/client_common.h:
+	* src/dialog_client.c: (dialog_client_redraw):
+	* src/main_client.c: (main_client_reparent), (main_client_redraw),
+	(main_client_button_press), (main_client_toggle_title_bar):
+	* src/mbtheme.c: (theme_frame_button_paint), (_theme_paint_core),
+	(theme_frame_paint), (theme_frame_menu_get_dimentions),
+	(_theme_frame_menu_paint_text_entry),
+	(theme_frame_menu_highlight_entry), (theme_frame_menu_paint):
+	* src/mbtheme.h:
+	* src/select_client.c: (select_client_new), (select_client_redraw):
+	* src/structs.h:
+	* src/toolbar_client.c: (toolbar_client_move_resize),
+	(toolbar_client_reparent), (toolbar_client_show),
+	(toolbar_client_redraw):
+	For new lower server memory frame decorations:
+	    - Fix decoration button rendering.
+	    - Fix toolbars, task menu to use new mechansim.
+	    - Remove uneeded pixbuf caching.
+	    - Remove older 'backing' code and references.
+
+
 2004-12-08  mallum <mallum@openedhand.com>
 
 	* src/base_client.c: (base_client_new):
@@ -14,6 +44,7 @@
 	* src/wm.c: (wm_find_client), (wm_handle_button_event):
 	Add Initial support for new lower server memory frame decorations.
 	Composite and standalone will likely be BROKEN atm. 
+	Also avoid refocusing dialog if it already has focus.
 
 2004-12-07  Ross Burton  <ross@openedhand.com>
 
@@ -23,12 +54,12 @@
 	* src/wm.c:
 	When Xrm is disabled, use a simple command line parser.
 	
-2004-12-01  mallum,,,  <mallum@handhelds.org>
+2004-12-01  mallum <mallum@handhelds.org>
 
 	* src/composite-engine.c: (comp_engine_client_get_trans_prop):
 	Change old atoms[INTEGER] to XA_INTEGER 
 
-2004-11-30  mallum,,,  <mallum@handhelds.org>
+2004-11-30  mallum <mallum@handhelds.org>
 
 	* configure.ac:
 	Bump Version.

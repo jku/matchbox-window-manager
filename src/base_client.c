@@ -57,13 +57,6 @@ base_client_new(Wm *w, Window win)
    for (i=0; i<N_DECOR_FRAMES; i++)
      c->frames_decor[i] = None;
 
-   for (i=0; i<N_DECOR_FRAMES; i++)
-#ifdef STANDALONE
-     c->pixmaps_decor[i] = None;
-#else
-     c->drawables_decor[i] = NULL;
-#endif
-
    /* UTF8 Window Name */
 
    if ((c->name = ewmh_get_utf8_prop(w, win, w->atoms[_NET_WM_NAME])) != NULL)
@@ -434,22 +427,6 @@ base_client_move_resize(Client *c)
 {
   int i;
 
-  /* Just free up clients various decoration 'backbuffers' */
-
-#ifdef STANDALONE
-   if (c->backing != None)
-     {
-       XFreePixmap(c->wm->dpy, c->backing);
-       c->backing = None;
-     }
-#else
-   if (c->backing != NULL)
-     {
-       mb_drawable_unref(c->backing);
-       c->backing = NULL;
-     }
-#endif
-
    for (i=0; i<MSK_COUNT; i++)
      if (c->backing_masks[i] != None)
        {
@@ -540,23 +517,14 @@ base_client_destroy(Client *c)
        if (c->xftdraw != NULL) XftDrawDestroy(c->xftdraw);
 #endif
 
-       if (c->title_frame != c->window 
-	   && c->title_frame != c->frame
-	   && c->title_frame != None) 
-	 XDestroyWindow(w->dpy, c->title_frame);
+       for (i=0; i<N_DECOR_FRAMES; i++)
+	 if (c->frames_decor[i] != None && c->frames_decor[i] != c->frame)
+	   XDestroyWindow(w->dpy, c->frames_decor[i]);
 
        /* Destroy top parent frame last */
 
        if (c->frame && c->frame != c->window) 
 	 XDestroyWindow(w->dpy, c->frame);
-
-#ifdef STANDALONE
-       if (c->backing != None)
-	   XFreePixmap(w->dpy, c->backing);
-#else
-       if (c->backing != NULL)
-	   mb_drawable_unref(c->backing);
-#endif
 
        for (i=0; i<MSK_COUNT; i++)
 	 if (c->backing_masks[i] != None)

@@ -263,6 +263,12 @@ wm_usage(char *progname)
    printf("\tping protocol support            no\n");
 #endif
 
+#ifndef NO_XRM
+   printf("\tXRM support                      yes\n");
+#else
+   printf("\tXRM support                      no\n");
+#endif
+
    printf("\nVisit http://matchbox.handhelds.org for more info.\n");
    printf("(c) 2004 OpenedHand Ltd\n");
    exit(0);
@@ -275,6 +281,7 @@ wm_load_config (Wm   *w,
 		char *argv[])
 {
    int i;
+
    /* Configure these now, and let the arguments override them */
 
    w->config = malloc(sizeof(Wm_config));
@@ -312,89 +319,100 @@ wm_load_config (Wm   *w,
 #endif
          continue;
       }
-      if (!strcmp ("-use_titlebar", argv[i])) {
-         if (++i>=*argc) wm_usage (argv[0]);
-         if (strcmp(argv[i], "no") == 0) {
+      if (!strcmp ("-use_titlebar", argv[i])) 
+	{
+	  if (++i>=*argc) wm_usage (argv[0]);
+	  if (strcmp(argv[i], "no") == 0) 
             w->config->use_title = False;
-            dbg("%s() TURNING TITLE OFF\n", __func__);
-         }
-         continue;
+	  continue;
       }
-      if (!strcmp("-display", argv[i])) {
+      if (!strcmp("-display", argv[i])) 
+	{
          if (++i>=*argc) wm_usage (argv[0]);
          strcpy (w->config->display_name, argv[i]);
          continue;
-      }
-      if (!strcmp ("-use_cursor", argv[i])) {
-         if (++i>=*argc) wm_usage (argv[0]);
-         if (strcmp(argv[i], "no") == 0) {
+	}
+      if (!strcmp ("-use_cursor", argv[i])) 
+	{
+	  if (++i>=*argc) wm_usage (argv[0]);
+	  if (strcmp(argv[i], "no") == 0) 
             w->config->no_cursor = True;
-            dbg("%s() TURNING CURSOR OFF\n", __func__);
-         }
          continue;
       }
 #ifndef USE_COMPOSITE
-      if (!strcmp ("-use_lowlight", argv[i])) {
-         if (++i>=*argc) wm_usage (argv[0]);
-         if (strcmp(argv[i], "yes") == 0) {
+      if (!strcmp ("-use_lowlight", argv[i])) 
+	{
+	  if (++i>=*argc) wm_usage (argv[0]);
+	  if (strcmp(argv[i], "yes") == 0)
             w->config->dialog_shade = True;   
-            dbg("%s() TURNING LOWLIGHT ON\n", __func__);
-         }
-         continue;
-      }
+	  continue;
+	}
 #endif
-      if (!strcmp("-use_dialog_mode", argv[i])) {
-         if (++i>=*argc) wm_usage (argv[0]);
-         if (!strcmp("free", argv[i])) {
-            w->config->dialog_stratergy = WM_DIALOGS_STRATERGY_FREE;
-         } else if (!strcmp("const-horiz", argv[i])) {
-            w->config->dialog_stratergy = WM_DIALOGS_STRATERGY_CONSTRAINED_HORIZ;
-         } else if (!strcmp("static", argv[i])) {
-            w->config->dialog_stratergy = WM_DIALOGS_STRATERGY_STATIC;
-         } else {
-            wm_usage (argv[0]);
-         }
-         continue;
-      }
-      if (!strcmp("-use_desktop_mode", argv[i])) {
-         if (++i>=*argc) wm_usage (argv[0]);
-         if (!strcmp("decorated", argv[i])) {
-            w->flags |= DESKTOP_DECOR_FLAG;
-         }
-         continue;
-      }
-#ifdef STANDALONE
-      if (!strcmp("-titlebar_panel", argv[i])) {
-         int flags = 0;
-         if (++i>=*argc) wm_usage (argv[0]);
+      if (!strcmp("-use_dialog_mode", argv[i])) 
+	{
+	  if (++i>=*argc) wm_usage (argv[0]);
+	  if (!strcmp("free", argv[i])) 
+	    {
+	      w->config->dialog_stratergy = WM_DIALOGS_STRATERGY_FREE;
+	    } 
+	  else if (!strcmp("const-horiz", argv[i])) 
+	    {
+	      w->config->dialog_stratergy = WM_DIALOGS_STRATERGY_CONSTRAINED_HORIZ;
+	    } 
+	  else if (!strcmp("static", argv[i])) 
+	    {
+	      w->config->dialog_stratergy = WM_DIALOGS_STRATERGY_STATIC;
+	    } 
+	  else wm_usage (argv[0]);
+	  continue;
+	}
 
-         flags = XParseGeometry(argv[i], &w->toolbar_panel_x,
-                                &w->toolbar_panel_y,
-                                &w->toolbar_panel_w,
-                                &w->toolbar_panel_h) ;
+      if (!strcmp("-use_desktop_mode", argv[i])) 
+	{
+	  if (++i>=*argc) wm_usage (argv[0]);
+	  if (!strcmp("decorated", argv[i])) 
+            w->flags |= DESKTOP_DECOR_FLAG;
+	  continue;
+	}
+#ifdef STANDALONE
+      if (!strcmp("-titlebar_panel", argv[i])) 
+	{
+	  int flags = 0;
+	  if (++i>=*argc) wm_usage (argv[0]);
+	  
+	  flags = XParseGeometry(argv[i], &w->toolbar_panel_x,
+				 &w->toolbar_panel_y,
+				 &w->toolbar_panel_w,
+				 &w->toolbar_panel_h) ;
          
-         if ((flags & XValue) && (flags & YValue) && (flags & WidthValue) && (flags & HeightValue))
+	  if ((flags & XValue) && (flags & YValue) 
+	      && (flags & WidthValue) && (flags & HeightValue))
             w->have_toolbar_panel = True;
-         else
-            fprintf(stderr, "matchbox: titlebar panel geometry string invalid\n");
-         continue;
-      }
+	  else
+            fprintf(stderr, 
+		    "matchbox: titlebar panel geometry string invalid\n");
+	  continue;
+	}
 #endif
-      if (!strcmp ("-force_dialogs", argv[i])) {
-         if (++i>=*argc) wm_usage (argv[0]);
-         w->config->force_dialogs = argv[i];
-         dbg("%s() got force_dialogs :%s ", __func__, w->config->force_dialogs);
-         continue;
-      }
+      if (!strcmp ("-force_dialogs", argv[i])) 
+	{
+	  if (++i>=*argc) wm_usage (argv[0]);
+	  w->config->force_dialogs = argv[i];
+	  continue;
+	}
       wm_usage (argv[0]);
    }
 
-   if ((w->dpy = XOpenDisplay(w->config->display_name)) == NULL) {
-      fprintf(stderr, "matchbox: can't open display! check your DISPLAY variable.\n");
-      exit(1);
-   }
+   if ((w->dpy = XOpenDisplay(w->config->display_name)) == NULL) 
+     {
+       fprintf(stderr, 
+	       "matchbox: can't open display! check your DISPLAY variable.\n");
+       exit(1);
+     }
 }
-#else
+
+#else  /* We have memory hungry XRM */
+
 void
 wm_load_config (Wm   *w, 
 		int  *argc, 

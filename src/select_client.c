@@ -122,7 +122,7 @@ select_client_new(Wm *w)
 
    c = base_client_new(w, win);
    c->type = MBCLIENT_TYPE_TASK_MENU;
-   c->title_frame = c->frame = c->window;
+   client_title_frame(c) = c->frame = c->window;
 
    comp_engine_client_init(w, c); 
    
@@ -303,34 +303,19 @@ select_client_redraw(Client *c, Bool use_cache)
 
    dbg("%s() called\n", __func__);
 
-   if (use_cache && c->backing)
-     {
-#ifdef STANDALONE
-       XSetWindowBackgroundPixmap(c->wm->dpy, c->frame, c->backing);
-#else
-       XSetWindowBackgroundPixmap(c->wm->dpy, c->frame, mb_drawable_pixmap(c->backing));
-#endif
-       XClearWindow(c->wm->dpy, c->frame);
-       return;
-     }
+   if (use_cache)
+     return;
 
    is_shaped = theme_frame_wants_shaped_window( theme, FRAME_MENU);
 
-   if (c->backing == (Pixmap)NULL)
-     client_init_backing(c, c->width, c->height);
+   if (is_shaped) 
+     client_init_backing_mask(c, c->width, 0, c->height, 0, 0, 0 );
 
-   if (is_shaped) client_init_backing_mask(c, c->width, 0, c->height, 0, 0, 0 );
    theme_frame_menu_paint( theme, c);
   
    if (is_shaped)
      XShapeCombineMask( c->wm->dpy, c->frame, ShapeBounding, 0, 0, 
 			c->backing_masks[MSK_NORTH], ShapeSet);
-
-#ifdef STANDALONE
-       XSetWindowBackgroundPixmap(c->wm->dpy, c->frame, c->backing);
-#else
-       XSetWindowBackgroundPixmap(c->wm->dpy, c->frame, mb_drawable_pixmap(c->backing));
-#endif
 
    XClearWindow(c->wm->dpy, c->frame);
 

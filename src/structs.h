@@ -358,17 +358,7 @@ typedef struct _client
 
   /* Decoration etc */
 
-  Window	    frame, title_frame;
-  Window            frames_decor[N_DECOR_FRAMES];
-
-#ifdef STANDALONE
-  Pixmap            backing;
-  Pixmap            pixmaps_decor[N_DECOR_FRAMES]
-#else
-  MBDrawable       *backing;
-  MBDrawable       *drawables_decor[N_DECOR_FRAMES];
-#endif
-
+  Window	    frame, frames_decor[N_DECOR_FRAMES];
   Pixmap            backing_masks[MSK_COUNT];
 
   Bool              have_cache, have_set_bg;

@@ -633,7 +633,7 @@ dialog_client_redraw(Client *c, Bool use_cache)
 
   if (c->flags & CLIENT_TITLE_HIDDEN_FLAG) return;
 
-  if (use_cache && c->backing != None) return;
+  if (use_cache) return;
 
   offset_north = dialog_client_title_height(c);
 
@@ -663,11 +663,6 @@ dialog_client_redraw(Client *c, Bool use_cache)
 
   is_shaped = theme_frame_wants_shaped_window( c->wm->mbtheme, frame_ref_top);
 
-
-  if (c->backing == (Pixmap)NULL)
-    client_init_backing(c, total_w, total_h);
-
-
   if (is_shaped) client_init_backing_mask(c, total_w, c->height, 
 					  offset_north, offset_south,
 					  offset_east, offset_west);
@@ -679,18 +674,15 @@ dialog_client_redraw(Client *c, Bool use_cache)
 		 0, 0, total_w, total_h);
 #endif
 
-  theme_frame_paint(c->wm->mbtheme, c, frame_ref_top, 
-		    0, 0, total_w, offset_north); 
+  theme_frame_paint(c->wm->mbtheme, c, frame_ref_top, total_w, offset_north); 
     
-  theme_frame_paint(c->wm->mbtheme, c, frame_ref_west, 
-		    0, offset_north, offset_west, c->height); 
+  theme_frame_paint(c->wm->mbtheme, c, frame_ref_west,
+		    offset_west, c->height); 
   
   theme_frame_paint(c->wm->mbtheme, c, frame_ref_east, 
-		    total_w - offset_east, offset_north, 
 		    offset_east, c->height); 
 
   theme_frame_paint(c->wm->mbtheme, c, frame_ref_south, 
-		    0, total_h - offset_south, 
 		    total_w, offset_south); 
 
   /* We dont paint buttons for borderonly and message dialogs */

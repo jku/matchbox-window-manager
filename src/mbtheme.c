@@ -316,7 +316,8 @@ theme_frame_button_paint(MBTheme *theme,
 		  mb_pixbuf_img_get_height(theme->img_caches[frame_type]));
 
 	      if (c->type == MBCLIENT_TYPE_APP 
-		  || c->type == MBCLIENT_TYPE_TOOLBAR )
+		  || c->type == MBCLIENT_TYPE_TOOLBAR 
+		  || c->type == MBCLIENT_TYPE_DIALOG)
 		{
 		  img_backing = mb_pixbuf_img_rgb_new(theme->wm->pb, 
 						      button_w, button_h);
@@ -326,6 +327,7 @@ theme_frame_button_paint(MBTheme *theme,
 				     button_w, button_h,
 				     0, 0 );
 		}
+	      /*
 	      else
 		{
 #ifdef USE_COMPOSITE
@@ -355,6 +357,7 @@ theme_frame_button_paint(MBTheme *theme,
 					  0,0,0,0xff);
 		    }
 		}
+	      */
 
 	      if (state == ACTIVE)
 		{
@@ -608,8 +611,6 @@ Bool
 theme_frame_paint( MBTheme *theme, 
 		   Client  *c, 
 		   int frame_type, 
-		   int dx,
-		   int dy, 
 		   int dw, 
 		   int dh )
 {
@@ -627,8 +628,6 @@ theme_frame_paint( MBTheme *theme,
   MBDrawable       *drawable = NULL;
   MBPixbuf         *pixbuf = w->pb;
 
-  dx = 0; dy = 0; /* XXX THESE PARAMS ARE NOT NEEDED, FIX FIX FIX  */
-
   frame = (MBThemeFrame *)list_find_by_id(theme->frames, frame_type);
 
   if (frame == NULL) return False;
@@ -638,23 +637,51 @@ theme_frame_paint( MBTheme *theme,
      pixbuf = w->argb_pb;
 #endif
 
+   /* Figure out what frame we are painting to */
+
+  switch(frame_type)
+    {
+    case FRAME_MAIN_SOUTH:
+    case FRAME_DIALOG_SOUTH:
+    case FRAME_MSG_SOUTH:
+      decor_idx = SOUTH;
+      break;
+    case FRAME_MAIN_EAST: 
+    case FRAME_DIALOG_EAST:
+    case FRAME_MSG_EAST:
+      decor_idx = EAST;
+      break;
+    case FRAME_MAIN_WEST: 
+    case FRAME_DIALOG_WEST:
+    case FRAME_MSG_WEST:
+      decor_idx = WEST;
+      break;
+      /* FRAME_MAIN, FRAME_DIALOG, FRAME_MSG, FRAME_DIALOG_NORTH: */
+    default:
+      decor_idx = NORTH;
+      break;
+    }
+
    drawable = mb_drawable_new(pixbuf, dw, dh);
 
-  /* MBPixbufImage cache */
+   /* Cacheing */
 
-  if (frame_type == FRAME_MAIN 
-      && theme->img_caches[frame_type] != NULL)
+  if (frame_type == FRAME_MAIN && theme->img_caches[frame_type] != NULL)
     {
+      /* We only reuse app titlebar images. 
+       */
       img = theme->img_caches[frame_type];
       have_img_cached = True;
     }
   else
     {
-      if (theme->img_caches[frame_type] != NULL)
-	  mb_pixbuf_img_free(theme->wm->pb, theme->img_caches[frame_type]);
+      /* Other window decors are just kept around whilst the client exists 
+       * so things like buttons can composite onto them.  
+      */
+      theme_img_cache_clear (theme, frame_type);
 
       if (c->backing_masks[MSK_NORTH] != None  /* Need alpha chan for shape */
-	  || c->backing_masks[MSK_SOUTH] != None
+	  || c->backing_masks[MSK_SOUTH]!= None
 	  || c->backing_masks[MSK_EAST] != None
 	  || c->backing_masks[MSK_WEST] != None )
 	theme->img_caches[frame_type] = mb_pixbuf_img_rgba_new(theme->wm->pb,
@@ -668,6 +695,8 @@ theme_frame_paint( MBTheme *theme,
   layer_list_item = frame->layers;
 
   layer_label = (MBThemeLayer*)list_find_by_id(frame->layers, LAYER_LABEL);
+
+  /* Figure out text alignment + positioning */
 
   if (layer_label && c->name)
     {
@@ -745,10 +774,11 @@ theme_frame_paint( MBTheme *theme,
       else c->name_total_width = label_rendered_width;
     }
 
+  /* Paint the acout pixbuf image, if not cached */
   if (!have_img_cached)
-     _theme_paint_core( theme, c, frame, img, dx, dy, dw, dh );
+     _theme_paint_core( theme, c, frame, img, 0, 0, dw, dh );
   
-  /* Icons are a pain as we cant cache them */
+  /* Icons - are a pain as we cant cache them */
 
   if ((layer_icon = (MBThemeLayer*)list_find_by_id(frame->layers, 
 						   LAYER_ICON)) != NULL)
@@ -777,33 +807,12 @@ theme_frame_paint( MBTheme *theme,
     } 
 
   /* Finally paint to the pixmap. */
-
-  switch(frame_type)
-    {
-    case FRAME_MAIN_SOUTH:
-    case FRAME_DIALOG_SOUTH:
-    case FRAME_MSG_SOUTH:
-      decor_idx = SOUTH;
-      break;
-    case FRAME_MAIN_EAST: 
-    case FRAME_DIALOG_EAST:
-    case FRAME_MSG_EAST:
-      decor_idx = EAST;
-      break;
-    case FRAME_MAIN_WEST: 
-    case FRAME_DIALOG_WEST:
-    case FRAME_MSG_WEST:
-      decor_idx = WEST;
-      break;
-      /* FRAME_MAIN, FRAME_DIALOG, FRAME_MSG, FRAME_DIALOG_NORTH: */
-    default:
-      decor_idx = NORTH;
-      break;
-    }
   
   mb_pixbuf_img_render_to_drawable(pixbuf, img, 
 				   mb_drawable_pixmap(drawable), 
 				   0, 0);
+
+  /* and masks for shaping */
 
   if (c->backing_masks[MSK_NORTH] != None &&
       ( frame_type == FRAME_MAIN || frame_type == FRAME_DIALOG 
@@ -837,8 +846,15 @@ theme_frame_paint( MBTheme *theme,
 				 c->backing_masks[MSK_WEST],
 				 0, 0);
   
+  /* If we've painted an icon we need to free up our temporary image */
 
-  if (free_img) mb_pixbuf_img_free(theme->wm->pb, img);
+  if (free_img)
+    mb_pixbuf_img_free(theme->wm->pb, img);
+
+  /* No point caching frame images which dont have buttons */
+
+  if (decor_idx != NORTH)
+    theme_img_cache_clear (theme, frame_type);
 
   /* Now paint text onto pixmap */
 
@@ -880,9 +896,9 @@ theme_frame_paint( MBTheme *theme,
 				 MB_ENCODING_UTF8,
 				 text_render_opts);
 	}
-
-
     }
+
+  /* Finally put the drawable on the decoration frame background */
 
   XSetWindowBackgroundPixmap(w->dpy, c->frames_decor[decor_idx], 
 			     mb_drawable_pixmap(drawable));
@@ -958,6 +974,7 @@ _theme_frame_menu_paint_text_entry(MBTheme      *theme,
 				   MBColor      *color, 
 				   Client       *c, 
 				   Client       *entry, 
+				   MBDrawable   *dest,
 				   int           x,
 				   int           y)
 {
@@ -970,7 +987,7 @@ _theme_frame_menu_paint_text_entry(MBTheme      *theme,
   mb_font_set_color (font, color);
 
   mb_font_render_simple (font, 
-			 c->backing,
+			 dest,
 			 x,
 			 y + offset,
 			 c->width - c->wm->config->use_icons - MENU_ENTRY_PADDING,
@@ -1116,7 +1133,9 @@ theme_frame_menu_paint(MBTheme* theme, Client *c)
   MBColor        *color;
   MBClientButton *button = NULL;
   MBList         *item;
+  MBDrawable     *drawable;
   int             item_h, item_x, item_current_y, item_text_w, icon_offset = 0;
+
 
   frame = (MBThemeFrame *)list_find_by_id(theme->frames, FRAME_MENU);
 
@@ -1131,6 +1150,8 @@ theme_frame_menu_paint(MBTheme* theme, Client *c)
   icon_offset = (item_h - c->wm->config->use_icons)/2;
 
   if (icon_offset < 0) icon_offset = 0;
+
+  drawable = mb_drawable_new(w->pb, c->width, c->height);
     
   img = mb_pixbuf_img_new(theme->wm->pb, c->width, c->height);
 
@@ -1182,7 +1203,7 @@ theme_frame_menu_paint(MBTheme* theme, Client *c)
    /* render the pixbuf */
 
    mb_pixbuf_img_render_to_drawable(theme->wm->pb, img, 
-				    mb_drawable_pixmap(c->backing), 0, 0);
+				    mb_drawable_pixmap(drawable), 0, 0);
 
   if (c->backing_masks[MSK_NORTH] != None)
     mb_pixbuf_img_render_to_mask(theme->wm->pb, img, 
@@ -1209,7 +1230,8 @@ theme_frame_menu_paint(MBTheme* theme, Client *c)
 	  && p != wm_get_visible_main_client(w))
 	{
 	  _theme_frame_menu_paint_text_entry(theme, font, color, 
-					     c, p, item_x, item_current_y);
+					     c, p, drawable, 
+					     item_x, item_current_y);
 	  
 	  button = client_button_new(c, c->frame, frame->border_w, 
 				     item_current_y, 
@@ -1233,7 +1255,8 @@ theme_frame_menu_paint(MBTheme* theme, Client *c)
 	  && p != wm_get_visible_main_client(w))
 	{
 	  _theme_frame_menu_paint_text_entry(theme, font, color, 
-					     c, p, item_x, item_current_y);
+					     c, p, drawable, 
+					     item_x, item_current_y);
 	  
 	  button = client_button_new(c, c->frame, frame->border_w, 
 				     item_current_y, 
@@ -1250,7 +1273,8 @@ theme_frame_menu_paint(MBTheme* theme, Client *c)
   if ((p = wm_get_desktop(c->wm)) != NULL) 
     {
       _theme_frame_menu_paint_text_entry(theme, font, color, 
-					 c, p, item_x, item_current_y);
+					 c, p, drawable, 
+					 item_x, item_current_y);
 
       button = client_button_new(c, c->frame, frame->border_w, 
 				 item_current_y, 
@@ -1261,6 +1285,12 @@ theme_frame_menu_paint(MBTheme* theme, Client *c)
       list_add(&c->buttons, NULL, 0, (void *)button);
     }
   
+
+  XSetWindowBackgroundPixmap(w->dpy, c->frame, mb_drawable_pixmap(drawable));
+  XClearWindow(w->dpy, c->frame);
+  XSync(c->wm->dpy, False);
+
+  mb_drawable_unref(drawable);
   return;
 }
 

@@ -97,7 +97,7 @@ toolbar_client_move_resize(Client *c)
       XResizeWindow(w->dpy, c->window, c->width, c->height);
       XMoveResizeWindow(w->dpy, c->frame, c->x - max_offset,
 		  c->y, c->width + max_offset, c->height );
-      XMoveResizeWindow(w->dpy, c->title_frame, 0,
+      XMoveResizeWindow(w->dpy, client_title_frame(c), 0,
 		  0, max_offset , c->height );
    } else {
 
@@ -105,7 +105,7 @@ toolbar_client_move_resize(Client *c)
        {
 	 XMoveResizeWindow(w->dpy, c->frame, c->x,
 			   c->y, c->width + max_offset, offset );
-	 XMoveResizeWindow(w->dpy, c->title_frame, 0,
+	 XMoveResizeWindow(w->dpy, client_title_frame(c), 0,
 			   0, c->width + max_offset , min_offset );
        }
    }      
@@ -133,7 +133,7 @@ toolbar_client_reparent(Client *c)
   
   attr.background_pixel = w->grey_col.pixel;
   
-  c->title_frame =
+  c->frames_decor[NORTH] =
     XCreateWindow(w->dpy, c->frame, 0, 0, frm_size, c->height, 0,
 		  CopyFromParent, CopyFromParent, CopyFromParent,
 		  CWOverrideRedirect|CWBackPixel|CWEventMask, &attr);
@@ -156,16 +156,7 @@ toolbar_client_show(Client *c)
   Wm   *w = c->wm;
   long win_state; 
 
-#ifdef STANDALONE
-   XFreePixmap(w->dpy, c->backing);
-   c->backing = None;
-#else
-   if (c->backing != NULL) 
-     mb_drawable_unref(c->backing);
-   c->backing = NULL;
-#endif
-
-   c->mapped = True;
+  c->mapped = True;
 
   if (w->stack_top_app 
       && (w->stack_top_app->flags & CLIENT_FULLSCREEN_FLAG))
@@ -228,21 +219,11 @@ toolbar_client_hide(Client *c)
   
   c->y = c->y +(c->height - theme_frame_defined_height_get(c->wm->mbtheme,
 							   FRAME_UTILITY_MIN));
-#ifdef STANDALONE
-   if (c->backing) 
-     XFreePixmap(w->dpy, c->backing);
-   c->backing = None;
-#else
-   if (c->backing != NULL)
-     mb_drawable_unref(c->backing);
-   c->backing = NULL;
-#endif
+  toolbar_client_move_resize(c);
+  
+  dbg("hiding toolbar y is now %i", c->y);
 
-   toolbar_client_move_resize(c);
-
-   dbg("hiding toolbar y is now %i", c->y);
-
-   wm_update_layout(c->wm, c, c->height - toolbar_win_offset(c));
+  wm_update_layout(c->wm, c, c->height - toolbar_win_offset(c));
 }
 
 void
@@ -352,7 +333,10 @@ toolbar_client_redraw(Client *c, Bool use_cache)
 						 FRAME_UTILITY_MAX);
   int min_offset = theme_frame_defined_height_get(w->mbtheme, 
 						  FRAME_UTILITY_MIN);
-  if (use_cache && c->backing != None) return;
+
+  if (c->flags & CLIENT_TITLE_HIDDEN_FLAG) return;
+
+  if (use_cache) return;
   
   client_buttons_delete_all(c);
   
@@ -360,15 +344,8 @@ toolbar_client_redraw(Client *c, Bool use_cache)
     {
       if (!min_offset) return;
       
-      if (c->flags & CLIENT_TITLE_HIDDEN_FLAG) max_offset = 0;
-      
-      if (c->backing == None)
-	client_init_backing(c, c->width + max_offset, min_offset);
-      
       theme_frame_paint(w->mbtheme, c, FRAME_UTILITY_MIN, 
-			0, 0, 
-			c->width + max_offset, 
-			min_offset); 
+			c->width + max_offset, min_offset); 
       
       theme_frame_button_paint(w->mbtheme, c, BUTTON_ACTION_CLOSE, 
 			       INACTIVE, FRAME_UTILITY_MIN, 
@@ -382,13 +359,8 @@ toolbar_client_redraw(Client *c, Bool use_cache)
       
       if (!max_offset) return;
       
-      if (c->flags & CLIENT_TITLE_HIDDEN_FLAG) return;
-      
-      if (c->backing == None)
-	client_init_backing(c, max_offset, c->height);
-      
-      theme_frame_paint( w->mbtheme, c, FRAME_UTILITY_MAX,
-			 0, 0, max_offset, c->height);
+      theme_frame_paint( w->mbtheme, c, FRAME_UTILITY_MAX, 
+			 max_offset, c->height);
       
       theme_frame_button_paint(w->mbtheme, c, BUTTON_ACTION_CLOSE, 
 			       INACTIVE, FRAME_UTILITY_MAX, 
@@ -399,14 +371,6 @@ toolbar_client_redraw(Client *c, Bool use_cache)
 			       max_offset, c->height);
     }
   
-#ifdef STANDALONE
-  XSetWindowBackgroundPixmap(w->dpy, c->title_frame, c->backing);
-#else
-  XSetWindowBackgroundPixmap(w->dpy, c->title_frame, 
-			     mb_drawable_pixmap(c->backing));
-#endif
-  XClearWindow(w->dpy, c->title_frame);
-  XFlush(w->dpy);
 }
 
 

@@ -470,14 +470,6 @@ client_decor_frames_init(Client *c,
 #endif
 #else
 
-  for(i=0; i<N_DECOR_FRAMES; i++)
-    if (c->drawables_decor[i] != NULL)
-      mb_drawable_unref(c->drawables_decor[i]);
-
-      /* OLD */
-   if (c->backing != NULL) 
-     mb_drawable_unref(c->backing);
-
 #ifdef USE_COMPOSITE
    if (c->is_argb32)
      {
@@ -489,62 +481,10 @@ client_decor_frames_init(Client *c,
      }
 #endif
 
-   c->drawables_decor[NORTH] = mb_drawable_new(pb,
-					       c->width + width_east + width_west, 
-					       height_north);
 
-   /*
-   c->backing = mb_drawable_new(w->pb, width, height);
-
-   XFillRectangle(w->dpy, mb_drawable_pixmap(c->backing), 
-		  w->mbtheme->gc, 0, 0, width, height);
-   */
 #endif
 
 
-}
-
-void
-client_init_backing(Client* c, int width, int height)
-{
-  Wm *w = c->wm;
-
-#ifdef STANDALONE
-
-  if (c->backing != None) XFreePixmap(w->dpy, c->backing);
-
-  c->backing = XCreatePixmap(w->dpy, w->root, width, height ,
-			     DefaultDepth(w->dpy, w->screen));
-
-#if defined (USE_XFT) 
-
-  if (c->xftdraw != NULL) XftDrawDestroy(c->xftdraw);
-
-   c->xftdraw = XftDrawCreate(w->dpy, (Drawable) c->backing, 
-			      DefaultVisual(w->dpy, w->screen),
-			      DefaultColormap(w->dpy, w->screen));
-#endif
-
-
-#else
-
-   if (c->backing != NULL) 
-     mb_drawable_unref(c->backing);
-
-#ifdef USE_COMPOSITE
-   if (c->is_argb32)
-     {
-       c->backing = mb_drawable_new(w->argb_pb, width, height);
-       dbg("%s() XXXXX creating 32bit drawable ( %i, %ix%i ) XXXX\n", 
-	   __func__, w->argb_pb->depth, width, height);
-     }
-   else
-#endif
-     c->backing = mb_drawable_new(w->pb, width, height);
-
-     XFillRectangle(w->dpy, mb_drawable_pixmap(c->backing), 
-		    w->mbtheme->gc, 0, 0, width, height);
-#endif
 }
 
 /* Create masks used for shaped decorations */

@@ -277,8 +277,6 @@ main_client_reparent(Client *c)
 
   XClearWindow(w->dpy, c->frame);
 
-  c->title_frame = c->frames_decor[NORTH];
-
   XSetWindowBorderWidth(w->dpy, c->window, 0);
   XAddToSaveSet(w->dpy, c->window);
   XSelectInput(w->dpy, c->window, ColormapChangeMask|PropertyChangeMask);
@@ -417,17 +415,13 @@ main_client_redraw(Client *c, Bool use_cache)
 
    dbg("%s() calling theme_frame_paint()\n", __func__); 
 
-   theme_frame_paint(w->mbtheme, c, FRAME_MAIN, 0, 0, width, height); 
+   theme_frame_paint(w->mbtheme, c, FRAME_MAIN, width, height); 
 
-   theme_frame_paint(w->mbtheme, c, FRAME_MAIN_WEST, 
-		     0, height, offset_west, c->height); 
+   theme_frame_paint(w->mbtheme, c, FRAME_MAIN_WEST, offset_west, c->height); 
   
-   theme_frame_paint(w->mbtheme, c, FRAME_MAIN_EAST, 
-		     c->width + offset_west, height, 
-		     offset_east, c->height); 
+   theme_frame_paint(w->mbtheme, c, FRAME_MAIN_EAST, offset_east, c->height); 
 
    theme_frame_paint(w->mbtheme, c, FRAME_MAIN_SOUTH, 
-		     0, c->height + height, 
 		     c->width + offset_east + offset_west, offset_south); 
 
    if (!(c->flags & CLIENT_IS_DESKTOP_FLAG))
@@ -561,8 +555,10 @@ void main_client_button_press(Client *c, XButtonEvent *e)
    if (w->flags & TITLE_HIDDEN_FLAG)
    {
       main_client_toggle_title_bar(c);
+      /* XXX What is this doing ?
       XMapWindow(w->dpy, c->title_frame);
       XMapSubwindows(w->dpy, c->title_frame);
+      */
       return;
    }
 
@@ -662,7 +658,7 @@ main_client_toggle_title_bar(Client *c)
 	    /* show */
 	    p->y = main_client_title_height(p) + y_offset;
 	    p->height -= ( main_client_title_height(p) - TITLE_HIDDEN_SZ );
-	    XMapWindow(w->dpy, p->title_frame); /* prev will have unmapped */
+	    XMapWindow(w->dpy, client_title_frame(p)); /* prev will have unmapped */
 	    
 	    if (w->have_titlebar_panel
 		&& mbtheme_has_titlebar_panel(w->mbtheme))

@@ -67,14 +67,15 @@ AC_ARG_ENABLE(ping-protocol,
    		enable_ping_protocol=$enableval, 
 		enable_ping_protocol=yes)
 
+AC_ARG_ENABLE(xrm,
+  [  --disable-xrm                 disable Xrm support [default=no]],
+   		enable_xrm=$enableval, 
+		enable_xrm=yes)
+
 AC_ARG_ENABLE(alt_input_wins,
   [  --enable-alt-input-wins enable alternate managing input windows (EXPERIMENTAL)],
   enable_alt_input_wins=$enableval, enable_alt_input_wins=no)
 
-AC_ARG_ENABLE(xrm,
-  [  --disable-xrm            disable Xrm support [default=no]],
-   		enable_xrm=$enableval, 
-		enable_xrm=yes)
 
 AC_ARG_ENABLE(debug,
   [  --enable-debug                enable debug ( verbose ) build],
@@ -212,7 +213,7 @@ fi
 dnl ------ Xrm support ------------------------------------------------
 
 if test x$enable_xrm = xno; then
-      LIBMB_CFLAGS="$LIBMB_CFLAGS -DNO_XRM"
+      AC_DEFINE(NO_XRM, [1], [Dont use Xrm])
       AC_MSG_RESULT([Disabling Xrm Support.])	
 fi
 
@@ -464,9 +465,9 @@ echo "
         Building Standalone with Xft:       ${enable_standalone_xft}
 
         Building with Keyboard:             ${enable_keyboard}
+	Building with XRM support           ${enable_xrm}
         Building with wm ping protocol:     ${enable_ping_protocol}
         Building with Alt input Windows:    ${enable_alt_input_wins}
-        Building with Xrm:                  ${enable_xrm}
         Building with Expat:                ${enable_expat}
         Building with XSync:                ${enable_xsync}
         Building with XSettings:            ${mb_have_xsettings}

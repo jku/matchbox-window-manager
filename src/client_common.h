@@ -76,16 +76,6 @@ client_get_next (Client* c, MBClientTypeEnum wanted);
 Client *
 client_get_prev (Client* c, MBClientTypeEnum wanted);
 
-void 
-client_init_backing (Client* c, int width, int height);
-
-/*
-void
-client_init_backing_mask (Client *c, 
-			  int     width, 
-			  int     height_north, 
-			  int     height_south );
-*/
 
 void
 client_decor_frames_move_resize(Client *c, 
