@@ -1,5 +1,18 @@
 2004-08-06  mallum,,,  <mallum@handhelds.org>
 
+	* src/wm.c: (wm_handle_button_event),
+	(wm_handle_configure_request), (wm_restack):
+	* src/dialog_client.c: (dialog_check_geometry):
+	* src/dialog_client.h:
+	Allow dialog resizing / repostioning via new dialog stuff. 
+        Raise a dialog on click ( not just titlebar anymore ).
+
+	* src/ewmh.c: (ewmh_set_active):
+	Minor optimisation - avoid setting active win prop
+	if not changed.
+
+2004-08-06  mallum,,,  <mallum@handhelds.org>
+
 	* data/themes/blondie/theme.xml:
 	Fix min+max toolbars having different sizes.
 	Note, Matchbox probably should handle this.

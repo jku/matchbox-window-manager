@@ -417,26 +417,35 @@ ewmh_set_allowed_actions(Wm *w, Client *c)
 		  num_actions);
 }
 
-void ewmh_set_active(Wm *w)
+void 
+ewmh_set_active(Wm *w)
 {
   Client *c;
-   unsigned long  val[1];
-if ((c = wm_get_desktop(w)) != NULL
-	    && (w->flags & DESKTOP_RAISED_FLAG))
-     { 
-       val[0] = c->window; 
-       dbg("%s() setting desktop ( %li ) as active\n", __func__, c->window );
-     }
-   else if (w->main_client)
-     { 
-       val[0] = w->main_client->window; 
-       dbg("%s() setting %li as active\n", __func__, w->main_client->window );
-     }
-   else val[0] = 0;
+  static unsigned long last_active; 
+  unsigned long  val[1];
+
+  if ((w->flags & DESKTOP_RAISED_FLAG) && (c = wm_get_desktop(w)) != NULL)
+    { 
+      val[0] = c->window; 
+      dbg("%s() setting desktop ( %li ) as active\n", __func__, c->window );
+    }
+  else if (w->main_client)
+    { 
+      val[0] = w->main_client->window; 
+
+    }
+  else val[0] = 0;
    
-   XChangeProperty(w->dpy, w->root, w->atoms[_NET_ACTIVE_WINDOW] ,
-		   XA_WINDOW, 32, PropModeReplace,
-		   (unsigned char *)val, 1);
+  if (last_active == val[0]) 	/* avoid the roundtrip if pos */
+    return;
+
+  last_active = val[0]; 
+
+  dbg("%s() setting %li as active\n", __func__, w->main_client->window );
+
+  XChangeProperty(w->dpy, w->root, w->atoms[_NET_ACTIVE_WINDOW] ,
+		  XA_WINDOW, 32, PropModeReplace,
+		  (unsigned char *)val, 1);
 }
 
 

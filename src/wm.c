@@ -744,6 +744,10 @@ wm_handle_button_event(Wm *w, XButtonEvent *e)
    Client *p;
    Client *c = wm_find_client(w, e->window, WINDOW);
 
+   /* raise dialogs */
+   if (c && c->type == dialog) 
+     c->show(c);
+
    XAllowEvents(w->dpy, ReplayPointer, CurrentTime);
 
    if (c && c->type != menu && c->type != dock && client_want_focus(c))
@@ -1084,7 +1088,7 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
        return;
      }
    
-   dbg("%s() for win %s - have x: %i vs %i, y: %i vs %i, w: %i vs %i, h: %i vs %i,\n", __func__, c->name, c->height, e->height, c->width, e->width, c->x, e->x, c->y, e->y );
+   dbg("%s() for win %s - have w: %i vs %i, h: %i vs %i, x: %i vs %i, y: %i vs %i,\n", __func__, c->name, c->height, e->height, c->width, e->width, c->x, e->x, c->y, e->y );
    
    if (c->type == dock) 	/* Docks can move */
      {
@@ -1115,7 +1119,53 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
         } 
        return;
      } 
-   
+
+   xwc.width  = c->width;
+   xwc.height = c->height;
+   xwc.x = c->x;
+   xwc.y = c->y;
+
+   if (c->type == dialog)
+     {
+       int req_x = e->x, req_y = e->y, req_w = e->width, req_h = e->height;
+
+       if (e->width && e->width != c->width && e->width != c->init_width)
+	 c->init_width = e->width;
+
+       if (e->height && e->height != c->height && e->height != c->init_height)
+	 c->init_height = e->height;
+
+       if (e->x <= 0) req_x = c->x;
+       if (e->y <= 0) req_y = c->y;
+
+       if (e->x != c->x || e->y != c->y 
+	   || e->width != c->width || e->height != c->height)
+	 {
+	   dialog_check_geometry(c, &req_x, &req_y, &req_w, &req_h);
+
+	   /* make sure buttons get repositioned */
+	   if (c->width != req_w)
+	     client_buttons_delete_all(c);
+
+	   xwc.width  = c->width  = req_w;
+	   xwc.height = c->height = req_h;
+	   xwc.x      = c->x      = req_x;
+	   xwc.y      = c->y      = req_y; 
+
+	   /* for below */
+	   no_configure = True; 
+
+	   dialog_client_move_resize(c);
+
+	   client_deliver_config(c);
+
+	   /* Make sure we get the damage before the move.. */
+
+	   need_comp_update = True;
+	 }
+     }
+
+#if 0    			/* Old way */
    /* allow decoration free dialogs to move themselves */
    if ((c->type == dialog  	
 	&& ( c->flags & CLIENT_TITLE_HIDDEN_FLAG 
@@ -1125,6 +1175,7 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 	     || c->wm->config->dialog_stratergy == WM_DIALOGS_STRATERGY_FREE))
        || c->type == MBCLIENT_TYPE_OVERRIDE)
      {
+
        /* render any existing  */
        comp_engine_render(c->wm, c->wm->all_damage);
 
@@ -1153,7 +1204,8 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
        xwc.x = c->x;
        xwc.y = c->y;
      }
-   
+#endif
+
    xwc.border_width = 0;
    xwc.sibling = e->above;
    xwc.stack_mode = e->detail;
@@ -1891,7 +1943,7 @@ wm_restack(Wm         *w,
        {
 	 int req_x = p->x, req_y = p->y, req_w = p->width, req_h = p->height;
 
-	 if (!dialog_check_gemoetry(p, &req_x, &req_y, &req_w, &req_h))
+	 if (!dialog_check_geometry(p, &req_x, &req_y, &req_w, &req_h))
 	   {
 	     p->x = req_x; p->y = req_y; p->width = req_w; p->height = req_h;
 	     p->move_resize(p);

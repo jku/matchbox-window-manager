@@ -456,7 +456,7 @@ dialog_get_available_area(Client *c,
    to fit. 
  */
 Bool
-dialog_check_gemoetry(Client *c,
+dialog_check_geometry(Client *c,
 		      int    *req_x,
 		      int    *req_y,
 		      int    *req_width,
