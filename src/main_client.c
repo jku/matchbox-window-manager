@@ -14,7 +14,7 @@
 */
 
 /*
-  $Id: main_client.c,v 1.17 2004/11/16 16:07:44 mallum Exp $
+  $Id: main_client.c,v 1.18 2004/11/17 12:50:21 mallum Exp $
 */
 
 #include "main_client.h"
@@ -612,13 +612,18 @@ main_client_hide(Client *c)
     {
       c->next_focused_client = w->focused_client;
     }
-  else c->next_focused_client = NULL;
+  else 
+    {
+      c->next_focused_client = NULL;
+      w->focused_client      = NULL;
+    }
 }
 
 void
 main_client_iconize(Client *c)
 {
   client_set_state(c, IconicState);
+  c->flags |= CLIENT_IS_MINIMIZED;
   main_client_unmap(c);
 }
 
@@ -648,7 +653,11 @@ main_client_show(Client *c)
 
    if (!c->mapped)
      {
-       client_set_state(c, NormalState);
+       if (c->flags & CLIENT_IS_MINIMIZED)
+	 {
+	   client_set_state(c, NormalState);
+	   c->flags &= ~CLIENT_IS_MINIMIZED;
+	 }
        XMapSubwindows(w->dpy, c->frame);
        XMapWindow(w->dpy, c->frame);
      }
@@ -710,6 +719,9 @@ main_client_unmap(Client *c)
      }
 
    XUnmapWindow(w->dpy, c->frame); 
+
+   if (c == w->focused_client)
+     w->focused_client = NULL;
 
    if (next_client)
      wm_activate_client(next_client);   

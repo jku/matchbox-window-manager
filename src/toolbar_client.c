@@ -114,7 +114,7 @@ toolbar_client_reparent(Client *c)
   int frm_size = theme_frame_defined_width_get(w->mbtheme, 
 					       FRAME_UTILITY_MAX );   
   attr.override_redirect = True; 
-  attr.background_pixel  = BlackPixel(w->dpy, w->screen);
+  attr.background_pixel  = w->grey_col.pixel;
   attr.event_mask        = ChildMask|ButtonPressMask|ExposureMask;
   
   c->frame =
