@@ -495,6 +495,11 @@ base_client_destroy(Client *c)
 #endif
      }
 
+   /* Whatever we do the below is very likely to fire off a ( harmless ) 
+    *  X Error or two. Therefore we trap, just to quiten the warnings.
+   */
+   misc_trap_xerrors();
+
 #ifdef USE_LIBSN
    wm_sn_cycle_remove(w, c->window);
 #endif       
@@ -540,9 +545,13 @@ base_client_destroy(Client *c)
     if (c == w->focused_client)
       w->focused_client = NULL;
 
+    /* Be sure to flush out all calls before we untrap.
+     * Important here as the above does alot.
+    */
+    XSync(w->dpy, False);
+    misc_untrap_xerrors();
+
     free(c);
-
-
 }
 
 

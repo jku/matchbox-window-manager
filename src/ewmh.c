@@ -382,8 +382,6 @@ ewmh_update_rects(Wm *w)
   val[3] = w->dpy_height - wm_get_offsets_size(w, NORTH, NULL, True)
     - wm_get_offsets_size(w, SOUTH, NULL, True);
 
-  dbg("%s(): val[3] is %li\n", __func__, val[3] );
-
   if (w->flags & DESKTOP_DECOR_FLAG)
     {
       /* Desktop is decorated, needs to know frame border sizes  */
@@ -395,13 +393,15 @@ ewmh_update_rects(Wm *w)
       val[3] -= theme_frame_defined_height_get(w->mbtheme, FRAME_MAIN); 
     }
 
-  dbg("%s(): val[3] now is %li\n", __func__, val[3] );
+  dbg("%s(): vals now is %li, %li, %li, %li ( root: %li )\n", 
+      __func__, val[0], val[1], val[2], val[3], w->root );
 
   XChangeProperty(w->dpy, w->root, w->atoms[_NET_WORKAREA],
 		  XA_CARDINAL, 32, PropModeReplace, (unsigned char *)val, 4);
   
   XChangeProperty(w->dpy, w->root, w->atoms[_NET_DESKTOP_GEOMETRY],
 		  XA_CARDINAL, 32, PropModeReplace, (unsigned char *)val, 4);
+
 }
 
 void 

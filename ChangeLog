@@ -1,3 +1,13 @@
+2005-02-21  mallum,,,  <mallum@openedhand.com>
+
+	* src/base_client.c: (base_client_destroy):
+	* src/ewmh.c: (ewmh_update_rects):
+	* src/misc.c:
+	More XError trapping;
+	Add debug statements so we no when traps are in place.
+	Do an XSync before untrapping on destroy call, to flush
+	an errors through.
+
 2005-02-18  mallum,,,  <mallum@openedhand.com>
 
 	* src/stack.c: (stack_sync_to_display):
@@ -32,6 +42,8 @@
 	Add colormap to frames so argb wins work again
 	* src/main_client.c: (main_client_button_press):
 	Ignore minimise buttons in presence of modal dialog
+
+2005-02-08  0.9.3 Released
 
 2005-02-08  mallum,,,  <mallum@openedhand.com>
 

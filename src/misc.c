@@ -113,15 +113,17 @@ trapped_xerror_handler(Display     *display,
 void
 misc_trap_xerrors(void)
 {
-   trapped_error_code = 0;
-   old_error_handler = XSetErrorHandler(trapped_xerror_handler);
+  trapped_error_code = 0;
+  dbg("**** %s() *****\n", __func__);
+  old_error_handler = XSetErrorHandler(trapped_xerror_handler);
 }
 
 int
 misc_untrap_xerrors(void)
 {
-   XSetErrorHandler(old_error_handler);
-   return trapped_error_code;
+  dbg("**** %s() *****\n", __func__);
+  XSetErrorHandler(old_error_handler);
+  return trapped_error_code;
 }
 
 
