@@ -1944,7 +1944,7 @@ wm_activate_client(Client *c)
   Wm     *w;
   Client *client_to_focus = c;
 
-  if (c == NULL) return; /* its possible? for this to happen */
+  if (c == NULL) return; /* its possible for this to happen :( */
 
   w = c->wm;
 
@@ -1994,13 +1994,18 @@ wm_activate_client(Client *c)
 
       stack_move_transients_to_top(w, c, 0);
 
+      /* Above dialogs go above transient for root  */
+
+      stack_move_transients_to_top(w, c, CLIENT_HAS_ABOVE_STATE 
+				   /* CLIENT_HAS_URGENCY_FLAG */);
+
       /* Move transient for root dialogs to very top */
 
       stack_move_transients_to_top(w, NULL, 0);
 
-      /* Urgent dialogs go above transient for root  */
+      /* Move transient for root with state above to top  */
 
-      stack_move_transients_to_top(w, c, CLIENT_HAS_URGENCY_FLAG);
+      stack_move_transients_to_top(w, NULL, CLIENT_HAS_ABOVE_STATE );
 
       /* Now move transient for root messages to top */
 

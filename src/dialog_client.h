@@ -60,10 +60,10 @@ int
 dialog_client_title_height (Client *c);
 
 Bool
-dialog_check_geometry(Client *c,
-		      int    *req_x,
-		      int    *req_y,
-		      int    *req_width,
-		      int    *req_height);
+dialog_constrain_geometry(Client *c,
+			  int    *req_x,
+			  int    *req_y,
+			  int    *req_width,
+			  int    *req_height);
 
 #endif

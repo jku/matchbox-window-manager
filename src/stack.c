@@ -256,7 +256,6 @@ stack_move_transients_to_top(Wm *w, Client *client_trans_for, int flags)
   /* This function shifts a clients transients to the top
    * of the stack keeping there respective order.   
    *
-   *
    */
 
   MBList *transient_list = NULL, *list_item = NULL;

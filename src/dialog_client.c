@@ -237,8 +237,8 @@ dialog_client_show(Client *c)
        * - raise ourselves above 
        */
       Client *lowest_trans = c->trans;
-      int urgent_flag = (c->flags & CLIENT_HAS_URGENCY_FLAG) ?
-	CLIENT_HAS_URGENCY_FLAG : 0;
+      int urgent_flag = 0; /* (c->flags & CLIENT_HAS_URGENCY_FLAG) ?
+			      CLIENT_HAS_URGENCY_FLAG : 0; */
 
       while (lowest_trans->trans != NULL) 
 	lowest_trans = lowest_trans->trans;
@@ -248,8 +248,8 @@ dialog_client_show(Client *c)
       if (c->mapped && highest_client == c)
 	{
 	  /* if were already at the top, logic below will actually
-	     move us below the transient.
-	  */
+	   *  move us below the transient.
+	   */
 	  dbg("%s() %s already highest and mapped .. leaving\n", 
 	      __func__, c->name);
 	}
@@ -287,14 +287,15 @@ dialog_client_show(Client *c)
   list_destroy(&transient_list);
 
 
+  /* Insurance below */
+
   if (wm_get_visible_main_client(w))
     {
       stack_move_transients_to_top(w, wm_get_visible_main_client(w), 
-				   CLIENT_HAS_URGENCY_FLAG);
-
-      stack_move_transients_to_top(w, wm_get_visible_main_client(w), 
 				   CLIENT_HAS_ABOVE_STATE);
     }
+
+  stack_move_transients_to_top(w, NULL, CLIENT_HAS_ABOVE_STATE);
 
   stack_move_transients_to_top(w, NULL, CLIENT_HAS_URGENCY_FLAG);
 

@@ -1,5 +1,15 @@
 2004-11-11  mallum,,,  <mallum@handhelds.org>
 
+	* src/dialog_client.h:
+	Add missing prototype.
+	* src/dialog_client.c: (dialog_client_show):
+	* src/stack.c: (stack_move_transients_to_top):
+	* src/wm.c: (wm_activate_client):
+	Add support for _NET_WM_STATE_ABOVE to dialog stacking
+	Make urgent wins non transient for root stack lower. 
+
+2004-11-11  mallum,,,  <mallum@handhelds.org>
+
 	* src/dialog_client.c: (dialog_client_check_for_state_hints),
 	(dialog_client_button_press):
 	* src/wm.c: (wm_handle_button_event):
@@ -7,7 +17,6 @@
         titlebar is clicked on. So 'see through' kind of.
 
 2004-11-10  mallum,,,  <mallum@handhelds.org>
-
 
 	* src/dialog_client.c: (dialog_constrain_geometry):
 	Rename dialog_check_geometry
