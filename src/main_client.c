@@ -14,7 +14,7 @@
 */
 
 /*
-  $Id: main_client.c,v 1.5 2004/07/30 12:12:32 mallum Exp $
+  $Id: main_client.c,v 1.6 2004/08/05 16:37:19 mallum Exp $
 */
 
 #include "main_client.h"
@@ -114,14 +114,16 @@ main_client_configure(Client *c)
 int
 main_client_title_height(Client *c)
 {
-   if ( (!c->wm->config->use_title)
-	|| c->flags & CLIENT_FULLSCREEN_FLAG) return 0;
+  if (c == NULL || c->type != mainwin)
+    return 0;
 
-   if ((c->wm->flags & TITLE_HIDDEN_FLAG) && c->type == mainwin)
-      return TITLE_HIDDEN_SZ;
+  if ( (!c->wm->config->use_title)
+       || c->flags & CLIENT_FULLSCREEN_FLAG) return 0;
 
-   return theme_frame_defined_height_get(c->wm->mbtheme, FRAME_MAIN);
+  if ((c->wm->flags & TITLE_HIDDEN_FLAG) && c->type == mainwin)
+    return TITLE_HIDDEN_SZ;
 
+  return theme_frame_defined_height_get(c->wm->mbtheme, FRAME_MAIN);
 }
 
 void

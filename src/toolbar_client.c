@@ -137,6 +137,7 @@ toolbar_client_reparent(Client *c)
 void /* Try to stop any dialogs covering toolbar windows */
 _fix_dialogs_for_toolbars(Client *c)
 {
+#if 0
   Client *t;
   int     max_y = 0, diff = 0, bottom_frame_width = 0;
 
@@ -177,6 +178,7 @@ _fix_dialogs_for_toolbars(Client *c)
 	}
     }
   END_CLIENT_LOOP(c->wm, t)
+#endif
 
 }
 
@@ -197,10 +199,12 @@ toolbar_client_show(Client *c)
 
    if (client_get_state(c) == WithdrawnState)
      {
+       client_set_state(c,NormalState);
        wm_restack(c->wm, c, - c->height);
      } 
    else if (client_get_state(c) == IconicState) 
      {
+       client_set_state(c,NormalState);
        wm_restack(c->wm, c, -(c->height - toolbar_win_offset(c)));
        c->y = c->y - ( c->height - toolbar_win_offset(c));
        if (c->flags & CLIENT_TITLE_HIDDEN_FLAG)
@@ -281,18 +285,29 @@ toolbar_client_hide(Client *c)
 void
 toolbar_client_destroy(Client *c)
 {
-   dbg("toolbar got destroy");
+  int change_amount = 0;
+  Wm *w = c->wm;
 
-   if (c->x == theme_frame_defined_width_get(c->wm->mbtheme,
-					     FRAME_UTILITY_MAX )
-       || (c->flags & CLIENT_TITLE_HIDDEN_FLAG) )
-   {
-      wm_restack(c->wm, c, c->height);
-   } else {
-      wm_restack(c->wm, c, +theme_frame_defined_height_get(c->wm->mbtheme,
-							   FRAME_UTILITY_MIN));
-   }
-   base_client_destroy(c);
+  dbg("%s() called\n", __func__);
+   
+  c->mapped = False; /* Setting mapped to false will allow the 
+                        dialog resizing/repositioning via restack
+                        to ignore use  */
+
+  if (c->x == theme_frame_defined_width_get(c->wm->mbtheme,
+					    FRAME_UTILITY_MAX )
+      || (c->flags & CLIENT_TITLE_HIDDEN_FLAG) )
+    {
+      change_amount = c->height;
+
+      wm_restack(w, c, change_amount);
+    } else {
+      change_amount = theme_frame_defined_height_get(c->wm->mbtheme,
+						     FRAME_UTILITY_MIN);
+      wm_restack(w, c, change_amount);
+    }
+  
+  base_client_destroy(c);     
 }
 
 void

@@ -253,8 +253,7 @@ dialog_client_show(Client *c)
 
 #ifdef USE_MSG_WIN 	
   if (c->flags & CLIENT_IS_MESSAGE_DIALOG_LO)
-    {
-      Client *t = NULL;
+    {      Client *t = NULL;
 
       /* Make sure any higher priority dialogs are mapped above */
       START_CLIENT_LOOP(c->wm, t)
@@ -374,10 +373,233 @@ dialog_client_reparent(Client *c)
 		     offset_west, offset_north);
 }
 
+/*  Padding between dialog borders and area available  
+ *
+ */
+#define DIALOG_PADDING 4 
+
+void
+dialog_get_available_area(Client *c,
+			  int    *x,
+			  int    *y,
+			  int    *width,
+			  int    *height)
+{
+  Wm *w = c->wm;
+
+
+
+#if 0
+  if (c->trans)
+    {
+      /* Transient for root dialog,
+       * 
+       *
+       */
+
+
+    }
+  else
+#endif
+
+    dbg("%s() south size is %i\n", __func__,  wm_get_offsets_size(w, SOUTH, NULL, True));
+
+  if (c->flags & CLIENT_TITLE_HIDDEN_FLAG 
+      || c->flags & CLIENT_IS_MESSAGE_DIALOG)
+    {
+      /* Decorationless dialogs can position themselves anywhere */
+      *y = 0; *x = 0; *height = w->dpy_height; *width = w->dpy_width;
+    }
+  else
+    {
+      Client *p = NULL;
+      Bool    have_toolbar = False;
+
+      START_CLIENT_LOOP(w, p)
+      {
+	if (p->type == toolbar && p->mapped)
+	  { have_toolbar = True; break; }
+      }
+      END_CLIENT_LOOP(w, p);
+
+      *y      = wm_get_offsets_size(w, NORTH, NULL, True);
+
+      /* if toolbar ( input window present ) dialogs can cover titlebars */
+      if (!have_toolbar)
+	*y  += main_client_title_height(c->trans);
+
+      *height = w->dpy_height - *y - wm_get_offsets_size(w, SOUTH, NULL, True);
+      *x      = wm_get_offsets_size(w, WEST, NULL, True);
+      *width  = w->dpy_width - *x - wm_get_offsets_size(w, EAST, NULL, True);
+    }
+}
+
+/* 
+   req params are reparented window geometry *without* borders
+
+ */
+Bool
+dialog_check_gemoetry(Client *c,
+		      int    *req_x,
+		      int    *req_y,
+		      int    *req_width,
+		      int    *req_height)
+{
+  Wm  *w = c->wm;
+  int avail_x, avail_y, avail_width, avail_height;
+  int actual_x, actual_y, actual_width, actual_height;
+  int bdr_south = 0, bdr_west = 0, bdr_east = 0, bdr_north = 0;
+
+  dialog_get_available_area(c,&avail_x, &avail_y, &avail_width, &avail_height);
+
+  /* Figure out window border offsets */
+  dialog_client_get_offsets(c, &bdr_east, &bdr_south, &bdr_west);
+  bdr_north = dialog_client_title_height(c);
+
+  dbg("%s() - \n\t avail_x : %d\n\tavail_y : %d\n\tavail_width : %d"
+      "\n\tavail_height %d\n\tbdr_south : %d\n\tbdr_west : %d\n\tbdr_east : %d\n\tbdr_north : %d\n",
+      __func__, avail_x, avail_y, avail_width, avail_height,
+      bdr_south, bdr_west, bdr_east, bdr_north);
+
+  /* Dialog geometry with decorations */
+  actual_x = *req_x - bdr_east - DIALOG_PADDING;
+  actual_y = *req_y - bdr_north - DIALOG_PADDING;
+  actual_width = *req_width + bdr_east + bdr_west + (2*DIALOG_PADDING);
+  actual_height = *req_height + bdr_north + bdr_south + (2*DIALOG_PADDING);
+
+  if (actual_x > avail_x 
+      && (actual_x + actual_width) < (avail_x + avail_width) 
+      && actual_y > avail_y
+      && (actual_y + actual_height) < (avail_y + avail_height) )
+    {
+      /* 
+	 if remem size && rememsize > this_size
+	   try and grow.    
+      */
+    }
+
+  if (c->init_width && c->init_height 
+      && (c->init_width > *req_width || c->init_height > *req_height) )
+    {
+      actual_width  = c->init_width + bdr_east + bdr_west + (2*DIALOG_PADDING);
+      actual_height = c->init_height + bdr_north + bdr_south + (2*DIALOG_PADDING);
+    }
+
+  if (actual_width > avail_width)  /* set width to fit  */
+    *req_width = avail_width - ( bdr_east + bdr_west + (2*DIALOG_PADDING));
+
+  if (actual_height > avail_height)  /* and height  */
+    *req_height = avail_height - ( bdr_south + bdr_north + (2*DIALOG_PADDING));
+
+  if (actual_x < avail_x) 
+    *req_x = avail_x + bdr_west + DIALOG_PADDING; /* move dialog right */
+
+  if (actual_y < avail_y) 
+    *req_y = avail_y + bdr_north + DIALOG_PADDING; /* move dialog up */
+
+  if (actual_x > avail_x 
+      && (actual_x + actual_width) > (avail_x + avail_width) )
+    *req_x = avail_x + bdr_west + DIALOG_PADDING; /* move dialog right */
+
+   if (actual_y > avail_y
+       && (actual_y + actual_height) > (avail_y + avail_height) )
+    *req_y = avail_y + bdr_north + DIALOG_PADDING; /* move dialog up */
+
+  return False;
+}
+		
+void
+dialog_init_geometry(Client *c)      
+{
+  /* 
+     Called by initial configure() 
+     
+     - Check for 0,0 position. 
+       - 0,0 ? center. 
+     - Save initial position. 
+
+  */
+  Wm  *w = c->wm;
+  int  avail_x, avail_y, avail_width, avail_height;
+  int  bdr_south = 0, bdr_west = 0, bdr_east = 0, bdr_north = 0;
+
+  /* Check if we actually want to perform any sizing intervention */
+  if (w->config->dialog_stratergy == WM_DIALOGS_STRATERGY_FREE)
+    return;
+
+  /* Allow decorationless dialogs to position themselves anywhere */
+  if (c->flags & CLIENT_TITLE_HIDDEN_FLAG)
+    return;
+
+  dialog_get_available_area(c,&avail_x, &avail_y, &avail_width, &avail_height);
+
+  /* Figure out window border offsets */
+  dialog_client_get_offsets(c, &bdr_east, &bdr_south, &bdr_west);
+  bdr_north = dialog_client_title_height(c);
+
+  dbg("%s() - \n\t avail_x : %d\n\tavail_y : %d\n\tavail_width : %d"
+      "\n\tavail_height %d\n\tbdr_south : %d\n\tbdr_west : %d\n\tbdr_east : %d\n\tbdr_north : %d\n",
+      __func__, avail_x, avail_y, avail_width, avail_height,
+      bdr_south, bdr_west, bdr_east, bdr_north);
+
+  /* Message Dialogs are free to postion/size where ever but can use totally  
+   * offscreen request to position to window corners - see below
+   */
+  if (c->flags & CLIENT_IS_MESSAGE_DIALOG)
+    {
+      int total_win_width  = c->width + bdr_east + bdr_west;
+      int total_win_height = c->height + bdr_south + bdr_north;
+
+      if (c->x > w->dpy_width) 
+	c->x = w->dpy_width - total_win_width - (c->x - w->dpy_width );
+
+      if (c->y > w->dpy_height) 
+	c->y = w->dpy_height - total_win_height - (c->y - w->dpy_height );
+
+      return;
+    }
+
+  /* save values for possible resizing later if more space comes available */
+  c->init_width  = c->width;
+  c->init_height = c->height;
+
+  dbg("%s() set init, %ix%i, wants x:%d y:%d\n", __func__, c->init_width, c->init_height, c->x, c->y); 
+
+  /* Fix width/height  */
+  if ((c->width + bdr_east + bdr_west) > avail_width)
+    c->width = (avail_width - bdr_east - bdr_west - (2*DIALOG_PADDING));
+
+  if ((c->height + bdr_north + bdr_south) > avail_height)
+    c->height = (avail_height - bdr_north - bdr_south - (2*DIALOG_PADDING));
+
+
+  /* Reposition dialog initially centered if ;
+      + positioned at 0,0
+      + positioned offscreen
+    */
+  if ( (c->x - bdr_west) <= avail_x 
+       || (c->x + c->width + bdr_east + bdr_west) > (avail_x + avail_width))
+    {
+      dbg("%s() centering x pos\n", __func__);
+      c->x = (avail_width  - (c->width + bdr_east + bdr_west))/2 
+	+ bdr_west + avail_x;
+    }
+
+  if ( (c->y - bdr_north) <= avail_y
+       || (c->y + c->height + bdr_south + bdr_north) > (avail_y+avail_height))
+    {
+      dbg("%s() centering y pos\n", __func__);
+      c->y = (avail_height - (c->height + bdr_south + bdr_north))/2 + avail_y + bdr_north;
+    }
+
+}
 
 void
 dialog_client_configure(Client *c)
 {
+  dialog_init_geometry(c);
+
+#if 0
 
 #define MAX_PADDING 8 		/*Used to make sure there is always some free
 				  border space around a dialog */
@@ -501,6 +723,7 @@ dialog_client_configure(Client *c)
       c->y = (c->wm->dpy_height - (c->height + offset_south))/2;
     }
 
+#endif
 }
 
 void

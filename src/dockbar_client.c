@@ -159,6 +159,8 @@ dockbar_client_show(Client *c) /*TODO: show and hide share common static func*/
 
    XGrabServer(c->wm->dpy);
    
+   c->mapped = True;
+
    if (c->flags & CLIENT_DOCK_EAST || c->flags & CLIENT_DOCK_WEST)
      wm_restack(c->wm, c, - c->width);
    else if ( c->flags & CLIENT_DOCK_NORTH )
@@ -209,6 +211,8 @@ dockbar_client_hide(Client *c)
    XGrabServer(c->wm->dpy);
    client_set_state(c, IconicState);
 
+   c->mapped = False; 		/* Same reasoning as toolbar_destroy */
+
    if (c->flags & CLIENT_DOCK_EAST || c->flags & CLIENT_DOCK_WEST)
      wm_restack(c->wm, c, c->width);
    else if (!(c->flags & CLIENT_DOCK_TITLEBAR))
@@ -225,6 +229,8 @@ dockbar_client_destroy(Client *c)
    //dockbar_client_hide(c);
   if (c == c->wm->have_titlebar_panel)
     c->wm->have_titlebar_panel = NULL;
+
+  c->mapped = False;
 
    if (c->flags & CLIENT_DOCK_EAST || c->flags & CLIENT_DOCK_WEST)
      wm_restack(c->wm, c, c->width );

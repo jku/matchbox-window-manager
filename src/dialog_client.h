@@ -54,7 +54,16 @@ dialog_client_button_press (Client *c, XButtonEvent *e);
 void 
 dialog_client_destroy (Client *c);
 
+/* dialog only methods */
+
 int  
 dialog_client_title_height (Client *c);
+
+Bool
+dialog_check_gemoetry(Client *c,
+		      int    *req_x,
+		      int    *req_y,
+		      int    *req_width,
+		      int    *req_height);
 
 #endif

@@ -337,6 +337,7 @@ typedef struct _client
   Visual           *visual;
   Colormap	    cmap;
   int		    x, y, width, height;
+  int               init_width, init_height;
   XID               win_group;
   Pixmap            icon, icon_mask;
   Bool              mapped;	                 /* Bogus ? */

@@ -1697,10 +1697,13 @@ wm_restack(Wm         *w,
 	   signed int  change_amount)
 {
  Client *p;
-
  XGrabServer(w->dpy);
- for (p=client_changed->next; p != client_changed; p=p->next)
+
+ for (p=client_changed->next; p != client_changed; p=p->next) 
    {
+     if (p == client_changed)
+       continue;
+
      dbg("%s() restacking, comparing %i is less than %i for %s\n",
 	 __func__, p->y, client_changed->y, p->name);
      if (client_changed->type == dock 
@@ -1865,19 +1868,38 @@ wm_restack(Wm         *w,
 		   }
 		 break;
 	       case dialog :
-
+		 /*
 		 if (p->flags & CLIENT_SHRUNK_FOR_TB_FLAG)
 		   {
 		     p->height += change_amount;
 		     p->move_resize(p);
 		     client_deliver_config(p);
 		   }
+		 */
 	       default:
 		 break;
 	       }
 	   }
       }
    }
+
+
+ /* Handle dialogs */
+ START_CLIENT_LOOP(w, p)
+   {
+     if (p->type == dialog) 
+       {
+	 int req_x = p->x, req_y = p->y, req_w = p->width, req_h = p->height;
+
+	 if (!dialog_check_gemoetry(p, &req_x, &req_y, &req_w, &req_h))
+	   {
+	     p->x = req_x; p->y = req_y; p->width = req_w; p->height = req_h;
+	     p->move_resize(p);
+	     client_deliver_config(p);
+	   }
+       }
+   }
+ END_CLIENT_LOOP(w, p);
 
  XSync(w->dpy, False);
  XUngrabServer(w->dpy);
@@ -1936,7 +1958,8 @@ wm_get_offsets_size(Wm*     w,
 
    START_CLIENT_LOOP(w, p)
      {
-       if (ignore_client && p == ignore_client) continue;
+       if ((ignore_client && p == ignore_client) || p->mapped == False) 
+	 continue;
 
        switch(wanted_direction)
 	 {

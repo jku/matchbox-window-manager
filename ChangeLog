@@ -1,3 +1,18 @@
+2004-08-05  mallum,,,  <mallum@handhelds.org>
+
+	* src/dialog_client.c: (dialog_client_show),
+	(dialog_get_available_area), (dialog_check_gemoetry),
+	(dialog_init_geometry), (dialog_client_configure):
+	* src/dialog_client.h:
+	* src/dockbar_client.c: (dockbar_client_show),
+	(dockbar_client_hide), (dockbar_client_destroy):
+	* src/main_client.c: (main_client_title_height):
+	* src/structs.h:
+	* src/toolbar_client.c: (_fix_dialogs_for_toolbars),
+	(toolbar_client_show), (toolbar_client_destroy):
+	* src/wm.c: (wm_restack), (wm_get_offsets_size):
+	Initial dialog postioning/sizing rewrite
+
 2004-08-03  mallum,,,  <mallum@handhelds.org>
 
 	* src/client_common.c: (client_deliver_wm_protocol),
