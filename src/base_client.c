@@ -14,7 +14,7 @@
 */
 
 /*
-  $Id: base_client.c,v 1.1 2004/02/03 14:56:33 mallum Exp $
+  $Id: base_client.c,v 1.2 2004/02/10 18:05:44 mallum Exp $
 */
 
 
@@ -57,10 +57,9 @@ base_client_new(Wm *w, Window win)
    c->wm = w;
    c->ignore_unmap = 0;
    
-#if defined (USE_XFT) || defined (USE_PANGO)
    if ((c->name = ewmh_get_utf8_prop(w, win, w->atoms[_NET_WM_NAME])) != NULL)
      c->name_is_utf8 = True;
-#endif    
+
    base_client_process_name(c);
    
    c->x = attr.x;
@@ -162,7 +161,7 @@ base_client_new(Wm *w, Window win)
    for (i=0; i<MSK_COUNT; i++)
      c->backing_masks[i] = None;
 
-#if defined (USE_XFT) || defined (USE_PANGO)
+#if defined (USE_XFT)
    c->xftdraw = NULL;
 #endif
 
@@ -518,7 +517,7 @@ base_client_destroy(Client *c)
        
        ewmh_update(c->wm);
    
-#if defined (USE_XFT) || defined (USE_PANGO)
+#if defined (USE_XFT)
        if (c->xftdraw != NULL) XftDrawDestroy(c->xftdraw);
 #endif
 

@@ -1,3 +1,8 @@
+2004-02-10  Matthew Allum,,,  <mallum@handhelds.org>
+
+	* src/base_client.c: (base_client_new), (base_client_destroy):
+	Fix reading of UTF8 Win titles
+
 2004-02-09  Matthew Allum,,,  <mallum@openedhand.com>
 
 	* data/themes/borillo/theme.desktop:
