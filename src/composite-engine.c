@@ -1078,6 +1078,8 @@ _render_a_client(Wm           *w,
   int x,y,width,height;
   XserverRegion winborder;
 
+  want_lowlight = False; /* disable lowlight for now - seems buggy */
+
   if (client->picture == None) {
     dbg("%s() no pixture for %s\n", __func__, client->name);
     return;

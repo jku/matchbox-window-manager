@@ -1,5 +1,10 @@
 2005-02-22  mallum,,,  <mallum@openedhand.com>
 
+	* src/composite-engine.c: (_render_a_client):
+	Force composite lowlighting *off* for now. Needs fixing. 
+
+2005-02-22  mallum,,,  <mallum@openedhand.com>
+
 	* src/dialog_client.c: (dialog_get_available_area):
 	Fix dialog positioning for fullscreen windows
 	* src/toolbar_client.c: (toolbar_client_new):
