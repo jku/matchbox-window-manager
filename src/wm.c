@@ -1163,7 +1163,7 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 	   && e->height != c->height && !(c->flags & CLIENT_IS_MINIMIZED))
 	 {
 	   int change_amount = c->height - e->height;
-	   
+	   c->y += change_amount;
 	   c->height = e->height;
 	   c->move_resize(c);
 	   wm_restack(w, c, change_amount); 

@@ -1,3 +1,9 @@
+2004-10-15  mallum  <mallum@handhelds.org>
+
+	* src/wm.c: (wm_handle_configure_request):
+	Make sure a toolbar that resizes itself gets repositioned 
+	correctly. ( Bug #94 )
+
 2004-09-22 0.8.4 released. 
 
 2004-09-28  mallum,,,  <mallum@handhelds.org>
