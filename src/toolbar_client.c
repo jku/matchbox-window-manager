@@ -201,7 +201,7 @@ toolbar_client_show(Client *c)
 
    /* make sure any dialog clients are raised above */
    /* move / resize any dialogs */
-   if (c->wm->main_client) 
+   if (c->wm->main_client &&   !(c->wm->flags & DESKTOP_RAISED_FLAG)) 
      base_client_show(c->wm->main_client);
 }
 
