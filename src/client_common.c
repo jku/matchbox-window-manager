@@ -504,8 +504,39 @@ client_init_backing_mask (Client *c,
   XFreeGC(w->dpy, shape_gc);
 }
 
+void
+client_button_init(Client         *c, 
+		   Window          win_parent, 
+		   MBClientButton *b,
+		   int             x, 
+		   int             y, 
+		   int             width, 
+		   int             height,
+		   Bool            want_inputonly,
+		   void           *data)
+{
+  Wm *w = c->wm;
 
-/* Decoration button stuff, could probably do with a good cleanup/rewrite */
+  int                  class = CopyFromParent;
+  XSetWindowAttributes attr;
+
+  attr.override_redirect = True; 
+  attr.event_mask        = ExposureMask;
+  
+  if (want_inputonly ) class = InputOnly;	      
+  
+  b->x = x; b->y = y; b->w = width; b->h = height; b->data = data;
+  
+  b->win = XCreateWindow(w->dpy, win_parent, 
+			 x, y, width, height, 0,
+			 CopyFromParent, 
+			 class, 
+			 CopyFromParent,
+			 CWOverrideRedirect|CWEventMask, 
+			 &attr);
+
+  XMapWindow(w->dpy, b->win);
+}
 
 MBClientButton*
 client_button_new(Client *c, 
@@ -517,25 +548,13 @@ client_button_new(Client *c,
 		  Bool    want_inputonly, 
 		  void   *data )
 {
-  Wm *w = c->wm;
-  XSetWindowAttributes attr;
-  int                  class = CopyFromParent;
   MBClientButton      *b = malloc(sizeof(MBClientButton));
 
   memset(b, 0, sizeof(MBClientButton));
-  
-  attr.override_redirect = True; 
-  attr.event_mask = ExposureMask;
-  
-  if (want_inputonly ) class = InputOnly;	      
-  
-  b->x = x; b->y = y; b->w = width; b->h = height; b->data = data;
-  
-  b->win = XCreateWindow(w->dpy, win_parent, x, y, width, height, 0,
-			 CopyFromParent, class, CopyFromParent,
-			 CWOverrideRedirect|CWEventMask, &attr);
 
-  XMapWindow(w->dpy, b->win);
+  client_button_init(c, win_parent, b, 
+		     x, y, width, height, 
+		     want_inputonly, data);
   return b;
 }
 

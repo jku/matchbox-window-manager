@@ -1,3 +1,12 @@
+2005-01-10  mallum,,,  <mallum@openedhand.com>
+
+	* src/client_common.c: (client_button_init), (client_button_new):
+	* src/client_common.h:
+	* src/mbtheme.c: (theme_frame_button_paint):
+
+	Redo button themeing and painting code. Making smaller and slightly
+	easier to understand.
+
 2005-01-07  mallum,,,  <mallum@openedhand.com>
 
 	* src/mbtheme.c: (mbtheme_switch):

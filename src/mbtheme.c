@@ -169,9 +169,10 @@ theme_frame_button_paint(MBTheme *theme,
 			 int      dest_w, 
 			 int      dest_h )
 {
+  Wm           *w = c->wm;
   MBThemeFrame *frame = NULL;
-  MBList       *client_button_obj = c->buttons;
-  MBList       *theme_button_list  = NULL;
+  MBList       *client_button_obj = c->buttons; /* Client 'WM' buttons */
+  MBList       *theme_button_list  = NULL;      /* Theme button defs   */
   int           button_x, button_y, button_w, button_h;
 
   frame = (MBThemeFrame *)list_find_by_id(theme->frames, frame_type);
@@ -180,24 +181,21 @@ theme_frame_button_paint(MBTheme *theme,
 
   if (frame == NULL) { dbg("%s failed to find frame\n", __func__); return; }
 
-  /* 
-   *  for each matching theme def for a button
-   *    - see if the client struct has a button object for it it
-   *    - YES
-   *      - get the window id, save last point in the list
-   *    - NO
-   *      - create one, add it to the list
-   */
-
   theme_button_list = frame->buttons;
 
   while (theme_button_list != NULL)
     {
+      /* Go through defined theme frames button list, find matching action */
+
       if (theme_button_list->id == action)
 	{
 	  MBThemeButton *button = (MBThemeButton *)theme_button_list->data;
 	  Window         button_xid = None;
 	  Bool           found = False;
+
+	  /* Figure out actual wm button geometry from the defined theme
+           * button.
+	  */
 
 	  /* HACK. param_get() has no client* ref so need to  
            * do stuff here to get position relevant to 
@@ -219,7 +217,7 @@ theme_frame_button_paint(MBTheme *theme,
 
 	  button_h = param_get(frame, button->h, dest_h);
 
-	  dbg("%s() found theme action %i - dest_w: %i dest_h: %i\n", __func__, action, dest_w, dest_h);
+	  /* See if the clien already has a wm button object created */
 
 	  while (client_button_obj != NULL)
 	    {
@@ -234,87 +232,72 @@ theme_frame_button_paint(MBTheme *theme,
 	      client_button_obj = client_button_obj->next;
 	    }
 
+	  /* Did we find a valid window ID for the button */
+
 	  if (button_xid == None)
 	    {
-	      /* XXX should use client_button_new here ! */
-	      XSetWindowAttributes attr;
-	      int class = CopyFromParent;
 	      MBClientButton *b = NULL;
 
 	      if (!found)
-		b = malloc(sizeof(MBClientButton));
+		{
+		  /*  We didn't so create a new client button 'on demand'. */
+
+		  b = client_button_new(c, client_title_frame(c),
+					button_x, button_y,
+					button_w, button_h,
+					button->inputonly,
+					NULL);
+		  list_add(&c->buttons, NULL, action, (void *)b);
+		}
 	      else
-		b = (MBClientButton *)client_button_obj->data;
+		{
+		  /* We found a button with no win ID ( win probably removed  
+		   * so it can be updated ). So we simply re-init it.   
+		  */
 
-	      /*attr.override_redirect = True; */
-	      attr.event_mask = /*ButtonPressMask|*/ExposureMask;
-	      
-	      if (button->inputonly ) class = InputOnly;	      
-	      
-	      dbg("%s() creating new window +%i+%i %ix%i \n", __func__,
-		  button_x, button_y,
-		  button_w, button_h );
+		  b = (MBClientButton *)client_button_obj->data;
+		  client_button_init(c, client_title_frame(c), b,
+				     button_x, button_y,
+				     button_w, button_h,
+				     button->inputonly,
+				     b->data);
+		}
 
-	      button_xid = b->win = XCreateWindow(c->wm->dpy, 
-						  client_title_frame(c),
-						  button_x, button_y,
-						  button_w, button_h, 0,
-						  CopyFromParent, 
-						  class, 
-						  CopyFromParent,
-						  /* CWOverrideRedirect 
-						     | */CWEventMask,
-						  &attr);
-
-	      b->press_activates = button->press_activates;
-
-	      /* We didn't findn't find this in the list so add it  */
-	      if (!found)
-		list_add(&c->buttons, NULL, action, (void *)b);
+	      button_xid = b->win;
 	    }
-
+    
 	  if (!button->inputonly)
 	    {
-	      int copy_w, copy_h;
+	      /* Now paint the actual button if required */
+	      int            copy_w, copy_h;
 	      MBPixbufImage *img_backing = NULL;
-	      Pixmap pxm_button;
+	      Pixmap         pxm_button;
+	      MBPixbuf      *pb = w->pb;
 	      
-	      dbg("%s new button is NOT input only\n", __func__);
-
-	      /*
-	      img_backing = mb_pixbuf_img_rgb_new(theme->wm->pb, 
-						  button_w, button_h);
-	      */
 #ifdef USE_COMPOSITE
+	      /* 32 ARGB wins require 'special' pixbuf ref */
 	      if (c->is_argb32)
-		pxm_button = XCreatePixmap(theme->wm->dpy, theme->wm->root,
-					   button_w, button_h, 
-					   32);
-	      else
+		pb = wm->argb_pb;
 #endif
-		pxm_button = XCreatePixmap(theme->wm->dpy, theme->wm->root,
-					   button_w, button_h, 
-					   theme->wm->pb->depth);
+	      pxm_button = XCreatePixmap(w->dpy, w->root, button_w, button_h, 
+					 pb->depth);
 
+	      /* Grab any background from caches so can composite to it */
 
 	      if (c->type == MBCLIENT_TYPE_APP 
 		  || c->type == MBCLIENT_TYPE_TOOLBAR 
 		  || c->type == MBCLIENT_TYPE_DIALOG)
 		{
-		  dbg("%s() copying +%i+%i %ix%i cache %ix%i\n", __func__,
-		      button_x, button_y,
-		      button_w, button_h, 
-		      mb_pixbuf_img_get_width(theme->img_caches[frame_type]),
-		      mb_pixbuf_img_get_height(theme->img_caches[frame_type]));
+		  img_backing = mb_pixbuf_img_rgb_new(pb, button_w, button_h);
 
-		  img_backing = mb_pixbuf_img_rgb_new(theme->wm->pb, 
-						      button_w, button_h);
-		  mb_pixbuf_img_copy(theme->wm->pb, img_backing,
+		  mb_pixbuf_img_copy(pb, img_backing,
 				     theme->img_caches[frame_type],
 				     button_x, button_y,
 				     button_w, button_h,
 				     0, 0 );
 		}
+
+	      /* Now actually paint depending on button state */
 
 	      if (state == ACTIVE)
 		{
@@ -328,57 +311,43 @@ theme_frame_button_paint(MBTheme *theme,
 		  else
 		    copy_h = button->img_active->height;
 
-		  mb_pixbuf_img_copy_composite_with_alpha(theme->wm->pb, 
-							  img_backing,
+		  mb_pixbuf_img_copy_composite_with_alpha(pb, img_backing,
 							  button->img_active, 
 							  0, 0, copy_w, copy_h,
 							  0, 0, 
 							  button->img_active_blend);
-
-
-		} else {
-
+		} 
+	      else 
+		{
 		  if (button->img_inactive->width > button_w)
 		    copy_w = button_w;
 		  else
 		    copy_w = button->img_inactive->width;
-
+		  
 		  if (button->img_inactive->height > button_h)
 		    copy_h = button_h;
 		  else
 		    copy_h = button->img_inactive->height;
 
-
-		  mb_pixbuf_img_copy_composite_with_alpha(theme->wm->pb, 
-						     img_backing,
-						     button->img_inactive, 
-						     0, 0, copy_w, copy_h,
-						     0, 0,
-						     button->img_inactive_blend);
+		  mb_pixbuf_img_copy_composite_with_alpha(pb, img_backing,
+							  button->img_inactive, 
+							  0, 0, copy_w, copy_h,
+							  0, 0,
+							  button->img_inactive_blend);
 		}
 
-#ifdef USE_COMPOSITE
-	      if (c->is_argb32)
-		mb_pixbuf_img_render_to_drawable(theme->wm->argb_pb, 
-						 img_backing, 
-						 pxm_button, 0, 0);
-	      else
-#endif
-		mb_pixbuf_img_render_to_drawable(theme->wm->pb, img_backing, 
-						 pxm_button, 0, 0);
+	      mb_pixbuf_img_render_to_drawable(pb, img_backing, pxm_button, 
+					       0, 0);
 	      
-	      dbg("%s painting button\n", __func__);
+	      XSetWindowBackgroundPixmap(w->dpy, button_xid, pxm_button);
+	      XClearWindow(w->dpy, button_xid);   
 
-	      XSetWindowBackgroundPixmap(c->wm->dpy, button_xid,
-					 pxm_button);
-	      XClearWindow(c->wm->dpy, button_xid);   
-	      XFreePixmap(c->wm->dpy, pxm_button);
-	      mb_pixbuf_img_free(theme->wm->pb, img_backing);
+	      XFreePixmap(w->dpy, pxm_button);
+	      mb_pixbuf_img_free(pb, img_backing);
 	      
 	    }
-	  dbg("%s mapping window\n", __func__);
 
-	  XMapWindow(c->wm->dpy, button_xid);
+	  XMapWindow(w->dpy, button_xid);
 	}
       theme_button_list = theme_button_list->next;
     }

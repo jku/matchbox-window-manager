@@ -111,6 +111,17 @@ int
 client_button_do_ops (Client *c, XButtonEvent *e, int frame_type,
 		     int w, int h);
 
+void
+client_button_init(Client         *c, 
+		   Window          win_parent, 
+		   MBClientButton *b,
+		   int             x, 
+		   int             y, 
+		   int             width, 
+		   int             height,
+		   Bool            want_inputonly,
+		   void           *data);
+
 MBClientButton *
 client_button_new (Client *c, 
 		   Window  win_parent, 
