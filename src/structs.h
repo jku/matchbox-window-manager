@@ -269,6 +269,8 @@ typedef struct _mb_client_button
 #define CLIENT_IS_MODAL_FLAG      (1<<11)
 #define CLIENT_BORDERS_ONLY_FLAG  (1<<12)
 #define CLIENT_IS_MESSAGE_DIALOG  (1<<14)
+#define CLIENT_IS_MESSAGE_DIALOG_HI  (1<<21)
+#define CLIENT_IS_MESSAGE_DIALOG_LO  (1<<22)
 #define CLIENT_IS_DESKTOP_FLAG    (1<<15) /* Used in 'borked' desktop win 
 					     Handling mode :/ */
 #define CLIENT_NEW_FOR_DESKTOP    (1<<16)

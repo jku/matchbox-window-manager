@@ -14,7 +14,7 @@
 */
 
 /*
-  $Id: base_client.c,v 1.4 2004/04/06 15:36:56 mallum Exp $
+  $Id: base_client.c,v 1.5 2004/04/26 17:17:38 mallum Exp $
 */
 
 
@@ -450,13 +450,18 @@ base_client_show(Client *c)
 	    if ((t->trans == c || t->trans == NULL) && t->mapped)
 	    {
 	       dbg("%s() raising transient %s\n", __func__, t->name);
-	       t->show(t);
+
 #ifdef USE_MSG_WIN
-	       if (t->flags & CLIENT_IS_MESSAGE_DIALOG)
+	       /* Only raise 'global' msg wins above everything */
+	       if (t->flags & CLIENT_IS_MESSAGE_DIALOG
+		   && !(t->flags & CLIENT_IS_MESSAGE_DIALOG_HI)
+		   && !(t->flags & CLIENT_IS_MESSAGE_DIALOG_LO))
 		 {
 		   client_msg = t;
 		 }
+	       else
 #endif
+		 t->show(t);
 	    }
 	    /* raise any toolbar transients */
 	    else if (c->type != toolbar
@@ -470,10 +475,15 @@ base_client_show(Client *c)
       }
    }
 
-   /* Make sure message windows are _really_ on top */
-   if (client_msg) client_msg->show(client_msg);
-
    comp_engine_client_show(c->wm, c);
+
+   /* Make sure message windows are _really_ on top */
+   if (client_msg) 
+     {
+       dbg("%s() really raising client message...", __func__);
+       client_msg->show(client_msg);
+       comp_engine_client_show(c->wm, client_msg);
+     }
 
    ewmh_set_active(c->wm);
 }

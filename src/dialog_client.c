@@ -226,6 +226,8 @@ dialog_client_title_height(Client *c)
 void
 dialog_client_show(Client *c)
 {
+
+
   dbg("%s() called for %s\n", __func__, c->name);
 
   /* XXX paint before map so dialog gets shape 
@@ -234,7 +236,7 @@ dialog_client_show(Client *c)
   if (client_get_state(c) != NormalState)
     dialog_client_redraw(c, False);
 
-  XFlush(c->wm->dpy);
+  /* XFlush(c->wm->dpy); Not needed ? */
 
   client_set_state(c, NormalState); 
   XMapSubwindows(c->wm->dpy, c->frame);
@@ -248,20 +250,46 @@ dialog_client_show(Client *c)
       c->wm->focused_client = c;
     }
 
-#ifdef USE_MSG_WIN 		/* Ewe! mesg window hacks :/  */
-  if (c->wm->config->dialog_shade 
-      && (c->flags & CLIENT_IS_MODAL_FLAG)
-      && c->wm->msg_win_queue_head)
+  comp_engine_client_show(c->wm, c);
+
+#ifdef USE_MSG_WIN 	
+
+  if (c->flags & CLIENT_IS_MESSAGE_DIALOG_LO)
+    {
+      Client *t = NULL;
+
+      /* Make sure any higher priority dialogs are mapped above */
+      START_CLIENT_LOOP(c->wm, t)
+	{
+	  if (t->flags & CLIENT_IS_MESSAGE_DIALOG_HI)
+	    {
+	      t->show(t);
+	      /* We need to call show to get the composite stacking right */
+	      comp_engine_client_show(c->wm, t);
+	    }
+	}
+      END_CLIENT_LOOP(c->wm, t);
+    }
+
+
+  if (/* c->wm->config->dialog_shade 
+       && (c->flags & CLIENT_IS_MODAL_FLAG) 
+	 && */ c->wm->msg_win_queue_head)
     {
         Client *msg_client = NULL;
 	if ((msg_client = wm_find_client(c->wm, 
 					 c->wm->msg_win_queue_head->win, 
 					 WINDOW)) != NULL)
-	  msg_client->show(msg_client);
+	  if (msg_client != c) 
+	    {
+	      msg_client->show(msg_client);
+	      /* We need to call show to get the composite stacking right */
+	      comp_engine_client_show(c->wm, msg_client);
+	    }
     }
 #endif
 
-  comp_engine_client_show(c->wm, c);
+
 
   c->mapped = True;
 }
@@ -621,6 +649,7 @@ dialog_client_redraw(Client *c, Bool use_cache)
    XFlush(c->wm->dpy);
 }
 
+
 void
 dialog_client_button_press(Client *c, XButtonEvent *e)
 {
@@ -653,6 +682,7 @@ dialog_client_button_press(Client *c, XButtonEvent *e)
 	 break;
    }
 }
+
 
 static void
 dialog_client_drag(Client *c) /* drag box */
@@ -828,9 +858,12 @@ dialog_client_drag(Client *c) /* drag box */
 	/* Check for message super above dialogs */
 	START_CLIENT_LOOP(c->wm, t)
 	  {
-	    if (t->flags & CLIENT_IS_MESSAGE_DIALOG)
+	    if (t->flags & CLIENT_IS_MESSAGE_DIALOG
+		&& !(t->flags & CLIENT_IS_MESSAGE_DIALOG_HI)
+		&& !(t->flags & CLIENT_IS_MESSAGE_DIALOG_LO))
 	      {
 		t->show(t);
+		 comp_engine_client_show(c->wm, t); 
 		break;
 	      }
 	  }
@@ -847,6 +880,7 @@ dialog_client_drag(Client *c) /* drag box */
   client_deliver_config(c);
 }
 
+
 static void
 _get_mouse_position(Wm *w, int *x, int *y)
 {
@@ -858,19 +892,23 @@ _get_mouse_position(Wm *w, int *x, int *y)
         x, y, &win_x, &win_y, &mask);
 }
 
+
 static void
 _draw_outline(Client *c, int x, int y, int width, int height)
 {
   XDrawRectangle(c->wm->dpy, c->wm->root, c->wm->mbtheme->band_gc, x-1, y-1, 
 		 width+2, height+2);
 }
+
  
 void dialog_client_destroy(Client *c)
 {
   Wm     *w = c->wm; 
   Client *d = NULL;
 #ifdef USE_MSG_WIN
-  int was_msg = (c->flags & CLIENT_IS_MESSAGE_DIALOG);
+  int was_msg = (c->flags & CLIENT_IS_MESSAGE_DIALOG
+		 && !(c->flags & CLIENT_IS_MESSAGE_DIALOG_HI)
+		 && !(c->flags & CLIENT_IS_MESSAGE_DIALOG_LO));
 #endif 
 
   base_client_destroy(c);
@@ -893,25 +931,6 @@ void dialog_client_destroy(Client *c)
 	comp_engine_client_show (w, d); 
     }
 
-
-  /* Old way of above
-  if (w->flags & DESKTOP_RAISED_FLAG)
-    {
-      Client *d = wm_get_desktop(w);
-
-      if (d)
-	{
-	  if (client_want_focus(d))
-	    {
-	      XSetInputFocus(w->dpy, d->window,
-			     RevertToPointerRoot, CurrentTime);
-	      c->wm->focused_client = d;
-	    }
-
-	  comp_engine_client_show (w, d);
-	}
-    }
-  */
 
 #ifdef USE_MSG_WIN
 

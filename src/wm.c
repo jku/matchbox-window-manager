@@ -1506,13 +1506,13 @@ wm_make_new_client(Wm *w, Window win)
 	     {
 		   c = dialog_client_new(w, win, NULL);
 		   if (c == NULL) goto end;
-		   c->flags ^= CLIENT_IS_MESSAGE_DIALOG; 
+		   c->flags ^= CLIENT_IS_MESSAGE_DIALOG|CLIENT_IS_MESSAGE_DIALOG_HI; 
 	     }
 	   else if (value[0] == w->atoms[WINDOW_TYPE_MESSAGE_STATIC_1])
 	     {
 		   c = dialog_client_new(w, win, NULL);
 		   if (c == NULL) goto end;
-		   c->flags ^= CLIENT_IS_MESSAGE_DIALOG; 
+		   c->flags ^= CLIENT_IS_MESSAGE_DIALOG|CLIENT_IS_MESSAGE_DIALOG_LO; 
 	     }
 
 #endif
@@ -2603,6 +2603,8 @@ wm_msg_win_queue_add(Wm *w, Window win)
     
   if (data) XFree (data);
 
+  dbg("%s() timeout is %i\n", __func__, timeout);
+
   if (w->msg_win_queue_head == NULL)
     {
       dbg("%s() message queue is empty, adding new head\n", __func__);
@@ -2615,6 +2617,8 @@ wm_msg_win_queue_add(Wm *w, Window win)
     }
   
   dbg("%s() queue has items, adding to back \n", __func__);
+
+
 
   while (tmp->next != NULL) tmp = tmp->next;
 

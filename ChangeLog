@@ -1,3 +1,12 @@
+2004-04-26  Matthew Allum,,,  <mallum@handhelds.org>
+
+	* src/base_client.c: (base_client_show):
+	* src/dialog_client.c: (dialog_client_show), (dialog_client_drag),
+	(dialog_client_destroy):
+	* src/structs.h:
+	* src/wm.c: (wm_make_new_client), (wm_msg_win_queue_add):
+	More work on new message window types. Stacking and composite fixes.
+
 2004-04-22  Matthew Allum,,,  <mallum@openedhand.com>
 
 	* src/dockbar_client.c: (dockbar_client_orientation_calc),
