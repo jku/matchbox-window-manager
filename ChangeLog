@@ -1,3 +1,13 @@
+2004-09-07  mallum,,,  <mallum@handhelds.org>
+
+	* src/mbtheme.c: (_theme_paint_core):
+	* src/toolbar_client.c: (toolbar_client_new):
+	* src/wm.c: (wm_sn_monitor_event_func):
+	Various bug fixes to random bugs, inclusing;
+	- startup notification crash with bad data and no clients
+	- over large toolbars
+	- bad theme.xml data
+
 2004-09-01  mallum,,,  <mallum@handhelds.org>
 
 	* src/wm.c: (wm_handle_property_change):

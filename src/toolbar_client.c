@@ -24,7 +24,7 @@ toolbar_client_new(Wm *w, Window win)
 
    /* If theres not room for the toolbar, just make it an app window */
    /* In practise one would expect this to never happen              */
-   if ((c->y + c->height) > w->dpy_height)
+   if ((c->y + c->height) > w->dpy_height - (theme_frame_defined_height_get(w->mbtheme, FRAME_MAIN)*2) )
      {
        base_client_destroy(c);
        return main_client_new(w, win);

@@ -486,6 +486,10 @@ _theme_paint_core( MBTheme *theme, Client *c, MBThemeFrame *frame,
       if (w > dw) w = dw;
       if (h > dh) h = dh;
 	
+      /* more safety */
+      if (w <= 0) w = 1;
+      if (h <= 0) h = 1;
+
       if ( layer_list_item->id == LAYER_PIXMAP 
 	   || layer_list_item->id == LAYER_PIXMAP_TILED)
 	{

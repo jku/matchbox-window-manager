@@ -2562,20 +2562,24 @@ wm_sn_monitor_event_func (SnMonitorEvent *event,
     case SN_MONITOR_EVENT_COMPLETED:
       dbg("%s() SN_MONITOR_EVENT_COMPLETED\n", __func__ );
 
-      START_CLIENT_LOOP(w,p)
+      if (w->head_client)
 	{
-	  if (p->startup_id && !strcmp(p->startup_id, seq_id))
+	  START_CLIENT_LOOP(w,p)
 	    {
-	      dbg("%s() found startup_id match ( %s ) for %s \n", 
-		  __func__, seq_id, p->name );
-	      
-	      wm_sn_cycle_update_xid(w, bin_name, p->window);
-	      wm_sn_cycle_update_root_prop(w);
-	      w->sn_busy_cnt--;
-	      break;
+	      if (p->startup_id && !strcmp(p->startup_id, seq_id))
+		{
+		  dbg("%s() found startup_id match ( %s ) for %s \n", 
+		      __func__, seq_id, p->name );
+		  
+		  wm_sn_cycle_update_xid(w, bin_name, p->window);
+		  wm_sn_cycle_update_root_prop(w);
+		  w->sn_busy_cnt--;
+		  break;
+		}
 	    }
+	  END_CLIENT_LOOP(w,p);
 	}
-      END_CLIENT_LOOP(w,p);
+      else w->sn_busy_cnt--;
       break;
     case SN_MONITOR_EVENT_CANCELED:
       /* wm_sn_cycle_remove(w, bin_name); */
