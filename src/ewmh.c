@@ -426,11 +426,13 @@ if ((c = wm_get_desktop(w)) != NULL
 }
 
 
-#define PING_PENDING_MAX 5
+#define PING_PENDING_MAX 2
 
 void
 ewmh_hung_app_check(Wm *w)
 {
+#ifndef NO_PING
+
   Client *c = NULL;
 
   if (!w->head_client) return;
@@ -439,7 +441,7 @@ ewmh_hung_app_check(Wm *w)
 
   START_CLIENT_LOOP(w, c)
     {
-      if (c->has_ping_protocol)
+      if (c->has_ping_protocol && c->pings_pending != -1)
 	{
 	  XEvent e;
 
@@ -462,10 +464,11 @@ ewmh_hung_app_check(Wm *w)
 
 	  if (c->pings_pending >= PING_PENDING_MAX)
 	    {
-	      /* XXX
-                  - move to own func ? so client_common can use too ?
-                  - check for cmd line param to launch helper app.
-	      */
+	      /*
+               * ifdef'd out as handled simpler now in client_obliterare
+	       *
+	       */
+#if 0
 	      char buf[257];
 	      int sig  = 9;
 
@@ -514,10 +517,15 @@ ewmh_hung_app_check(Wm *w)
 
 	      dbg("%s() Sending sig %i to  app %s as png timeout\n",
 		  __func__, sig, c->name);
+
+#endif
+	      client_obliterate(c);
 	    }
 	}
     }
   END_CLIENT_LOOP(w, c);
+
+#endif
 }
 
 static void set_supported(Wm *w) /*  */

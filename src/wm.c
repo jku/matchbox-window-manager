@@ -66,6 +66,7 @@ wm_new(int argc, char **argv)
    w->main_client    = NULL; /* Points to the current 'main' client
 				- eg the 'BIG' window - */
 
+   w->n_active_ping_clients    = 0;
    w->next_click_is_not_double = True;
 
    sattr.event_mask =  SubstructureRedirectMask
@@ -515,6 +516,13 @@ wm_find_client(Wm *w, Window win, int mode)
 static Bool
 get_xevent_timed(Display* dpy, XEvent* event_return, struct timeval *tv)
 {
+
+  if (tv->tv_usec == 0 && tv->tv_sec == 0)
+    {
+      XNextEvent(dpy, event_return);
+      return True;
+    }
+
   XFlush(dpy);
 
   if (XPending(dpy) == 0) 
@@ -523,12 +531,14 @@ get_xevent_timed(Display* dpy, XEvent* event_return, struct timeval *tv)
       fd_set readset;
       FD_ZERO(&readset);
       FD_SET(fd, &readset);
+
       if (select(fd+1, &readset, NULL, NULL, tv) == 0) 
 	return False;
       else {
 	XNextEvent(dpy, event_return);
 	return True;
       }
+
     } else {
       XNextEvent(dpy, event_return);
       return True;
@@ -626,19 +636,32 @@ wm_event_loop(Wm* w)
     {
 
       tvt.tv_usec = 0;
-      tvt.tv_sec = 1;
-      /*
-      tvt.tv_usec = 500;
-      tvt.tv_sec = 0;
-      */
-      //            do {
+      tvt.tv_sec  = 0;
+
+#ifdef USE_LIBSN
+      if (w->sn_busy_cnt)
+	tvt.tv_sec = 1;
+#endif      
+
+#ifdef USE_MSG_WIN
+      if (w->msg_win_queue_head)
+	tvt.tv_sec = 1;
+#endif
+
+#ifdef USE_GCONF
+      if (w->gconf_client != NULL)
+	tvt.tv_sec = 1;
+#endif
+
+#ifndef NO_PNG
+      if (w->n_active_ping_clients)
+	tvt.tv_sec = 1;
+#endif
 
       if (get_xevent_timed(w->dpy, &ev, &tvt))
 	{
 
-	  //XNextEvent(w->dpy, &ev);
-
-	switch (ev.type) 
+	  switch (ev.type) 
 	  {
 #ifdef USE_COMPOSITE
 	  case MapNotify:
@@ -666,9 +689,6 @@ wm_event_loop(Wm* w)
 	  case PropertyNotify:
 	    wm_handle_property_change(w, &ev.xproperty); break;
 #ifndef NO_KBD
-	  case KeymapNotify:
-	    /* keys_reinit(w); XXX why does this always get called ? */
-	    break;
 	  case MappingNotify:
 	    dbg("%s() got MappingNotify\n", __func__);
 	    XRefreshKeyboardMapping(&ev.xmapping);
@@ -695,13 +715,12 @@ wm_event_loop(Wm* w)
 	/* No X event poll checks here */
 #ifdef USE_LIBSN
 	if (w->sn_busy_cnt)
-	  wm_sn_timeout_check (w);
+	    wm_sn_timeout_check (w);
 #endif      
 
 #ifdef USE_MSG_WIN
 	if (w->msg_win_queue_head)
 	  {
-	    /* dbg("%s() checking message queue\n", __func__); */
 	    wm_msg_win_queue_process (w);
 	  }
 #endif
@@ -711,12 +730,14 @@ wm_event_loop(Wm* w)
 	  g_main_context_iteration (w->gconf_context, FALSE);
 #endif
 
+#ifndef NO_PING
 	/* check for hung apps every five seconds */
-	if (++hung_app_timer > 5)
+	if (++hung_app_timer > 5 && w->n_active_ping_clients)
 	  {
 	    hung_app_timer = 0;
 	    ewmh_hung_app_check(w);
 	  }
+#endif
    
       }
 
@@ -2177,6 +2198,8 @@ static void
 wm_sn_timeout_check (Wm *w)
 {
   time_t now ;
+
+  dbg("%s() called\n", __func__);
 
   if (!w->sn_busy_cnt) return;
   

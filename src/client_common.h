@@ -35,6 +35,9 @@ client_deliver_config (Client *c);
 void 
 client_deliver_wm_protocol (Client *c, Atom delivery);
 
+Bool
+client_obliterate(Client *c);
+
 void 
 client_deliver_delete (Client *c);
 

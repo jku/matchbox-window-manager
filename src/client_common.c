@@ -93,6 +93,38 @@ client_deliver_wm_protocol(Client *c, Atom delivery)
     XSendEvent(c->wm->dpy, c->window, False, 0, &e);
 }
 
+/* 'Really' kill an app if it gives us enough info */
+Bool
+client_obliterate(Client *c)
+{
+  char buf[257];
+  int sig  = 9;
+
+  if (c->host_machine == NULL || !c->pid)
+    return False;
+
+  if (gethostname (buf, sizeof(buf)-1) == 0)
+    {
+      if (!strcmp (buf, c->host_machine))
+	{
+	  if (kill (c->pid, sig) < 0)
+	    {
+	      fprintf(stderr, "matchbox: kill %i on %s failed.\n",
+		      sig, c->name);
+	      return False;
+	    }
+	}
+      else return False; 	/* on a different host */
+    }
+  else 
+    {
+      fprintf(stderr, "matchbox: gethostname failed\n");
+      return False;
+    }
+
+  return True;
+}
+
 void
 client_deliver_delete(Client *c)
 {
@@ -104,10 +136,21 @@ client_deliver_delete(Client *c)
 	   if (protocols[i] == c->wm->atoms[WM_DELETE_WINDOW]) found++;
         XFree(protocols);
     }
+
+    /* Initiate pinging the app - to really kill hung applications */
+    if (c->has_ping_protocol && c->pings_pending == -1) 
+      {
+	c->pings_pending = 0;
+	c->wm->n_active_ping_clients++;
+      }
+
     if (found)
       client_deliver_wm_protocol(c, c->wm->atoms[WM_DELETE_WINDOW]);
     else 
-      XKillClient(c->wm->dpy, c->window);
+      {
+	if (!client_obliterate(c))
+	  XKillClient(c->wm->dpy, c->window);
+      }
 }
 
 /* ----- new bits ---------*/

@@ -58,6 +58,11 @@ AC_ARG_ENABLE(keyboard,
    		enable_keyboard=$enableval, 
 		enable_keyboard=yes)
 
+AC_ARG_ENABLE(ping-protocol,
+  [  --disable-ping-protocol       disable ping protocol support [default=no]],
+   		enable_ping_protocol=$enableval, 
+		enable_ping_protocol=yes)
+
 AC_ARG_ENABLE(message_wins,
   [  --enable-message-wins         enable 'message' window support ( see docs )],
   enable_message_wins=$enableval, enable_message_wins=no)
@@ -155,6 +160,13 @@ dnl ------ keyboard support ------------------------------------------------
 if test x$enable_keyboard = xno; then
       LIBMB_CFLAGS="$LIBMB_CFLAGS -DNO_KBD"
       AC_MSG_RESULT([Disabling Keyboard Support.])	
+fi
+
+dnl ------ ping proto support ----------------------------------------------
+
+if test x$enable_ping_protocol = xno; then
+      LIBMB_CFLAGS="$LIBMB_CFLAGS -DNO_PING"
+      AC_MSG_RESULT([Disabling Ping Protocol Support.])	
 fi
 
 dnl ------ Message Wins----------------------------------------------------

@@ -603,6 +603,8 @@ typedef struct _wm
   int           toolbar_panel_h;
 #endif
 
+  int n_active_ping_clients; 	/* Number of apps we are pinging */
+
 } Wm;
 
 #ifdef USE_PANGO

@@ -1,3 +1,25 @@
+2004-04-06  Matthew Allum,,,  <mallum@openedhand.com>
+
+	* configure.ac:
+	Add disable ping option.
+	
+	* src/base_client.c: (base_client_new), (base_client_destroy):
+	* src/client_common.c: (client_obliterate),
+	(client_deliver_delete):
+	* src/client_common.h:
+	* src/ewmh.c: (ewmh_hung_app_check):
+	* src/structs.h:
+	* src/wm.c: (wm_new), (get_xevent_timed), (wm_event_loop),
+	(wm_sn_timeout_check):
+
+	- Many ping handling changes;
+	  -  initiate only when close button pressed.
+          -  make code more modular / smaller / ifdef'd
+	- Attempt to kill -9 apps by defualt if PID given and app
+	  offers no WM_DELETE proto.
+        - Improve event loop to only use select timeouts when really needed.
+          ( XXX. needs more testing may have broken stuff )
+
 2004-04-05  Matthew Allum,,,  <mallum@openedhand.com>
 
 	* configure.ac:

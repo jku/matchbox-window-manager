@@ -14,7 +14,7 @@
 */
 
 /*
-  $Id: base_client.c,v 1.3 2004/02/24 21:02:05 mallum Exp $
+  $Id: base_client.c,v 1.4 2004/04/06 15:36:56 mallum Exp $
 */
 
 
@@ -203,7 +203,6 @@ base_client_new(Wm *w, Window win)
 
   c->has_ping_protocol = False;
 
-
   /* We detect any errors here to check the window hasn't dissapeared half
    * way through. A bit hacky ...
    */
@@ -229,18 +228,19 @@ base_client_new(Wm *w, Window win)
 	       dbg("%s() got _NET_WM_CONTEXT_CUSTOM protocol\n", __func__ );
 	       c->flags |= CLIENT_CUSTOM_BUTTON_FLAG;
 	     }
+#ifndef NO_PNG
 	   else if (protocols[i] == c->wm->atoms[_NET_WM_PING]
 		    && c->host_machine && c->pid)
 	     {
 	       dbg("%s() has PING ewmh\n", __func__);
 	       c->has_ping_protocol = True;
 	     }
+#endif
 	 }
        XFree(protocols);
     }
 
-
-   c->pings_pending = 0;
+   c->pings_pending = -1;
 
    client_set_state(c, WithdrawnState);
 
@@ -501,6 +501,9 @@ base_client_destroy(Client *c)
 #ifdef USE_LIBSN
    wm_sn_cycle_remove(c->wm, c->window);
 #endif       
+
+   if (c->has_ping_protocol && c->pings_pending != -1) 
+     c->wm->n_active_ping_clients--;
 
    /* remove from circular list */
    if (c->prev != c)
