@@ -108,7 +108,9 @@ ewmh_init(Wm *w)
     "_MB_DOCK_TITLEBAR_SHOW_ON_DESKTOP",
     "_MB_WIN_SUB_NAME",
     "_MB_GRAB_TRANSFER",
+    "_NET_WM_WINDOW_TYPE_INPUT",
     "INTEGER" 			/* XXX Needed ? */
+
   };
 
   XInternAtoms (w->dpy, atom_names, ATOM_COUNT,

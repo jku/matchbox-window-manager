@@ -1528,7 +1528,8 @@ wm_make_new_client(Wm *w, Window win)
 	       c = dockbar_client_new(w, win);
 	       if (c == NULL) goto end;
 	     }
-	   else if (value[0] == w->atoms[WINDOW_TYPE_TOOLBAR])
+	   else if (value[0] == w->atoms[WINDOW_TYPE_TOOLBAR]
+		    || value[0] == w->atoms[WINDOW_TYPE_INPUT])
 	     {
 	       dbg("%s() got toolbar atom\n", __func__ );
 	       c = toolbar_client_new(w, win);
