@@ -1,17 +1,22 @@
-/* matchbox - a lightweight window manager
-
-   Copyright 2002 Matthew Allum
-
-   This program is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
-   any later version.
-
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
-*/
+/* 
+ *  Matchbox Window Manager - A lightweight window manager not for the
+ *                            desktop.
+ *
+ *  Authored By Matthew Allum <mallum@o-hand.com>
+ *
+ *  Copyright (c) 2002, 2004 OpenedHand Ltd - http://o-hand.com
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2, or (at your option)
+ *  any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ */
 
 #ifndef _MBTHEME_H_
 #define _MBTHEME_H_
@@ -156,9 +161,7 @@ typedef struct _mbtheme {
   struct list_item* colors;
   struct list_item* fonts;
 
-  GC gc;
-  GC mask_gc;
-  GC band_gc; 	/* for drag window  */
+  GC                gc, mask_gc, band_gc; /* for drag window  */
 
   MBPixbufImage* img_caches[N_FRAME_TYPES];
 
@@ -169,15 +172,11 @@ typedef struct _mbtheme {
   MBThemeParam *toolbar_panel_w;
   MBThemeParam *toolbar_panel_h;
 
-#ifdef USE_EXTRAS
-
   /* For image substitution */
   char           subst_char;
   MBPixbufImage *subst_img;
 
-#endif
-
-  struct _wm *wm;
+  struct _wm    *wm;
    
 } MBTheme;
 

@@ -1,17 +1,22 @@
-/* matchbox - a lightweight window manager
-
-   Copyright 2002 Matthew Allum
-
-   This program is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
-   any later version.
-
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
-*/
+/* 
+ *  Matchbox Window Manager - A lightweight window manager not for the
+ *                            desktop.
+ *
+ *  Authored By Matthew Allum <mallum@o-hand.com>
+ *
+ *  Copyright (c) 2002, 2004 OpenedHand Ltd - http://o-hand.com
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2, or (at your option)
+ *  any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ */
 
 /* Toolbar windows are small collapsable 'panel' like windows at bottom 
  * of display. They are mainly to hold input methods like software keyboards
@@ -207,10 +212,12 @@ toolbar_client_show(Client *c)
 void
 toolbar_client_hide(Client *c)
 {
-  /* TODO: Make this work */
+  Wm *w = c->wm;
 
-  if (c->flags & CLIENT_IS_MINIMIZED || client_get_state(c) == IconicState) 
-    return;
+  client_set_state(c, WithdrawnState);
+  XReparentWindow(w->dpy, c->window, w->root, 0, 0); 
+  XUnmapWindow(w->dpy, c->window);
+  c->destroy(c);
 }
 
 void

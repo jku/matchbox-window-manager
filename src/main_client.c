@@ -1,22 +1,22 @@
-/* matchbox - a lightweight window manager
- 
-   Copyright 2002 Matthew Allum
-
-   This program is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
-   any later version.
-
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
-*/
-
-/*
-  $Id: main_client.c,v 1.20 2004/11/18 15:56:01 mallum Exp $
-*/
-
+/* 
+ *  Matchbox Window Manager - A lightweight window manager not for the
+ *                            desktop.
+ *
+ *  Authored By Matthew Allum <mallum@o-hand.com>
+ *
+ *  Copyright (c) 2002, 2004 OpenedHand Ltd - http://o-hand.com
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2, or (at your option)
+ *  any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ */
 #include "main_client.h"
 
 Client*
@@ -197,8 +197,6 @@ main_client_configure(Client *c)
    dbg("%s() configured as %i*%i+%i+%i, frame size is %i\n", 
        __func__, c->width, c->height, c->x, c->y, frm_size);
 
-   client_deliver_config(c);   
-   // c->wm->main_client = c;
 }
 
 int
@@ -295,7 +293,7 @@ main_client_move_resize(Client *c)
   XMoveResizeWindow(w->dpy, c->window, 
 		    offset_west, main_client_title_height(c), 
 		    c->width, c->height);
-  
+
   XResizeWindow(w->dpy, c->title_frame, 
 		c->width + (offset_east + offset_west),
 		c->height + main_client_title_height(c) + offset_south);
@@ -306,6 +304,40 @@ main_client_move_resize(Client *c)
 		    c->width + ( offset_east + offset_west),
 		    c->height + main_client_title_height(c) + offset_south);
 
+/*
+ * Disabled _NET_WM_SYNC code ( Alternate to above XMove*'s )
+ * Is unfinished and initial testing did not seem to improve things.
+ * Maybe re-try again at a later date.
+ *
+ * if (!c->ewmh_sync_is_waiting)
+ *  {
+ *    XMoveResizeWindow(w->dpy, c->window, 
+ *			offset_west, main_client_title_height(c), 
+ *			c->width, c->height);
+ *   }
+ * 
+ * if (ewmh_sync_client_move_resize(c))
+ *   {
+ *     dbg("%s() not resizing frame yet\n", __func__);
+ *     return; 
+ *   }
+ *
+ * XMoveWindow(w->dpy, c->window, offset_west, main_client_title_height(c));
+ * 
+ * XResizeWindow(w->dpy, c->title_frame, 
+ *		c->width + (offset_east + offset_west),
+ *		c->height + main_client_title_height(c) + offset_south);
+ * 
+ * XMoveResizeWindow(w->dpy, c->frame, 
+ *		    c->x - offset_west,
+ *		    c->y - main_client_title_height(c), 
+ *		    c->width + ( offset_east + offset_west),
+ *		    c->height + main_client_title_height(c) + offset_south);
+ *
+ *  dbg("%s() resizing frame\n", __func__);
+ *
+ * c->ewmh_sync_is_waiting = False;
+ */
 
 }
 
@@ -313,10 +345,6 @@ main_client_move_resize(Client *c)
 void
 main_client_toggle_fullscreen(Client *c)
 {
-  Wm *w = c->wm;
-
-  XGrabServer(w->dpy);
-
   c->flags ^= CLIENT_FULLSCREEN_FLAG;
 
   main_client_configure(c);
@@ -334,7 +362,6 @@ main_client_toggle_fullscreen(Client *c)
 
   wm_activate_client(c); /* Reactivate, stacking order slightly different  */
 
-  XUngrabServer(w->dpy);
 }
 
 
@@ -511,7 +538,9 @@ main_client_redraw(Client *c, Bool use_cache)
 void main_client_button_press(Client *c, XButtonEvent *e)
 {
   Wm *w = c->wm;
-  int ch = 0;
+
+  int     ch = 0;
+  Client *p  = NULL;
 
    if (!w->config->use_title) return;
 
@@ -522,6 +551,23 @@ void main_client_button_press(Client *c, XButtonEvent *e)
       XMapSubwindows(w->dpy, c->title_frame);
       return;
    }
+
+   stack_enumerate(w, p)
+     {
+       if (p->trans == c && (p->flags & CLIENT_IS_MODAL_FLAG))
+	 {
+	   MBList *button_item = client_get_button_list_item_from_event(c, e);
+
+	   /* In the precense of a modal transient dialog ignore 
+	    * certain buttons. 
+	    *
+	    * For now its just the custom type. May make sense to
+            * Add more.
+	   */
+	   if (button_item && button_item->id == BUTTON_ACTION_CUSTOM)
+	     return;
+	 }
+     }
 
    ch = theme_frame_defined_height_get(w->mbtheme, FRAME_MAIN);
 

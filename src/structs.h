@@ -1,17 +1,22 @@
-/* matchbox - a lightweight window manager
-
-   Copyright 2002 Matthew Allum
-
-   This program is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
-   any later version.
-
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
-*/
+/* 
+ *  Matchbox Window Manager - A lightweight window manager not for the
+ *                            desktop.
+ *
+ *  Authored By Matthew Allum <mallum@o-hand.com>
+ *
+ *  Copyright (c) 2002, 2004 OpenedHand Ltd - http://o-hand.com
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2, or (at your option)
+ *  any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ */
 
 #ifndef _STRUCTS_H_
 #define _STRUCTS_H_
@@ -64,6 +69,10 @@
 #include <X11/extensions/Xrender.h>
 #endif
 
+#ifdef USE_XSYNC
+#include <X11/extensions/sync.h>
+#endif
+
 #define MSG_Q 1  		/* TO go for 0.9 FULL */
 
 #define GENERIC_ICON        PKGDATADIR "/mbnoapp.xpm"
@@ -86,8 +95,6 @@
 #endif
 
 #define CONFDEFAULTS       PKGDATADIR "/defaults"
-
-#define USE_EXTRAS 1
 
 /* Simple Macros  */
 
@@ -201,7 +208,8 @@ enum {
   WINDOW_TYPE_INPUT,
   WINDOW_STATE_ABOVE,
   WM_TRANSIENT_FOR,
-  INTEGER,
+  _NET_WM_SYNC_REQUEST_COUNTER,
+  _NET_WM_SYNC_REQUEST,
   ATOM_COUNT
 
 } MBAtomEnum;
@@ -376,6 +384,14 @@ typedef struct _client
   int               pings_pending;
   char             *host_machine;
   pid_t             pid;
+
+#ifdef USE_XSYNC
+  Bool              has_ewmh_sync;
+  XSyncCounter      ewmh_sync_counter;
+  XSyncValue        ewmh_sync_value;
+  XSyncAlarm        ewmh_sync_alarm;
+  Bool              ewmh_sync_is_waiting;
+#endif
 
   /* References */
    
@@ -601,11 +617,6 @@ typedef struct _wm
   MsgWinQueue      *msg_win_queue_head;
 #endif
 
-#ifdef USE_PANGO
-  PangoContext     *pgo;
-  PangoFontMap     *pgo_fontmap;
-#endif
-
 #ifdef USE_GCONF
   GConfClient      *gconf_client;
   GMainContext     *gconf_context;
@@ -648,12 +659,18 @@ typedef struct _wm
 
 #endif
 
+#ifdef USE_XSYNC
+  Bool              have_xsync;
+  int               sync_event_base;
+  int               sync_error_base;
+#endif
+
 #ifdef STANDALONE
-  Bool          have_toolbar_panel;
-  int           toolbar_panel_x;
-  int           toolbar_panel_y;
-  int           toolbar_panel_w;
-  int           toolbar_panel_h;
+  Bool             have_toolbar_panel;
+  int              toolbar_panel_x;
+  int              toolbar_panel_y;
+  int              toolbar_panel_w;
+  int              toolbar_panel_h;
 #endif
 
   int n_active_ping_clients; 	/* Number of apps we are pinging */

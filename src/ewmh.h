@@ -1,3 +1,23 @@
+/* 
+ *  Matchbox Window Manager - A lightweight window manager not for the
+ *                            desktop.
+ *
+ *  Authored By Matthew Allum <mallum@o-hand.com>
+ *
+ *  Copyright (c) 2002, 2004 OpenedHand Ltd - http://o-hand.com
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2, or (at your option)
+ *  any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ */
+
 #ifndef _EWMH_H_
 #define _EWMH_H_
 
@@ -58,5 +78,21 @@ ewmh_utf8_get_byte_cnt(unsigned char *str, int num_chars);
 
 Bool 
 ewmh_utf8_validate(unsigned char *str, int max_len);
+
+#ifdef USE_XSYNC
+
+void
+ewmh_sync_init(Wm *w);
+
+void
+ewmh_sync_handle_event(Wm *w, XSyncAlarmNotifyEvent *ev);
+
+Bool
+ewmh_sync_client_move_resize(Client *client);
+
+Bool
+ewmh_sync_client_init_counter(Client *client);
+
+#endif /* USE_XSYNC */
 
 #endif

@@ -1,5 +1,5 @@
 AC_PREREQ(2.53)
-AC_INIT([matchbox-window-manager], 0.9rc2, [mallum@handhelds.org])
+AC_INIT([matchbox-window-manager], 0.9rc3, [mallum@handhelds.org])
 AC_CONFIG_SRCDIR([src/wm.c])
 
 AM_INIT_AUTOMAKE()
@@ -48,6 +48,10 @@ AC_ARG_WITH(expat-includes,
 AC_ARG_WITH(expat-lib,         
   [  --with-expat-lib=DIR          Use Expat library in DIR], 
 	   expat_lib=$withval, expat_lib=yes)
+
+AC_ARG_ENABLE(xsync,
+  [  --enable-xsync                enable XSYNC X extension support],
+     enable_xsync=$enableval, enable_xsync=no )
 
 AC_ARG_ENABLE(gconf,
   [  --enable-gconf                enable gconf support],
@@ -154,6 +158,31 @@ fi
 
 AM_CONDITIONAL(WANT_STANDALONE, 
 	       test x$enable_standalone = xyes || test x$enable_standalone_xft = xyes)
+
+
+dnl ------ XSYNC support ------------------------------------------------
+
+if test x$enable_xsync = xyes; then
+
+  have_xsync="yes" 
+
+  AC_CHECK_LIB(Xext, XSyncQueryExtension,
+               have_xsync="yes" , 
+	       have_sync="no" ,$LIBMB_LIBS )
+
+  if test "x$have_xsync" = "xyes"; then 	       
+     AC_CHECK_HEADER(X11/extensions/sync.h,,have_xsync=no,
+                     [#include <X11/Xlib.h>])	
+  fi		     
+
+  if test "x$have_xsync" = "xno"; then
+     AC_MSG_WARN([Unable to meet XSync dependencies. Not enabling])
+     enable_xsync="no"
+   else
+      AC_MSG_RESULT([Enabling XSync Support.])	
+      AC_DEFINE(USE_XSYNC, 1, Have the SYNC extension library)
+   fi
+fi
 
 dnl ------ keyboard support ------------------------------------------------
 
@@ -426,6 +455,7 @@ echo "
         Building with wm ping protocol:     ${enable_ping_protocol}
         Building with Alt input Windows:    ${enable_alt_input_wins}
         Building with Expat:                ${enable_expat}
+        Building with XSync:                ${enable_xsync}
         Building with XSettings:            ${mb_have_xsettings}
         Building with Startup-Notification: ${enable_startup_notification}
         Building with GConf:                ${enable_gconf}

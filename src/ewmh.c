@@ -1,17 +1,22 @@
-/* matchbox - a lightweight window manager
-
-   Copyright 2002 Matthew Allum
-
-   This program is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
-   any later version.
-
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
-*/
+/* 
+ *  Matchbox Window Manager - A lightweight window manager not for the
+ *                            desktop.
+ *
+ *  Authored By Matthew Allum <mallum@o-hand.com>
+ *
+ *  Copyright (c) 2002, 2004 OpenedHand Ltd - http://o-hand.com
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2, or (at your option)
+ *  any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ */
 
 #include "ewmh.h"
 
@@ -111,13 +116,16 @@ ewmh_init(Wm *w)
     "_NET_WM_WINDOW_TYPE_INPUT",
     "_NET_WM_STATE_ABOVE",
     "WM_TRANSIENT_FOR",
-    "INTEGER" 			/* XXX Needed ? */
-
+    "_NET_WM_SYNC_REQUEST_COUNTER",
+    "_NET_WM_SYNC_REQUEST"
   };
 
   XInternAtoms (w->dpy, atom_names, ATOM_COUNT,
                 False, w->atoms);
 
+#ifdef USE_XSYNC
+  ewmh_sync_init(w);
+#endif
 }
 
 void
@@ -699,6 +707,204 @@ static void set_compliant(Wm *w) /* lets clients know were compliant (ish) */
 
    XStoreName(w->dpy, win, app_name);   
 }
+
+
+/* 
+
+_NET_WM_SYNC_REQUEST
+
+This protocol uses the XSync extension the protocol specification and
+the library documentation<) to let client and window manager
+synchronize the repaint of the window manager frame and the client
+window. A client indicates that it is willing to participate in the
+protocol by listing _NET_WM_SYNC_REQUEST in the WM_PROTOCOLS property
+of the client window and storing the XID of an XSync counter in the
+property _NET_WM_SYNC_REQUEST_COUNTER. The initial value of this
+counter is not defined by this specification.
+
+A window manager uses this protocol by preceding a ConfigureNotify
+event sent to a client by a client message as follows:
+
+type = ClientMessage
+window = the respective client window
+message_type = WM_PROTOCOLS
+format = 32
+data.l[0] = _NET_WM_SYNC_REQUEST
+data.l[1] = timestamp
+data.l[2] = low 32 bits of the update request number
+data.l[3] = high 32 bits of the update request number
+other data.l[] elements = 0
+
+After receiving one or more such message/ConfigureNotify pairs, and
+having handled all repainting associated with the ConfigureNotify
+events, the client MUST set the _NET_WM_SYNC_REQUEST_COUNTER to the 64
+bit number indicated by the data.l[2] and data.l[3] fields of the last
+client message received.
+
+By using either the Alarm or the Await mechanisms of the XSync
+extension, the window manager can know when the client has finished
+handling the ConfigureNotify events. The window manager SHOULD not
+resize the window faster than the client can keep up.
+
+The update request number in the client message is determined by the
+window manager subject to the restriction that it MUST NOT be 0. The
+number is generally intended to be incremented by one for each message
+sent. Since the initial value of the XSync counter is not defined by
+this specification, the window manager MAY set the value of the XSync
+counter at any time, and MUST do so when it first manages a new
+window.
+
+*/
+
+#ifdef USE_XSYNC
+
+static void
+sync_value_increment (XSyncValue *value)
+{
+  XSyncValue one;
+  int overflow;
+  
+  XSyncIntToValue (&one, 1);
+  XSyncValueAdd (value, *value, one, &overflow);
+}
+
+void
+ewmh_sync_init(Wm *w)
+{
+  if (!XSyncQueryExtension (w->dpy,
+                            &w->sync_event_base,
+                            &w->sync_error_base))
+    {
+      dbg("%s() XSyncQueryExtension FAILED.\n", __func__);
+      w->have_xsync = False;
+      return;
+    }
+
+  w->have_xsync = True;
+}
+
+void
+ewmh_sync_handle_event(Wm *w, XSyncAlarmNotifyEvent *ev)
+{
+  Client *client = NULL;
+
+  stack_enumerate(w, client)
+    {
+      if (client->ewmh_sync_alarm == ev->alarm)
+	break;
+    }
+
+  if (client) 			/* XXX should check alarm matches */
+    {
+      dbg("%s() found client %s\n", __func__, client->name);
+      client->move_resize(client);
+    }
+}
+
+Bool
+ewmh_sync_client_move_resize(Client *client)
+{
+  Wm *w = client->wm;
+  unsigned long highval, lowval;
+
+  if (!w->have_xsync) 
+    return False;
+  
+  if (!client->has_ewmh_sync)
+    return False;
+
+  if (client->ewmh_sync_is_waiting)
+    return False; 		/* XXX WRONG XXX */
+
+  ewmh_sync_client_init_counter(client);
+
+  lowval  = XSyncValueLow32 (client->ewmh_sync_value);
+  highval = XSyncValueHigh32 (client->ewmh_sync_value);
+
+  sync_value_increment (&client->ewmh_sync_value);
+
+  dbg("%s() delivering _NET_WM_SYNC_REQUEST\n", __func__);
+
+  client_deliver_message(client, 
+			 w->atoms[WM_PROTOCOLS], 
+			 w->atoms[_NET_WM_SYNC_REQUEST], 
+			 CurrentTime, lowval, highval,
+			 0);
+  
+  client->ewmh_sync_is_waiting = True;
+  
+  return True;
+}
+
+Bool
+ewmh_sync_client_init_counter(Client *client)
+{
+  Wm *w = client->wm;
+
+  XSyncAlarmAttributes values;
+  Atom                 type;
+  int                  format, result;
+  long                 bytes_after, n_items;
+  XID                 *value;
+
+  if (!w->have_xsync) 
+    return False;
+  
+  if (!client->has_ewmh_sync)
+    return False;
+
+  result =  XGetWindowProperty (w->dpy, client->window, 
+				w->atoms[_NET_WM_SYNC_REQUEST_COUNTER],
+				0, 1024L,
+				False, XA_CARDINAL,
+				&type, &format, &n_items,
+				&bytes_after, (unsigned char **)&value);
+
+  if (result != Success || value == NULL || format != 32)
+    {
+      dbg("%s() _NET_WM_SYNC_REQUEST_COUNTER failed\n", __func__);
+      if (value) XFree (value);
+      return False;
+    }
+
+  dbg("%s() creating alarm\n", __func__);
+
+  client->ewmh_sync_counter = *value;
+
+  XSyncIntsToValue (&client->ewmh_sync_value, random(), 0);
+  XSyncSetCounter (w->dpy, client->ewmh_sync_counter, client->ewmh_sync_value);
+
+  sync_value_increment (&client->ewmh_sync_value);
+
+  values.events = True;
+  values.trigger.counter    = client->ewmh_sync_counter;
+  values.trigger.wait_value = client->ewmh_sync_value;
+  values.trigger.value_type = XSyncAbsolute;
+  values.trigger.test_type  = XSyncPositiveComparison;
+  XSyncIntToValue (&values.delta, 1);
+  values.events = True;
+
+  /* Note that by default, the alarm increments the trigger value
+   * when it fires until the condition (counter.value < trigger.value)
+   * is FALSE again.
+   */
+  client->ewmh_sync_alarm = XSyncCreateAlarm (w->dpy,
+					      XSyncCACounter 
+					      | XSyncCAValue 
+					      | XSyncCAValueType 
+					      | XSyncCATestType 
+					      | XSyncCADelta 
+					      | XSyncCAEvents,
+					      &values);
+  XSync (w->dpy, False);
+
+  /* XXX untrap error here */
+
+  return True;
+}
+
+#endif
+
 
 /* UTF8 - borrowed from glib. XXX fontconfig may actually provide these calls*/
 

@@ -1,3 +1,23 @@
+/* 
+ *  Matchbox Window Manager - A lightweight window manager not for the
+ *                            desktop.
+ *
+ *  Authored By Matthew Allum <mallum@o-hand.com>
+ *
+ *  Copyright (c) 2002, 2004 OpenedHand Ltd - http://o-hand.com
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2, or (at your option)
+ *  any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ */
+
 #include "composite-engine.h"
 
 #define DO_TIMINGS 0 		/* enable this for lowlight timings */
@@ -1006,16 +1026,21 @@ comp_engine_client_configure(Wm *w, Client *client)
 
   XserverRegion   extents = client_win_extents(w, client);
 
+  if (client->picture != None)
+    {
+      XRenderFreePicture (w->dpy, client->picture);
+      client->picture = None;
+    }
+
   damage = XFixesCreateRegion (w->dpy, 0, 0);
+
   if (client->extents != None)
     XFixesCopyRegion (w->dpy, damage, client->extents);
-
 
   XFixesUnionRegion (w->dpy, damage, damage, extents);
   XFixesDestroyRegion (w->dpy, extents);
 
   comp_engine_add_damage (w, damage);
-
 }
 
 
@@ -1091,6 +1116,8 @@ _render_a_client(Wm           *w,
       && (client->type & (MBCLIENT_TYPE_APP|MBCLIENT_TYPE_DESKTOP)))
     {
       int title_offset = 0;
+
+      dbg("%s() rendering lowlight\n", __func__);
 
       /* XXX maybe it would make more sense to calc geom of client->win */
 
@@ -1190,7 +1217,11 @@ comp_engine_render(Wm *w, XserverRegion region)
     {
       dbg("%s() rendering %s\n", __func__, t->name);
 
-      _render_a_client(w, t, region, False);
+      if (t->type == MBCLIENT_TYPE_DIALOG
+	  && t->flags & CLIENT_IS_MODAL_FLAG)
+	have_modal = True;
+
+      _render_a_client(w, t, region, have_modal);
       
       if (t == client_top_app)
 	break;

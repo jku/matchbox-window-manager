@@ -1,22 +1,22 @@
-/* matchbox - a lightweight window manager
-
-   Copyright 2002 Matthew Allum
-
-   This program is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
-   any later version.
-
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
-*/
-
-/*
-  $Id: base_client.c,v 1.15 2004/11/18 13:29:14 mallum Exp $
-*/
-
+/* 
+ *  Matchbox Window Manager - A lightweight window manager not for the
+ *                            desktop.
+ *
+ *  Authored By Matthew Allum <mallum@o-hand.com>
+ *
+ *  Copyright (c) 2002, 2004 OpenedHand Ltd - http://o-hand.com
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2, or (at your option)
+ *  any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ */
 
 #include "base_client.h"
 
@@ -218,6 +218,7 @@ base_client_new(Wm *w, Window win)
 
    if (XGetWMProtocols(c->wm->dpy, c->window, &protocols, &n)) 
      {
+       dbg("%s() checking wm protocols ( %i found )\n", __func__, n);
        for (i=0; i<n; i++)
 	 {
 	   if (protocols[i] == c->wm->atoms[_NET_WM_CONTEXT_HELP])
@@ -241,6 +242,13 @@ base_client_new(Wm *w, Window win)
 	     {
 	       dbg("%s() has PING ewmh\n", __func__);
 	       c->has_ping_protocol = True;
+	     }
+#endif
+#ifdef USE_XSYNC
+	   else if (protocols[i] == c->wm->atoms[_NET_WM_SYNC_REQUEST])
+	     {
+	       c->has_ewmh_sync = True;
+	       dbg("%s() client has _NET_WM_SYNC_REQUEST\n", __func__);
 	     }
 #endif
 	 }
@@ -484,7 +492,16 @@ base_client_destroy(Client *c)
         */
 
        if (p->trans == c)
+#ifdef USE_ALT_INPUT_WIN
+	 {
+	   if (p->flags & (CLIENT_TB_ALT_TRANS_FOR_DIALOG|CLIENT_TB_ALT_TRANS_FOR_APP))
+	     p->hide(p);
+	   else
+	     p->trans = c->trans;
+	 }
+#else
 	 p->trans = c->trans;
+#endif
      }
 
 #ifdef USE_LIBSN

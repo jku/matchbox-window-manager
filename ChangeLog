@@ -1,3 +1,59 @@
+2004-11-30  mallum,,,  <mallum@handhelds.org>
+
+	* configure.ac:
+	Bump Version.
+	* src/base_client.c: (base_client_new), (base_client_destroy):
+	* src/base_client.h:
+	* src/client_common.c:
+	* src/client_common.h:
+	* src/composite-engine.c: (comp_engine_client_configure),
+	(_render_a_client), (comp_engine_render):
+	* src/composite-engine.h:
+	* src/desktop_client.c:
+	* src/desktop_client.h:
+	* src/dialog_client.c: (dialog_client_new),
+	(dialog_client_check_for_state_hints),
+	(dialog_client_button_press), (dialog_client_set_focus_next),
+	(dialog_client_iconize), (dialog_client_destroy):
+	* src/dialog_client.h:
+	* src/dockbar_client.c:
+	* src/dockbar_client.h:
+	* src/ewmh.c: (ewmh_init), (sync_value_increment),
+	(ewmh_sync_init), (ewmh_sync_handle_event),
+	(ewmh_sync_client_move_resize), (ewmh_sync_client_init_counter):
+	* src/ewmh.h:
+	* src/keys.c:
+	* src/keys.h:
+	* src/list.c:
+	* src/list.h:
+	* src/main.c:
+	* src/main_client.c: (main_client_configure),
+	(main_client_move_resize), (main_client_toggle_fullscreen),
+	(main_client_button_press):
+	* src/main_client.h:
+	* src/matchbox-remote.c:
+	* src/mbtheme-standalone.c:
+	* src/mbtheme-standalone.h:
+	* src/mbtheme.c:
+	* src/mbtheme.h:
+	* src/misc.c:
+	* src/misc.h:
+	* src/select_client.c:
+	* src/select_client.h:
+	* src/stack.c:
+	* src/stack.h:
+	* src/structs.h:
+	* src/toolbar_client.c:
+	* src/toolbar_client.h:
+	* src/toolbar_client_alt.c: (toolbar_client_hide):
+	* src/wm.c: (wm_event_loop), (wm_handle_configure_notify):
+	* src/wm.h:
+	* src/xml.c:
+	* src/xml.h:
+	Update copyright on all files.
+	Add initial _NET_WM_SYNC support ( not working ).
+	Tweak alternative toolbar behaviour. 
+
 2004-11-19  mallum,,,  <mallum@handhelds.org>
 
 	* src/wm.c: (wm_activate_client):

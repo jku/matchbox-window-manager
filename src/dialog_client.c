@@ -1,18 +1,22 @@
-/* matchbox - a lightweight window manager
-
-   Copyright 2002 Matthew Allum
-
-   This program is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
-   any later version.
-
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
-*/
-
+/* 
+ *  Matchbox Window Manager - A lightweight window manager not for the
+ *                            desktop.
+ *
+ *  Authored By Matthew Allum <mallum@o-hand.com>
+ *
+ *  Copyright (c) 2002, 2004 OpenedHand Ltd - http://o-hand.com
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2, or (at your option)
+ *  any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ */
 
 #include "dialog_client.h"
 
@@ -52,8 +56,7 @@ dialog_client_new(Wm *w, Window win, Client *trans)
    
    c->reparent     = &dialog_client_reparent;
    c->move_resize  = &dialog_client_move_resize;
-   c->hide         = &dialog_client_hide;
-   
+   c->iconize      = &dialog_client_iconize;   
    c->configure    = &dialog_client_configure;
    c->button_press = &dialog_client_button_press;
    c->redraw       = &dialog_client_redraw;
@@ -103,9 +106,18 @@ dialog_client_check_for_state_hints(Client *c)
 {
   if (ewmh_state_check(c, c->wm->atoms[WINDOW_STATE_MODAL]))
     {
+      Client *damaged_client;
       dbg("%s() got modal hint, setting flag\n", __func__);
 
       c->flags ^= CLIENT_IS_MODAL_FLAG;
+
+      /* Call comp_engine_client_show to add damage to main window
+       * so it gets fully lowlighted ok.
+       */
+      if ((damaged_client = wm_get_visible_main_client(c->wm)) != NULL)
+        {
+          comp_engine_client_show(c->wm, damaged_client);
+        }
     }
 
   if (ewmh_state_check(c, c->wm->atoms[WINDOW_STATE_ABOVE]))
@@ -170,23 +182,6 @@ dialog_client_move_resize(Client *c)
 			 c->width + offset_east + offset_west,
 			 c->height + frm_size + offset_south );
      }
-}
-
-void
-dialog_client_hide(Client *c)
-{
-  Client *damaged;
-  dbg("%s() called for %s\n", __func__, c->name);
-
-  XLowerWindow(c->wm->dpy, c->frame);
-
-  if (c->flags & CLIENT_IS_MODAL_FLAG 
-      && (damaged = wm_get_visible_main_client(c->wm)) != NULL)
-    {
-      comp_engine_client_show(c->wm, damaged);
-    }
-
-  comp_engine_client_hide(c->wm, c);
 }
 
 int
@@ -822,6 +817,9 @@ dialog_client_button_press(Client *c, XButtonEvent *e)
        *       Is it safe to simply remove the server grab ?
        *
        */
+      if (c->flags & CLIENT_HAS_URGENCY_FLAG)
+	return; 		/* No Effect for message wins */
+
       if (XGrabPointer(w->dpy, w->root, False,
 		       ButtonPressMask|ButtonReleaseMask,
 		       GrabModeAsync,
@@ -1035,8 +1033,41 @@ _draw_outline(Client *c, int x, int y, int width, int height)
 		 x-1, y-1, width+2, height+2);
 
 }
+
+static Client*
+dialog_client_set_focus_next(Client *c)
+{
+  Wm *w = c->wm; 
+
+  if (c->next_focused_client)
+    client_set_focus(c->next_focused_client);
+  else
+    {
+      if (w->focused_client == c)
+	w->focused_client = NULL;
+      return wm_get_visible_main_client(w);
+    }
+
+  return NULL;
+}
+
+void
+dialog_client_iconize(Client *c)
+{
+  Wm     *w = c->wm; 
+  Client *d = NULL;
+
+  client_set_state(c, IconicState);
+  c->flags |= CLIENT_IS_MINIMIZED;
+  c->mapped = False;
+  XUnmapWindow(w->dpy, c->frame); 
+  
+  if ((d = dialog_client_set_focus_next(d)) != NULL)
+    wm_activate_client(d);
+}
  
-void dialog_client_destroy(Client *c)
+void 
+dialog_client_destroy(Client *c)
 {
   Wm     *w = c->wm; 
   Client *d = NULL;
@@ -1052,14 +1083,9 @@ void dialog_client_destroy(Client *c)
     }
 #endif
 
-  if (c->next_focused_client)
-    client_set_focus(c->next_focused_client);
-  else
-    {
-      if (w->focused_client == c)
-	w->focused_client = NULL;
-      d = wm_get_visible_main_client(w);
-    }
+
+  /* Focus the saved next or return a likely candidate if none found */
+  d = dialog_client_set_focus_next(c);
 
   base_client_destroy(c);
 
@@ -1071,12 +1097,11 @@ if (was_msg)
   }
 #endif
 
-
   /* 
-     We call activate_client mainly to figure out what to focus next.
-     This probably only happens in the case of transient for root
-     dialogs which likely have no real focus history.
-  */
+   *  We call activate_client mainly to figure out what to focus next.
+   *  This probably only happens in the case of transient for root
+   *  dialogs which likely have no real focus history.
+   */
   if (d) 
       wm_activate_client(d);
 
