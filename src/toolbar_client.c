@@ -22,6 +22,14 @@ toolbar_client_new(Wm *w, Window win)
 
    if (!c) return NULL;
 
+   /* If theres not room for the toolbar, just make it an app window */
+   /* In practise one would expect this to never happen              */
+   if ((c->y + c->height) > w->dpy_height)
+     {
+       base_client_destroy(c);
+       return main_client_new(w, win);
+     }
+
    c->type = toolbar;
    
    c->configure    = &toolbar_client_configure;
@@ -34,6 +42,7 @@ toolbar_client_new(Wm *w, Window win)
    c->move_resize  = &toolbar_client_move_resize;
    c->get_coverage = &toolbar_client_get_coverage;
    c->destroy      = &toolbar_client_destroy;
+
 
 
    client_set_state(c,WithdrawnState); 	/* set initially to signal show() */

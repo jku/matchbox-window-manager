@@ -1,3 +1,9 @@
+2004-06-11  Matthew Allum,,,  <mallum@handhelds.org>
+
+	* src/toolbar_client.c: (toolbar_client_new):
+	If theres no vertical space for a new toolbar turn it
+	into a main client. 
+
 2004-06-04  Matthew Allum,,,  <mallum@handhelds.org>
 
 	* src/ewmh.c: (ewmh_handle_root_message):
