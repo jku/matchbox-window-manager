@@ -422,14 +422,16 @@ echo "
 
         Building Standalone:                ${enable_standalone}
         Building Standalone with Xft:       ${enable_standalone_xft}
+
         Building with Keyboard:             ${enable_keyboard}
-        Building with Expat:                ${enable_expat}
-
-        Building with GConf:                ${enable_gconf}
-        Building with Startup-Notification: ${enable_startup_notification}
-        Building with composite manager:    ${enable_composite}
+        Building with wm ping protocol:     ${enable_ping_protocol}
         Building with Message Windows:      ${enable_message_wins}
-
+        Building with Expat:                ${enable_expat}
         Building with XSettings:            ${mb_have_xsettings}
+        Building with Startup-Notification: ${enable_startup_notification}
+        Building with GConf:                ${enable_gconf}
+        Building with composite manager:    ${enable_composite}
+
+
 
 "
