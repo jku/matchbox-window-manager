@@ -184,8 +184,6 @@ _draw_button(MBTheme *theme, Drawable drw, int type, int size, int state)
   else
     XSetForeground(theme->wm->dpy, theme->gc, theme->col_text.pixel);
 
-
-
   if (type == BUTTON_CROSS)
     {
       size--;
@@ -195,13 +193,13 @@ _draw_button(MBTheme *theme, Drawable drw, int type, int size, int state)
   else
     {
       int i;
-      for (i=0; i<3; i++)
+      for (i=0; i<6; i++)
 	{
 	  XFillRectangle(theme->wm->dpy, 
 			 pxm_backing, 
 			 theme->gc, 
-			 (2*i), (2*i), 
-			 size-(4*i), 2);
+			 i, i+2, 
+			 size-(2*i), 1);
 	}
     }
 
@@ -473,21 +471,21 @@ _theme_paint_pixmap_border( MBTheme *theme,
 			    int      dw,
 			    int      dh)
 {
-  XSetForeground(theme->wm->dpy, theme->gc, theme->col_fg_highlight.pixel);
-  XFillRectangle(theme->wm->dpy, pxm_backing, theme->gc, 
-		 0, 0, dw, dh);
-  XSetForeground(theme->wm->dpy, theme->gc, theme->col_fg_lowlight.pixel);
-  XFillRectangle(theme->wm->dpy, pxm_backing, theme->gc, 
-		 1, 1, dw-1, dh-1);
-  XSetForeground(theme->wm->dpy, theme->gc, theme->col_fg.pixel);
-  XFillRectangle(theme->wm->dpy, pxm_backing, theme->gc, 
-		 1, 1, dw-2, dh-3);
-
-  /* XXX line at bottom */
   XSetForeground(theme->wm->dpy, theme->gc, 
 		 BlackPixel(theme->wm->dpy, theme->wm->screen));
   XFillRectangle(theme->wm->dpy, pxm_backing, theme->gc, 
-		 0, dh-1, dw, 1);
+		 0, 0, dw, dh);
+
+  XSetForeground(theme->wm->dpy, theme->gc, theme->col_fg_highlight.pixel);
+  XFillRectangle(theme->wm->dpy, pxm_backing, theme->gc, 
+		 1, 1, dw-2, dh-2);
+  XSetForeground(theme->wm->dpy, theme->gc, theme->col_fg_lowlight.pixel);
+  XFillRectangle(theme->wm->dpy, pxm_backing, theme->gc, 
+		 2, 2, dw-3, dh-3);
+  XSetForeground(theme->wm->dpy, theme->gc, theme->col_fg.pixel);
+  XFillRectangle(theme->wm->dpy, pxm_backing, theme->gc, 
+		 2, 2, dw-4, dh-4);
+
 }
 
 Bool 
@@ -597,7 +595,7 @@ theme_frame_paint( MBTheme *theme,
 		      title_bytes,
 		      c->name_is_utf8,
 		      xoffset, 
-		      font->ascent + 2);
+		      font->ascent + 3);
 	  
 	  XftDrawDestroy(xftdraw);
 	}
@@ -816,6 +814,7 @@ mbtheme_new(Wm *w)
   t->gc = XCreateGC(w->dpy, w->root,
 		       GCGraphicsExposures|GCFunction, &gv);
   
+
   gv.function = GXinvert;
   gv.subwindow_mode = IncludeInferiors;
   gv.line_width = 1;

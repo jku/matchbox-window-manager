@@ -1,3 +1,10 @@
+2005-01-23  mallum,,,  <mallum@openedhand.com>
+
+	* src/mbtheme-standalone.c: (_draw_button),
+	(_theme_paint_pixmap_border), (theme_frame_paint), (mbtheme_new):
+	* src/mbtheme-standalone.h:
+	Tweak the standalone 'theme' a little. 
+
 2005-01-21  mallum,,,  <mallum@openedhand.com>
 
 	* data/themes/Default/theme.xml:

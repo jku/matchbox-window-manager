@@ -44,7 +44,7 @@
 
 /* Line width for buttons  */
 
-#define THEME_LINE_WIDTH         3
+#define THEME_LINE_WIDTH         2
 
 /* Frame Colors */
 
