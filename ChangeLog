@@ -1,5 +1,10 @@
 2005-01-10  mallum,,,  <mallum@openedhand.com>
 
+	* src/mbtheme.c: (theme_frame_button_paint):
+	Fix typo break composite builds.
+
+2005-01-10  mallum,,,  <mallum@openedhand.com>
+
 	* src/dialog_client.c: (dialog_client_destroy):
 	* src/structs.h:
 	* src/wm.c: (wm_event_loop), (wm_make_new_client):

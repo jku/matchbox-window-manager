@@ -277,7 +277,7 @@ theme_frame_button_paint(MBTheme *theme,
 #ifdef USE_COMPOSITE
 	      /* 32 ARGB wins require 'special' pixbuf ref */
 	      if (c->is_argb32)
-		pb = wm->argb_pb;
+		pb = w->argb_pb;
 #endif
 	      pxm_button = XCreatePixmap(w->dpy, w->root, button_w, button_h, 
 					 pb->depth);
