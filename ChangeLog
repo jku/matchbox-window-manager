@@ -1,3 +1,8 @@
+2005-02-08  mallum,,,  <mallum@openedhand.com>
+
+	* configure.ac:
+	Bump up version to 0.9.3
+
 2005-02-08  mallum  <mallum@openedhand.com>
 
 	* src/client_common.c: (client_get_state):
