@@ -26,6 +26,8 @@
 #define DIALOG_DRAG_RESTRAIN     2
 #define DIALOG_DRAG_FREE         3
 
+/* below can be changed for different behaviours */
+
 /* Selected restraint */
 #define DIALOG_DRAG_MODE         DIALOG_DRAG_FREE
 
@@ -81,7 +83,6 @@ dialog_client_new(Wm *w, Window win, Client *trans)
    return c;
 }
 
-
 static void
 dialog_client_get_offsets(Client *c, int *e, int *s, int *w)
 {
@@ -113,7 +114,6 @@ dialog_client_get_offsets(Client *c, int *e, int *s, int *w)
 				      FRAME_DIALOG_WEST );
 }
 
-
 static void
 dialog_client_check_for_state_hints(Client *c)
 {
@@ -122,6 +122,7 @@ dialog_client_check_for_state_hints(Client *c)
       Client *damaged;
 
       dbg("%s() got modal hint, setting flag\n", __func__);
+
       c->flags ^= CLIENT_IS_MODAL_FLAG;
 
       /* Call comp_engine_client_show to add damage to main window 
@@ -133,7 +134,6 @@ dialog_client_check_for_state_hints(Client *c)
 	}
     }
 }
-
 
 void
 dialog_client_get_coverage(Client *c, int *x, int *y, int *w, int *h)
@@ -148,7 +148,6 @@ dialog_client_get_coverage(Client *c, int *x, int *y, int *w, int *h)
    *w = c->width + east + west;
    *h = c->height + frm_size + south;
 }
-
 
 void
 dialog_client_move_resize(Client *c)
@@ -197,7 +196,6 @@ dialog_client_move_resize(Client *c)
      }
 }
 
-
 void
 dialog_client_hide(Client *c)
 {
@@ -213,7 +211,6 @@ dialog_client_hide(Client *c)
 
   comp_engine_client_hide(c->wm, c);
 }
-
 
 int
 dialog_client_title_height(Client *c)
@@ -238,8 +235,6 @@ dialog_client_title_height(Client *c)
 void
 dialog_client_show(Client *c)
 {
-
-
   dbg("%s() called for %s\n", __func__, c->name);
 
   /* XXX paint before map so dialog gets shape 
@@ -296,7 +291,6 @@ dialog_client_show(Client *c)
   c->mapped = True;
 }
 
-
 void
 dialog_client_reparent(Client *c)
 {
@@ -343,7 +337,6 @@ dialog_client_reparent(Client *c)
 				     CopyFromParent,
 				     CopyFromParent, 
 				     CopyFromParent,
-
 #endif
 				     CWOverrideRedirect|CWEventMask
 				     |CWBackPixel|CWBorderPixel|CWColormap, 
@@ -383,11 +376,13 @@ dialog_client_reparent(Client *c)
 		     offset_west, offset_north);
 }
 
-/*  Padding between dialog borders and area available  
- *
- */
+/*  Padding between dialog borders and area available */
 #define DIALOG_PADDING 4 
 
+/*
+ *  dialog_get_available_area()
+ *  Get the 'safe' area ( eg no panels / input windows ) covered. 
+ */
 void
 dialog_get_available_area(Client *c,
 			  int    *x,
@@ -396,21 +391,6 @@ dialog_get_available_area(Client *c,
 			  int    *height)
 {
   Wm *w = c->wm;
-
-#if 0
-  if (c->trans)
-    {
-      /* Transient for root dialog,
-       * 
-       *
-       */
-
-
-    }
-  else
-#endif
-
-    dbg("%s() south size is %i\n", __func__,  wm_get_offsets_size(w, SOUTH, NULL, True));
 
   if (c->flags & CLIENT_TITLE_HIDDEN_FLAG 
       || c->flags & CLIENT_IS_MESSAGE_DIALOG)
@@ -433,7 +413,9 @@ dialog_get_available_area(Client *c,
 
       *y      = wm_get_offsets_size(w, NORTH, NULL, True);
 
-      /* if toolbar ( input window present ) dialogs can cover titlebars */
+      /* if toolbar ( input window present ) dialogs can cover titlebars 
+       * as can transient for root dialogs. 
+       */
       if (!have_toolbar)
 	*y  += main_client_title_height(c->trans);
 
@@ -444,16 +426,16 @@ dialog_get_available_area(Client *c,
 }
 
 /* 
-   dialog_check_gemoetry()
-
-   called mainly by wm_restack to suggest better positions for dialogs
-   in relation to panels and toolbar/input wins. 
-
-   req params are reparented window geometry *without* borders
-
-   returns True if geometry supplied fits - is good. 
-   retruns False if geometry supplyied bad,  supplied geometry is updated
-   to fit. 
+ * dialog_check_gemoetry()
+ *
+ * called mainly by wm_restack to suggest better positions for dialogs
+ * in relation to panels and toolbar/input wins. 
+ *
+ * req params are reparented window geometry *without* borders
+ *
+ *  returns True if geometry supplied fits - is good. 
+ *  retruns False if geometry supplyied bad,  supplied geometry is updated
+ *  to fit. 
  */
 Bool
 dialog_check_geometry(Client *c,
@@ -486,7 +468,8 @@ dialog_check_geometry(Client *c,
   bdr_north = dialog_client_title_height(c);
 
   dbg("%s() - \n\t avail_x : %d\n\tavail_y : %d\n\tavail_width : %d"
-      "\n\tavail_height %d\n\tbdr_south : %d\n\tbdr_west : %d\n\tbdr_east : %d\n\tbdr_north : %d\n",
+      "\n\tavail_height %d\n\tbdr_south : %d\n\tbdr_west : %d"
+      "\n\tbdr_east : %d\n\tbdr_north : %d\n",
       __func__, avail_x, avail_y, avail_width, avail_height,
       bdr_south, bdr_west, bdr_east, bdr_north);
 
@@ -517,22 +500,22 @@ dialog_check_geometry(Client *c,
       res = False;
     }
 
-  if (actual_x < avail_x) 
+  if (actual_x < avail_x)   /* move dialog right */
     {
-      *req_x = avail_x + bdr_west + DIALOG_PADDING; /* move dialog right */
+      *req_x = avail_x + bdr_west + DIALOG_PADDING;
       res = False;
     }
 
-  if (actual_y < avail_y) 
+  if (actual_y < avail_y)    /* move dialog up */
     {
-      *req_y = avail_y + bdr_north + DIALOG_PADDING; /* move dialog up */
+      *req_y = avail_y + bdr_north + DIALOG_PADDING;
       res = False;
     }
 
-  if (actual_x > avail_x 
+  if (actual_x > avail_x    /* move dialog right */
       && (actual_x + actual_width) > (avail_x + avail_width) )
     {
-      *req_x = avail_x + bdr_west + DIALOG_PADDING; /* move dialog right */
+      *req_x = avail_x + bdr_west + DIALOG_PADDING;
       res = False;
     }
 
@@ -548,14 +531,6 @@ dialog_check_geometry(Client *c,
 void
 dialog_init_geometry(Client *c)      
 {
-  /* 
-     Called by initial configure() 
-     
-     - Check for 0,0 position. 
-       - 0,0 ? center. 
-     - Save initial position. 
-
-  */
   Wm  *w = c->wm;
   int  avail_x, avail_y, avail_width, avail_height;
   int  bdr_south = 0, bdr_west = 0, bdr_east = 0, bdr_north = 0;
@@ -575,8 +550,10 @@ dialog_init_geometry(Client *c)
   bdr_north = dialog_client_title_height(c);
 
   dbg("%s() - \n\t avail_x : %d\n\tavail_y : %d\n\tavail_width : %d"
-      "\n\tavail_height %d\n\tbdr_south : %d\n\tbdr_west : %d\n\tbdr_east : %d\n\tbdr_north : %d\n",
-      __func__, avail_x, avail_y, avail_width, avail_height,
+      "\n\tavail_height %d\n\tbdr_south : %d\n\tbdr_west : %d"
+      "\n\tbdr_east : %d\n\tbdr_north : %d\n",
+      __func__, 
+      avail_x, avail_y, avail_width, avail_height,
       bdr_south, bdr_west, bdr_east, bdr_north);
 
   /* Message Dialogs are free to postion/size where ever but can use totally  
@@ -600,7 +577,8 @@ dialog_init_geometry(Client *c)
   c->init_width  = c->width;
   c->init_height = c->height;
 
-  dbg("%s() set init, %ix%i, wants x:%d y:%d\n", __func__, c->init_width, c->init_height, c->x, c->y); 
+  dbg("%s() set init, %ix%i, wants x:%d y:%d\n", 
+      __func__, c->init_width, c->init_height, c->x, c->y); 
 
   /* Fix width/height  */
   if ((c->width + bdr_east + bdr_west) > avail_width)
@@ -609,11 +587,10 @@ dialog_init_geometry(Client *c)
   if ((c->height + bdr_north + bdr_south) > avail_height)
     c->height = (avail_height - bdr_north - bdr_south - (2*DIALOG_PADDING));
 
-
-  /* Reposition dialog initially centered if ;
-      + positioned at 0,0
-      + positioned offscreen
-    */
+  /* Reposition dialog to center of avialable space if ;
+   *   + positioned at 0,0
+   *   + positioned offscreen
+   */
   if ( (c->x - bdr_west) <= avail_x 
        || (c->x + c->width + bdr_east + bdr_west) > (avail_x + avail_width))
     {
@@ -629,6 +606,13 @@ dialog_init_geometry(Client *c)
       c->y = (avail_height - (c->height + bdr_south + bdr_north))/2 + avail_y + bdr_north;
     }
 
+  /* horiz contarined mode - force dialog to be full width*/
+  if (c->wm->config->dialog_stratergy == WM_DIALOGS_STRATERGY_CONSTRAINED_HORIZ
+      && !(c->flags & CLIENT_TITLE_HIDDEN_FLAG) )
+    {
+      c->x     = avail_x + bdr_west;
+      c->width = avail_width - (bdr_east + bdr_west);
+    }
 }
 
 void
@@ -924,7 +908,6 @@ dialog_client_redraw(Client *c, Bool use_cache)
    XFlush(c->wm->dpy);
 }
 
-
 void
 dialog_client_button_press(Client *c, XButtonEvent *e)
 {
@@ -935,12 +918,9 @@ dialog_client_button_press(Client *c, XButtonEvent *e)
 
   dialog_client_get_offsets(c, &offset_east, &offset_south, &offset_west);
 
-  dbg("%s() c->width : %i , offset_east : %i, offset_west : %i\n",
-      __func__, c->width, offset_east, offset_west );
-
-   switch (client_button_do_ops(c, e, FRAME_DIALOG, 
-				c->width + offset_east + offset_west, 
-				offset_north))
+  switch (client_button_do_ops(c, e, FRAME_DIALOG, 
+			       c->width + offset_east + offset_west, 
+			       offset_north))
    {
       case BUTTON_ACTION_CLOSE:
 	 client_deliver_delete(c);
@@ -957,7 +937,6 @@ dialog_client_button_press(Client *c, XButtonEvent *e)
 	 break;
    }
 }
-
 
 static void
 dialog_client_drag(Client *c) /* drag box */
@@ -982,8 +961,6 @@ dialog_client_drag(Client *c) /* drag box */
 		   GrabModeAsync, None, c->wm->curs_drag, CurrentTime)
       != GrabSuccess)
     return;
-    
-
 
   /* Let the comp know theres gonna be damage in out old position.
    * XXX Must be a better way need to figure it out.    
@@ -992,17 +969,15 @@ dialog_client_drag(Client *c) /* drag box */
 #if (DIALOG_WANT_HIDDEN_DRAG) 	/* hide the dialog on drag */
 
 #ifdef USE_COMPOSITE
-
   comp_engine_client_hide(c->wm, c);
   comp_engine_render(c->wm, c->wm->all_damage);
-
 #endif
 
 #else
 
  comp_engine_client_show(c->wm, c); 
 
-#endif
+#endif /* DIALOG_WANT_HIDDEN_DRAG */
 
   c->flags |= CLIENT_IS_MOVING;
 
@@ -1014,7 +989,7 @@ dialog_client_drag(Client *c) /* drag box */
 
 #if (DIALOG_WANT_HIDDEN_DRAG) 	/* hide the dialog on drag */
 
-#ifndef USE_COMPOSITE 		/* .. for lowlighted dialogs - ewe */
+#ifndef USE_COMPOSITE 		/* .. for lowlighted dialogs */
   if (c->flags & CLIENT_IS_MODAL_FLAG && c->wm->config->dialog_shade)
     {
       XUnmapWindow(c->wm->dpy, c->window);
@@ -1025,7 +1000,7 @@ dialog_client_drag(Client *c) /* drag box */
     XUnmapWindow(c->wm->dpy, c->frame);
 
   c->ignore_unmap++;
-#endif
+#endif  /* DIALOG_WANT_HIDDEN_DRAG */
 
   XSync(c->wm->dpy, False);
     
@@ -1089,7 +1064,7 @@ dialog_client_drag(Client *c) /* drag box */
 	  c->x = old_cx + (ev.xmotion.x - x1);
 
 	c->y = old_cy + (ev.xmotion.y - y1);
-#endif
+#endif  /* DIALOG_WANT_HIDDEN_DRAG */
 
 	_draw_outline(c, c->x - offset_west, c->y - frm_size,
 		      c->width + offset_west + offset_east,
@@ -1119,7 +1094,7 @@ dialog_client_drag(Client *c) /* drag box */
 			      c->height);
 	  } 
 	else
-#endif 
+#endif /* USE_COMPOSITE */
 	  {
 	    XMoveWindow(c->wm->dpy, c->frame, c->x - offset_west,
 			c->y - dialog_client_title_height(c));
@@ -1136,20 +1111,20 @@ dialog_client_drag(Client *c) /* drag box */
 		&& !(t->flags & CLIENT_IS_MESSAGE_DIALOG_LO))
 	      {
 		t->show(t);
-		 comp_engine_client_show(c->wm, t); 
+		comp_engine_client_show(c->wm, t); 
 		break;
 	      }
 	  }
 	END_CLIENT_LOOP(c->wm, t);
-#endif 
+#endif /* USE_MSG_WIN */
 	c->flags &= ~ CLIENT_IS_MOVING;
 	
 	XUngrabPointer(c->wm->dpy, CurrentTime);
 	XUngrabServer(c->wm->dpy);
 	return;
       }
-
     }
+
   client_deliver_config(c);
 }
 
@@ -1157,22 +1132,20 @@ dialog_client_drag(Client *c) /* drag box */
 static void
 _get_mouse_position(Wm *w, int *x, int *y)
 {
-    Window mouse_root, mouse_win;
-    int win_x, win_y;
-    unsigned int mask;
-
-    XQueryPointer(w->dpy, w->root, &mouse_root, &mouse_win,
-        x, y, &win_x, &win_y, &mask);
+  Window mouse_root, mouse_win;
+  int win_x, win_y;
+  unsigned int mask;
+  
+  XQueryPointer(w->dpy, w->root, &mouse_root, &mouse_win,
+		x, y, &win_x, &win_y, &mask);
 }
-
 
 static void
 _draw_outline(Client *c, int x, int y, int width, int height)
 {
-  XDrawRectangle(c->wm->dpy, c->wm->root, c->wm->mbtheme->band_gc, x-1, y-1, 
-		 width+2, height+2);
+  XDrawRectangle(c->wm->dpy, c->wm->root, c->wm->mbtheme->band_gc, 
+		 x-1, y-1, width+2, height+2);
 }
-
  
 void dialog_client_destroy(Client *c)
 {
@@ -1212,6 +1185,4 @@ void dialog_client_destroy(Client *c)
        wm_msg_win_queue_pop(w);
      }
 #endif 
-
-   
 }

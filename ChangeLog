@@ -1,21 +1,21 @@
 2004-08-17  mallum,,,  <mallum@handhelds.org>
 
+	* src/dialog_client.c: (dialog_client_check_for_state_hints),
+	(dialog_client_show), (dialog_client_reparent),
+	(dialog_get_available_area), (dialog_check_geometry),
+	(dialog_init_geometry), (dialog_client_button_press),
+	(dialog_client_drag), (_get_mouse_position), (_draw_outline),
+	(dialog_client_destroy):
+	Quick dialog code cleanup 
+
+2004-08-17  mallum,,,  <mallum@handhelds.org>
+
 	* src/client_common.c: (client_button_do_ops):
 	* src/dialog_client.c: (dialog_client_destroy):
 	* src/mbtheme.c: (theme_frame_button_paint), (mbtheme_button_new):
 	* src/mbtheme.h:
 	* src/structs.h:
 	Fix for button press-only crazziness. 
-
-2004-08-17  mallum,,,  <mallum@handhelds.org>
-
-	reviewed by: <delete if not using a buddy>
-
-	* src/client_common.c: (client_button_do_ops):
-	* src/dialog_client.c: (dialog_client_destroy):
-	* src/mbtheme.c: (theme_frame_button_paint), (mbtheme_button_new):
-	* src/mbtheme.h:
-	* src/structs.h:
 
 2004-08-17  mallum,,,  <mallum@handhelds.org>
 
