@@ -437,8 +437,6 @@ typedef struct _kbdconfig_entry
   char                    *sdata;
   int                      idata;
   struct _kbdconfig_entry *next_entry;
-  Bool                     want_hold;
-  struct _kbdconfig_entry *partner_held_entry;
 
 } MBConfigKbdEntry;
 

@@ -50,7 +50,7 @@ keys_add_entry(Wm *w, char *keystr, int action, int idata, char *sdata)
   char *q;
   int i = 0, mask = 0;
   char *keydef = NULL;
-  Bool want_shift = False, want_hold = False;
+  Bool want_shift = False;
   KeySym ks;
   MBConfigKbdEntry *entry;
 
@@ -109,11 +109,6 @@ keys_add_entry(Wm *w, char *keystr, int action, int idata, char *sdata)
 	      if (!strncasecmp(p, "shift", 5))
 		{
 		  want_shift = True;
-		  p = q;
-		}
-	      else if (!strncasecmp(p, "hold", 5))
-		{
-		  want_hold = True;
 		  p = q;
 		}
 	      else return False;
@@ -177,14 +172,6 @@ keys_add_entry(Wm *w, char *keystr, int action, int idata, char *sdata)
   entry->idata        = idata;
   entry->sdata        = (( sdata == NULL ) ? NULL : strdup(sdata));
 
-  if (want_hold)
-    {
-      /* TODO should set something in Wm that signals we have held keys
-       *      defined
-      */
-      entry->want_hold = True;
-    }
-
   dbg("added new key entry mask: %i\n", entry->ModifierMask);
 
   return True;
@@ -194,8 +181,6 @@ keys_add_entry(Wm *w, char *keystr, int action, int idata, char *sdata)
 Bool
 keys_load_config(Wm *w)
 {
-
-  struct _kbdconfig_entry *entry;
 
 #ifdef USE_GCONF
 
@@ -383,32 +368,7 @@ keys_load_config(Wm *w)
 
 #endif
 
-  /* Now we need to cycle through and match up any held keys
-   * with there unheld partners so we can later handle events ok 
-   * for them.
-  */
-  entry = w->config->kb->entrys;
-
-  while (entry != NULL)
-    {
-      if (entry->want_hold)
-	{
-	  struct _kbdconfig_entry *partner  = w->config->kb->entrys;
-
-	  while (partner != NULL)
-	    {
-	      if (partner->key == entry->key
-		  && partner->ModifierMask == entry->ModifierMask)
-		{
-		  partner->partner_held_entry = entry;
-		  break;
-		}
-	      partner = partner->next_entry;
-	    }
-	}
-      entry = entry->next_entry;
-    }
-
+  
   return 1;
 }
 
