@@ -1057,18 +1057,17 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 {
    Client         *c = wm_find_client(w, e->window, WINDOW);
    XWindowChanges  xwc;
-   unsigned long   value_mask = 0;
 
-   int             req_x = e->x;
-   int             req_y = e->y;
-   int             req_w = e->width;
-   int             req_h = e->height;
+   unsigned long   value_mask = e->value_mask;
+   int             req_x      = e->x;
+   int             req_y      = e->y;
+   int             req_w      = e->width;
+   int             req_h      = e->height;
 
    /* TODO: Double check ICCCM on this code. 
     *       see http://tronche.com/gui/x/icccm/sec-4.html#s-4.1.5
     *       Only send synthetic configure notify on no change.
     *
-    *       XSYNC smooth resizing code.
     */  
 
    if (!c ) 
@@ -1087,23 +1086,25 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
        XConfigureWindow(w->dpy, e->window, e->value_mask, &xwc);
        return;
      }
-   
-   dbg("%s() for win %s - have w: %i vs %i, h: %i" 
-       "vs %i, x: %i vs %i, y: %i vs %i,\n", 
-       __func__, c->name, c->height, e->height, c->width, 
-       e->width, c->x, e->x, c->y, e->y );
 
    /* Process exactly what changes have been reuested */
 
-   if (!(e->value_mask & CWWidth))  req_w = c->width;
-   if (!(e->value_mask & CWHeight)) req_h = c->height;
+   if (!(value_mask & CWWidth))  req_w = c->width;
+   if (!(value_mask & CWHeight)) req_h = c->height;
    
-   if (e->x <= 0 || !(e->value_mask & CWX)) req_x = c->x;
-   if (e->y <= 0 || !(e->value_mask & CWY)) req_y = c->y;
+   if (e->x <= 0 || !(value_mask & CWX)) req_x = c->x;
+   if (e->y <= 0 || !(value_mask & CWY)) req_y = c->y;
 
+   dbg("%s() for win %s - have w: %i vs %i, h: %i" 
+       "vs %i, x: %i vs %i, y: %i vs %i,\n", 
+       __func__, c->name, c->height, req_h, c->width, 
+       req_w, c->x, req_x, req_y, e->y );
 
    /* Deal with raising - needs work, not sure if anything really
     * relies on this / or how it fits with mb. 
+    *
+    * Wins can use _NET_ACTIVATE_WINDOW to raise themselse. 
+    * Dialogs should be able to raise / lower theme selves ? 
     */
    if (value_mask & (CWSibling|CWStackMode))
      {
@@ -1112,6 +1113,9 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 	*/
 #ifdef DEBUG
        Client *sibling = wm_find_client(w, e->window, WINDOW);
+
+       dbg("%s() value_mask & (CWSibling|CWStackMode) sibling is %s\n",
+	   __func__, sibling ? sibling->name : "unkown" );
 
        if (sibling)
 	 {
@@ -1140,7 +1144,6 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
        value_mask &= ~(CWSibling|CWStackMode);
      }
 
-   
    if (c->type == MBCLIENT_TYPE_PANEL) 	/* Panels can move */
      {
        if ( c->height != req_h || c->width != req_w
@@ -1160,7 +1163,7 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 	   client_deliver_config(c); /* TODO: Not needed */
 	   client_set_state(c, WithdrawnState);
 
-	   /* Now we destroy the window and re-birth it.
+	   /* Now we destroy the window internally and re-birth it.
             * A bit of a cheat, but works.
 	    */
 
@@ -1192,11 +1195,11 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
         * - eg toolbar/panel/input windows may dissapear and make
         *      more space available. 
         */
-       if (e->width && (e->value_mask & CWWidth) 
+       if (e->width && (value_mask & CWWidth) 
 	   && e->width != c->width && e->width != c->init_width)
 	 c->init_width = e->width;
 
-       if (e->height && (e->value_mask & CWHeight) 
+       if (e->height && (value_mask & CWHeight) 
 	   && e->height != c->height && e->height != c->init_height)
 	 c->init_height = e->height;
 
@@ -1244,8 +1247,6 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
     * Code should fall back to this.
     */
    client_deliver_config(c);
-
-
 }
 
 
