@@ -1354,7 +1354,11 @@ wm_handle_client_message(Wm *w, XClientMessageEvent *e)
 	   wm_toggle_desktop(w);
 	   break;
 	 case MB_CMD_MISC: 	/* This is used for random testing stuff */
-	   comp_engine_time(w);
+#ifdef DEBUG
+	   /* comp_engine_time(w); Not used atm XXX DO_TIMINGS */
+	   dbg("*** Toggling composite visual debugging ***\n");
+	   w->flags ^= DEBUG_COMPOSITE_VISIBLE_FLAG;
+#endif
 	   break;
 	 }
        return;

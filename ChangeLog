@@ -1,3 +1,11 @@
+2004-07-16  Matthew Allum  <mallum@handhelds.org>
+
+	* src/composite-engine.c: (comp_engine_render), (comp_engine_time):
+	* src/structs.h:
+	* src/wm.c: (wm_handle_client_message):
+	Add suport for visual composite debugging. Toggle via 
+	matchbox-remote -x
+
 2004-07-13  Matthew Allum,,,  <mallum@handhelds.org>
 
 	* src/dialog_client.c: (dialog_client_configure):

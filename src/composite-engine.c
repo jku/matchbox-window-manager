@@ -1258,12 +1258,15 @@ comp_engine_render(Wm *w, XserverRegion region)
 
   XFixesSetPictureClipRegion (w->dpy, w->root_buffer, 0, 0, region);
 
-  /*
-#if MONITOR_REPAINT
-  XRenderComposite (w->dpy, PictOpSrc, w->black_picture, None, w->root_picture,
-		    0, 0, 0, 0, 0, 0, w->dpy_width, w->dpy_height);
+#if DEBUG
+  if (w->flags & DEBUG_COMPOSITE_VISIBLE_FLAG)
+    {
+      XRenderComposite (w->dpy, PictOpSrc, w->black_picture, 
+			None, w->root_picture,
+			0, 0, 0, 0, 0, 0, w->dpy_width, w->dpy_height);
+      return;
+    }
 #endif
-  */
 
   /* Render top -> bottom */
 
@@ -1488,7 +1491,6 @@ comp_engine_render(Wm *w, XserverRegion region)
 void
 comp_engine_time(Wm *w)
 {
-
 #ifdef STANDALONE   	/* No timings for standalone */
   return;
 #endif /* STANDALONE */

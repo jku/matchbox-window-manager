@@ -505,6 +505,10 @@ typedef struct MsgWinQueue
 #define THEME_SWITCH_FLAG   (1<<7)
 #define DESKTOP_DECOR_FLAG  (1<<8)
 
+#ifdef DEBUG
+#define DEBUG_COMPOSITE_VISIBLE_FLAG (1<<9)
+#endif
+
 /* Main WM struct  */
 
 typedef struct _wm
