@@ -14,7 +14,7 @@
 */
 
 /*
-  $Id: main_client.c,v 1.18 2004/11/17 12:50:21 mallum Exp $
+  $Id: main_client.c,v 1.19 2004/11/17 19:34:08 mallum Exp $
 */
 
 #include "main_client.h"
@@ -79,6 +79,35 @@ main_client_check_for_single(Client *c)
 int
 main_client_manage_toolbars_for_fullscreen(Client *c, Bool main_client_showing)
 {
+#ifdef USE_ALT_INPUT_WIN
+  Wm     *w = c->wm;
+  Client *p  = NULL;
+
+  stack_enumerate(w, p)
+    {
+      if (p->type == MBCLIENT_TYPE_DIALOG 
+	  && p->flags & CLIENT_TB_ALT_TRANS_FOR_APP
+	  && p->trans == c)
+	{
+	  if (c->flags & CLIENT_FULLSCREEN_FLAG)
+	    {
+	      p->y = w->dpy_height - p->height;
+	      p->width = w->dpy_width;
+	      toolbar_client_move_resize(p);
+	    }
+	  else
+	    {
+	      toolbar_client_configure(p);
+	      toolbar_client_move_resize(p);
+	    }
+
+	  return p->height;
+	}
+    }
+
+  return 0;
+
+#else
   Wm     *w = c->wm;
   Client *p  = NULL;
   int     south_panel_size = 0, south_total_size = 0;
@@ -137,6 +166,7 @@ main_client_manage_toolbars_for_fullscreen(Client *c, Bool main_client_showing)
     }
 
   return 0;
+#endif
 }
 
 void

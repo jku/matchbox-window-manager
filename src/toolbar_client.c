@@ -20,6 +20,8 @@
 
 #include "toolbar_client.h"
 
+#ifndef USE_ALT_INPUT_WIN
+
 Client*
 toolbar_client_new(Wm *w, Window win)
 {
@@ -403,6 +405,6 @@ toolbar_client_redraw(Client *c, Bool use_cache)
 }
 
 
-
+#endif /* USE_ALT_INPUT_WIN */
 
 

@@ -83,11 +83,9 @@ wm_new(int argc, char **argv)
 		    "grey", 
 		    &w->grey_col, &dummy_col);
 
-#if defined(USE_GCONF) || defined(USE_PANGO)
-   g_type_init() ;
-#endif 
-
 #ifdef USE_GCONF
+   g_type_init() ;
+
    w->gconf_client  = gconf_client_get_default();
    w->gconf_context = g_main_context_default ();
 
@@ -135,11 +133,6 @@ wm_new(int argc, char **argv)
 #endif
 
    ewmh_init(w);
-
-#ifdef USE_PANGO
-   w->pgo = pango_xft_get_context (w->dpy, w->screen);
-   w->pgo_fontmap = pango_xft_get_font_map (w->dpy, w->screen);
-#endif
 
    comp_engine_init (w);
 
@@ -237,6 +230,12 @@ wm_usage(char *progname)
    printf("\tJPG support                      no\n");
 #endif
 
+#ifdef MB_HAVE_PANGO
+   printf("\tpango support                    yes\n");
+#else
+   printf("\tpango support                    no\n");
+#endif
+
 #ifndef STANDALONE
    printf("\tTheme support                    yes\n");
 #else
@@ -247,12 +246,6 @@ wm_usage(char *progname)
    printf("\tgconf support                    yes\n");
 #else
    printf("\tgconf support                    no\n");
-#endif
-
-#ifdef MB_HAVE_PANGO
-   printf("\tpango support                    yes\n");
-#else
-   printf("\tpango support                    no\n");
 #endif
 
 #ifdef USE_COMPOSITE

@@ -26,6 +26,7 @@ matchbox_window_manager_SOURCES =                        \
                    base_client.c base_client.h           \
                    main_client.c main_client.h           \
 		   toolbar_client.c toolbar_client.h     \
+		   toolbar_client_alt.c                  \
 	           dockbar_client.c dockbar_client.h     \
                    dialog_client.c dialog_client.h       \
 		   select_client.c select_client.h       \

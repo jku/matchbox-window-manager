@@ -1,3 +1,25 @@
+2004-11-17  mallum,,,  <mallum@handhelds.org>
+
+	* configure.ac:
+	* src/Makefile.am:
+	* src/base_client.c: (base_client_destroy):
+	* src/main_client.c: (main_client_manage_toolbars_for_fullscreen):
+	* src/structs.h:
+	* src/toolbar_client.c:
+	* src/toolbar_client_alt.c: (toolbar_client_new),
+	(toolbar_win_offset), (toolbar_client_configure),
+	(toolbar_client_move_resize), (toolbar_client_reparent),
+	(toolbar_client_show), (toolbar_client_hide),
+	(toolbar_client_destroy), (toolbar_client_redraw):
+	Add initial alternative input/toolbar window code. 
+
+	* src/stack.c: (stack_get_type_list),
+	(stack_move_type_above_client):
+	Fix possible infinite loop.
+
+	* src/wm.c: (wm_new), (wm_usage):
+	Minor cleanup - remove old PANGO defines. 
+
 2004-11-17  mallum  <mallum@handhelds.org>
 
 	* src/main_client.c: (main_client_hide), (main_client_iconize),

@@ -100,15 +100,33 @@ stack_move_above_client(Client *client, Client *client_below)
 }
 
 void
+stack_get_type_list(Wm *w, MBList **list, MBClientTypeEnum  wanted_type)
+{
+  Client *p = NULL;
+
+  stack_enumerate(w,p)
+    if (p->type & wanted_type)
+      list_add(list, NULL, 0, p);
+}
+
+void
 stack_move_type_above_client(Wm               *w, 
 			     MBClientTypeEnum  wanted_type, 
 			     Client           *client)
 {
-  Client *c = NULL;
+  MBList *list = NULL, *list_item = NULL;
 
-  stack_enumerate(w,c)
-    if ((c->type & wanted_type) && c->mapped)
-      stack_move_above_client(c, client);
+  stack_get_type_list(w, &list, wanted_type);
+
+  list_enumerate(list, list_item)
+    {
+      Client *cur = (Client *)list_item->data;
+      if (cur->mapped) 
+	stack_move_above_client(cur, client);
+    }
+
+  list_destroy(&list);
+  
 }
 
 

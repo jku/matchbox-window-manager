@@ -288,6 +288,11 @@ typedef struct _mb_client_button
 #define CLIENT_HAS_URGENCY_FLAG (1<<26)
 #define CLIENT_HAS_ABOVE_STATE (1<<27)
 
+#ifdef USE_ALT_INPUT_WIN
+#define CLIENT_TB_ALT_TRANS_FOR_DIALOG (1<<28)
+#define CLIENT_TB_ALT_TRANS_FOR_APP    (1<<29)
+#endif
+
 /* Main Client structure */
 
 typedef struct _client

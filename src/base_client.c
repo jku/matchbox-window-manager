@@ -14,7 +14,7 @@
 */
 
 /*
-  $Id: base_client.c,v 1.13 2004/11/10 21:52:13 mallum Exp $
+  $Id: base_client.c,v 1.14 2004/11/17 19:34:08 mallum Exp $
 */
 
 
@@ -533,6 +533,9 @@ base_client_destroy(Client *c)
     if (c->startup_id)   XFree(c->startup_id);
     if (c->size)         XFree(c->size);
     if (c->host_machine) free(c->host_machine);
+
+   if (c == w->focused_client)
+     w->focused_client = NULL;
 
     free(c);
 }
