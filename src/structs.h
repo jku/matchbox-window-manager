@@ -108,10 +108,10 @@
 
 /* General Defines */
 
-#define NORTH  1
-#define EAST   2
-#define SOUTH  3
-#define WEST   4
+#define NORTH  0
+#define EAST   1
+#define SOUTH  2
+#define WEST   3
 
 #define ACTIVE   1
 #define INACTIVE 2
@@ -121,6 +121,8 @@
 
 #define MENU_ENTRY_PADDING 6
 #define MENU_ICON_PADDING 4
+
+#define N_DECOR_FRAMES 4
 
 /* Shadow defaults, only used with composite */
 
@@ -302,11 +304,7 @@ typedef struct _client
 
   /* Window identification / title stuff */
 
-#ifdef USE_PANGO
-  unsigned char    *name;
-  XftDraw          *xftdraw;
-  PangoLayout      *pgo_layout;
-#elif USE_XFT
+#if USE_XFT
   unsigned char    *name;
   XftDraw          *xftdraw;
 #else
@@ -361,11 +359,14 @@ typedef struct _client
   /* Decoration etc */
 
   Window	    frame, title_frame;
+  Window            frames_decor[N_DECOR_FRAMES];
 
 #ifdef STANDALONE
   Pixmap            backing;
+  Pixmap            pixmaps_decor[N_DECOR_FRAMES]
 #else
   MBDrawable       *backing;
+  MBDrawable       *drawables_decor[N_DECOR_FRAMES];
 #endif
 
   Pixmap            backing_masks[MSK_COUNT];

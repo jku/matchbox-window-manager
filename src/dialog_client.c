@@ -156,12 +156,6 @@ dialog_client_move_resize(Client *c)
 #ifndef USE_COMPOSITE
    if (c->wm->config->dialog_shade && (c->flags & CLIENT_IS_MODAL_FLAG))
      {
-       XMoveResizeWindow(c->wm->dpy, 
-			 c->title_frame, 
-			 c->x - offset_west, 
-			 c->y - frm_size, 
-			 c->width + offset_east + offset_west,
-			 c->height + frm_size + offset_south );
        XMoveWindow(c->wm->dpy, 
 		   c->window, 
 		   c->x, 
@@ -177,11 +171,11 @@ dialog_client_move_resize(Client *c)
 			 c->width + offset_west + offset_east,
 			 c->height + frm_size + offset_south
 			 );
-       XResizeWindow(c->wm->dpy, 
-			 c->title_frame, 
-			 c->width + offset_east + offset_west,
-			 c->height + frm_size + offset_south );
      }
+
+   if (!(c->flags & CLIENT_TITLE_HIDDEN_FLAG))
+     client_decor_frames_move_resize(c, offset_west, offset_east, 
+				     frm_size, offset_south);
 }
 
 int
@@ -305,37 +299,38 @@ dialog_client_show(Client *c)
 void
 dialog_client_reparent(Client *c)
 {
-   XSetWindowAttributes attr;
-
-   int offset_north = dialog_client_title_height(c);
-   int offset_south = 0, offset_west = 0, offset_east = 0;
-
-   dialog_client_get_offsets(c, &offset_east, &offset_south, &offset_west);
-
-   attr.override_redirect = True; 
-   attr.background_pixel  = 0; /* BlackPixel(c->wm->dpy, c->wm->screen); */
-   attr.border_pixel      = 0;
-   attr.event_mask        = ChildMask|ButtonPressMask|ExposureMask;
-
-   attr.colormap          = c->cmap; 
-
-   dbg("%s() want lowlight : wm:%i , client:%i\n", __func__,
-       c->wm->config->dialog_shade, (c->flags & CLIENT_IS_MODAL_FLAG));
+  Wm *w = c->wm;
+  XSetWindowAttributes attr;
+  
+  int offset_north = dialog_client_title_height(c);
+  int offset_south = 0, offset_west = 0, offset_east = 0;
+  
+  dialog_client_get_offsets(c, &offset_east, &offset_south, &offset_west);
+  
+  attr.override_redirect = True; 
+  attr.background_pixel  = w->grey_col.pixel;
+  attr.border_pixel      = 0;
+  attr.event_mask        = ChildMask|ButtonPressMask|ExposureMask;
+  
+  attr.colormap          = c->cmap; 
+  
+  dbg("%s() want lowlight : wm:%i , client:%i\n", __func__,
+      c->wm->config->dialog_shade, (c->flags & CLIENT_IS_MODAL_FLAG));
 #ifndef USE_COMPOSITE
-   if (c->wm->config->dialog_shade && (c->flags & CLIENT_IS_MODAL_FLAG))
-     {
-       dbg("%s() LOWLIGHTING\n", __func__);
-       wm_lowlight(c->wm, c);
-     }
-   else
+  if (c->wm->config->dialog_shade && (c->flags & CLIENT_IS_MODAL_FLAG))
+    {
+      dbg("%s() LOWLIGHTING\n", __func__);
+      wm_lowlight(w, c);
+    }
+  else
 #endif
      {
        if (c->flags & CLIENT_TITLE_HIDDEN_FLAG) 
 	 {
 	   c->frame = c->window;
 	 }
-       else c->frame = XCreateWindow(c->wm->dpy, 
-				     c->wm->root, 
+       else c->frame = XCreateWindow(w->dpy, 
+				     w->root, 
 				     0, 0,
 				     c->width + offset_east + offset_west, 
 				     c->height + offset_north + offset_south, 
@@ -354,36 +349,26 @@ dialog_client_reparent(Client *c)
 				     &attr);
      }
 
-   if (c->flags & CLIENT_TITLE_HIDDEN_FLAG)
+   if (!(c->flags & CLIENT_TITLE_HIDDEN_FLAG))
      {
-       c->title_frame = c->window;
-     }
-   else
-     {
-       c->title_frame =
-	 XCreateWindow(c->wm->dpy, 
-		       c->frame, 
-		       0, 0, 
-		       c->width + offset_east + offset_west, 
-		       c->height + offset_north + offset_south, 
-		       0,
-		       CopyFromParent, /* depth */
-		       CopyFromParent, 
-		       CopyFromParent, /* visual */
-		       CWOverrideRedirect|CWBackPixel|CWEventMask|CWBorderPixel|CWColormap, 
-		       &attr);
+
+       client_decor_frames_init(c, 
+				offset_west, offset_east, 
+				offset_north, offset_south);
 
      }
+
+   XClearWindow(w->dpy, c->frame);
    
-   XSetWindowBorderWidth(c->wm->dpy, c->window, 0);
+   XSetWindowBorderWidth(w->dpy, c->window, 0);
 
-   XAddToSaveSet(c->wm->dpy, c->window);
+   XAddToSaveSet(w->dpy, c->window);
 
-   XSelectInput(c->wm->dpy, c->window,
+   XSelectInput(w->dpy, c->window,
 		ButtonPressMask|ColormapChangeMask|PropertyChangeMask);
 
    if (c->frame != c->window)
-     XReparentWindow(c->wm->dpy, c->window, c->frame, 
+     XReparentWindow(w->dpy, c->window, c->frame, 
 		     offset_west, offset_north);
 }
 
@@ -677,9 +662,11 @@ dialog_client_redraw(Client *c, Bool use_cache)
 
 
   is_shaped = theme_frame_wants_shaped_window( c->wm->mbtheme, frame_ref_top);
-  
+
+
   if (c->backing == (Pixmap)NULL)
     client_init_backing(c, total_w, total_h);
+
 
   if (is_shaped) client_init_backing_mask(c, total_w, c->height, 
 					  offset_north, offset_south,
@@ -725,6 +712,8 @@ dialog_client_redraw(Client *c, Bool use_cache)
 
     }
 
+
+
   /* XXXX ifdef HAVE_SHAPE */
   if (is_shaped && !c->is_argb32)
     {
@@ -735,54 +724,83 @@ dialog_client_redraw(Client *c, Bool use_cache)
       rects[0].width = total_w - offset_west - offset_east;
       rects[0].height = total_h - offset_south - offset_north;
 
-      XShapeCombineRectangles ( c->wm->dpy, c->title_frame, 
+      XShapeCombineRectangles ( c->wm->dpy, c->frame, 
 				ShapeBounding,
 				0, 0, rects, 1, ShapeSet, 0 );
-      
+
 #ifndef USE_COMPOSITE
       if (c->wm->config->dialog_shade && (c->flags & CLIENT_IS_MODAL_FLAG)) 
 	{
-	  XShapeCombineMask( c->wm->dpy, c->title_frame, 
-			     ShapeBounding, 0, 0, 
-			     c->backing_masks[MSK_NORTH], ShapeUnion);
-	  XShapeCombineMask( c->wm->dpy, c->title_frame, 
-			     ShapeBounding, 0, total_h - offset_south, 
-			     c->backing_masks[MSK_SOUTH], ShapeUnion);
+	  /* client->frame is our lowlighted window, so we only shape
+           * our decor frames. 
+           *
+	  */
 
-	  XShapeCombineMask( c->wm->dpy, c->title_frame, 
-			     ShapeBounding, 0, offset_north, 
-			     c->backing_masks[MSK_WEST], ShapeUnion);
-	  XShapeCombineMask( c->wm->dpy, c->title_frame, 
+	  XShapeCombineMask( c->wm->dpy, c->frames_decor[NORTH], 
+			     ShapeBounding, 0, 0, 
+			     c->backing_masks[MSK_NORTH], ShapeSet);
+
+	  XShapeCombineMask( c->wm->dpy, c->frames_decor[SOUTH], 
+			     ShapeBounding, 0, 0,
+			     c->backing_masks[MSK_SOUTH], ShapeSet);
+
+	  XShapeCombineMask( c->wm->dpy, c->frames_decor[WEST], 
+			     ShapeBounding, 0, 0,
+			     c->backing_masks[MSK_WEST], ShapeSet);
+	  XShapeCombineMask( c->wm->dpy, c->frames_decor[EAST], 
 			     ShapeBounding, 
-			     total_w - offset_east, offset_north,
-			     c->backing_masks[MSK_EAST], ShapeUnion);
+			     0, 0,
+			     c->backing_masks[MSK_EAST], ShapeSet);
 	}
       else
 #endif
 	{
-	  XShapeCombineMask( c->wm->dpy, c->title_frame, 
+	  XShapeCombineMask( c->wm->dpy, c->frames_decor[NORTH], 
 			     ShapeBounding, 0, 0, 
-			     c->backing_masks[MSK_NORTH], ShapeUnion);
+			     c->backing_masks[MSK_NORTH], ShapeSet);
 
-	  XShapeCombineMask( c->wm->dpy, c->title_frame, 
-			     ShapeBounding, 0, total_h - offset_south, 
-			     c->backing_masks[MSK_SOUTH], ShapeUnion);
+	  XShapeCombineMask( c->wm->dpy, c->frames_decor[SOUTH], 
+			     ShapeBounding, 0, 0,
+			     c->backing_masks[MSK_SOUTH], ShapeSet);
 
-	  XShapeCombineMask( c->wm->dpy, c->title_frame, 
-			     ShapeBounding, 0, offset_north, 
-			     c->backing_masks[MSK_WEST], ShapeUnion);
-	  XShapeCombineMask( c->wm->dpy, c->title_frame, 
+	  XShapeCombineMask( c->wm->dpy, c->frames_decor[WEST], 
+			     ShapeBounding, 0, 0,
+			     c->backing_masks[MSK_WEST], ShapeSet);
+	  XShapeCombineMask( c->wm->dpy, c->frames_decor[EAST], 
 			     ShapeBounding, 
-			     total_w - offset_east, offset_north,
-			     c->backing_masks[MSK_EAST], ShapeUnion);
+			     0, 0,
+			     c->backing_masks[MSK_EAST], ShapeSet);
+
+	  /* XXX REFACTOR THIS WITH ABOVE */
 
 	  XShapeCombineShape ( c->wm->dpy, 
 			       c->frame,
 			       ShapeBounding, 0, 0, 
-			       c->title_frame,
-			       ShapeBounding, ShapeSet);
+			       c->frames_decor[NORTH],
+			       ShapeBounding, ShapeUnion);
+
+	  XShapeCombineShape ( c->wm->dpy, 
+			       c->frame,
+			       ShapeBounding, 0, total_h - offset_south, 
+			       c->frames_decor[SOUTH],
+			       ShapeBounding, ShapeUnion);
+
+	  XShapeCombineShape ( c->wm->dpy, 
+			       c->frame,
+			       ShapeBounding, 0, offset_north,
+			       c->frames_decor[WEST],
+			       ShapeBounding, ShapeUnion);
+
+	  XShapeCombineShape ( c->wm->dpy, 
+			       c->frame,
+			       ShapeBounding, 
+			       total_w - offset_east, offset_north,
+			       c->frames_decor[EAST],
+			       ShapeBounding, ShapeUnion);
 	}
     }
+
+#if 0
 
 #ifdef STANDALONE
    XSetWindowBackgroundPixmap(c->wm->dpy, c->title_frame, c->backing);
@@ -794,6 +812,7 @@ dialog_client_redraw(Client *c, Bool use_cache)
    XClearWindow(c->wm->dpy, c->title_frame);
 
    XFlush(c->wm->dpy);
+#endif
 }
 
 void
@@ -974,12 +993,6 @@ dialog_client_drag(Client *c) /* drag box */
 #ifndef USE_COMPOSITE	
 	if (c->wm->config->dialog_shade && (c->flags & CLIENT_IS_MODAL_FLAG))
 	  {
-	    XMoveResizeWindow(c->wm->dpy, 
-			      c->title_frame, 
-			      c->x - offset_west, 
-			      c->y - frm_size, 
-			      c->width + offset_east + offset_west,
-			      c->height + frm_size + offset_south);
 	    XMoveResizeWindow(c->wm->dpy, 
 			      c->window, 
 			      c->x, 

@@ -238,7 +238,7 @@ main_client_reparent(Client *c)
   Wm *w = c->wm;
   XSetWindowAttributes attr;
 
-  int frm_size = main_client_title_height(c);
+  int offset_north = main_client_title_height(c);
   int offset_south = theme_frame_defined_height_get(w->mbtheme, 
 						    FRAME_MAIN_SOUTH);
   int offset_east  = theme_frame_defined_width_get(w->mbtheme, 
@@ -248,32 +248,41 @@ main_client_reparent(Client *c)
   attr.override_redirect = True;
   attr.background_pixel  = w->grey_col.pixel; /* BlackPixel(w->dpy, w->screen); */
   attr.event_mask         = ChildMask|ButtonMask|ExposureMask;
-  
+
   c->frame =
     XCreateWindow(w->dpy, w->root, 
 		  c->x - offset_west, 
-		  c->y - frm_size,
+		  c->y - offset_north,
 		  c->width + offset_east + offset_west, 
-		  c->height + frm_size + offset_south, 
+		  c->height + offset_north + offset_south, 
 		  0,
 		  CopyFromParent, CopyFromParent, CopyFromParent,
 		  CWOverrideRedirect|CWEventMask|CWBackPixel,
 		  &attr);
-  
+
   dbg("%s frame created : %i*%i+%i+%i\n",
-      __func__, c->width, c->height + frm_size, c->x, c->y);
-  
+      __func__, c->width, c->height + offset_north, c->x, c->y);
+  /*  
   c->title_frame =
     XCreateWindow(w->dpy, c->frame, 0, 0, 
 		  c->width + ( offset_east + offset_west), 
 		  frm_size + c->height + offset_south, 0,
 		  CopyFromParent, CopyFromParent, CopyFromParent,
 		  CWBackPixel|CWEventMask, &attr);
-  
+  */
+
+  client_decor_frames_init(c, 
+			   offset_west, offset_east, 
+			   offset_north, offset_south);
+
+  XClearWindow(w->dpy, c->frame);
+
+  c->title_frame = c->frames_decor[NORTH];
+
   XSetWindowBorderWidth(w->dpy, c->window, 0);
   XAddToSaveSet(w->dpy, c->window);
   XSelectInput(w->dpy, c->window, ColormapChangeMask|PropertyChangeMask);
-  XReparentWindow(w->dpy, c->window, c->frame, offset_west, frm_size);
+  XReparentWindow(w->dpy, c->window, c->frame, offset_west, offset_north);
 }
 
 
@@ -294,15 +303,16 @@ main_client_move_resize(Client *c)
 		    offset_west, main_client_title_height(c), 
 		    c->width, c->height);
 
-  XResizeWindow(w->dpy, c->title_frame, 
-		c->width + (offset_east + offset_west),
-		c->height + main_client_title_height(c) + offset_south);
-  
   XMoveResizeWindow(w->dpy, c->frame, 
 		    c->x - offset_west,
 		    c->y - main_client_title_height(c), 
 		    c->width + ( offset_east + offset_west),
 		    c->height + main_client_title_height(c) + offset_south);
+
+  client_decor_frames_move_resize(c, 
+				  offset_west, offset_east, 
+				  main_client_title_height(c), offset_south);
+
 
 /*
  * Disabled _NET_WM_SYNC code ( Alternate to above XMove*'s )
@@ -380,7 +390,7 @@ main_client_redraw(Client *c, Bool use_cache)
 
    if (w->flags & TITLE_HIDDEN_FLAG)
    {
-      XUnmapWindow(w->dpy, c->title_frame);
+     // XUnmapWindow(w->dpy, c->title_frame);
       return;
    }
 
@@ -400,17 +410,13 @@ main_client_redraw(Client *c, Bool use_cache)
 
    dbg("%s() cache failed, actual redraw on %s\n", __func__, c->name);
 
-   if (c->backing == None)
-      client_init_backing(c, c->width + offset_east + offset_west, 
-			     c->height + offset_south + height);
-
    if (is_shaped) 
      client_init_backing_mask(c, c->width + offset_east + offset_west, 
-			      c->height, 
-			      height , offset_south,
+			      c->height, height , offset_south,
 			      width - offset_east, offset_west);
 
    dbg("%s() calling theme_frame_paint()\n", __func__); 
+
    theme_frame_paint(w->mbtheme, c, FRAME_MAIN, 0, 0, width, height); 
 
    theme_frame_paint(w->mbtheme, c, FRAME_MAIN_WEST, 
@@ -419,10 +425,6 @@ main_client_redraw(Client *c, Bool use_cache)
    theme_frame_paint(w->mbtheme, c, FRAME_MAIN_EAST, 
 		     c->width + offset_west, height, 
 		     offset_east, c->height); 
-
-   dbg("%s() painting south %i+%i - %ix%i \n", __func__, 
-       		     0, c->height + height, 
-		     c->width + offset_east + offset_west, offset_south);
 
    theme_frame_paint(w->mbtheme, c, FRAME_MAIN_SOUTH, 
 		     0, c->height + height, 
@@ -486,6 +488,7 @@ main_client_redraw(Client *c, Bool use_cache)
 				INACTIVE, FRAME_MAIN, width, height);
      }
 
+
   if (is_shaped)   /* XXX do we really need titleframe here ? */
     {
       XRectangle rects[1];
@@ -495,24 +498,33 @@ main_client_redraw(Client *c, Bool use_cache)
       rects[0].width = width;
       rects[0].height = c->height;
 
-      XShapeCombineRectangles ( w->dpy, c->title_frame, 
+      XShapeCombineRectangles ( w->dpy, c->frame, 
 				ShapeBounding,
 				0, 0, rects, 1, ShapeSet, 0 );
 
-      XShapeCombineMask( w->dpy, c->title_frame, 
+      XShapeCombineMask( c->wm->dpy, c->frames_decor[NORTH], 
 			 ShapeBounding, 0, 0, 
-			 c->backing_masks[MSK_NORTH], ShapeUnion);
+			 c->backing_masks[MSK_NORTH], ShapeSet);
 
-      XShapeCombineMask( w->dpy, c->title_frame, 
-			 ShapeBounding, 0, c->height + height, 
-			 c->backing_masks[MSK_SOUTH], ShapeUnion);
+      XShapeCombineMask( c->wm->dpy, c->frames_decor[SOUTH], 
+			 ShapeBounding, 0, 0,
+			 c->backing_masks[MSK_SOUTH], ShapeSet);
 
-      XShapeCombineShape ( w->dpy, 
+
+      XShapeCombineShape ( c->wm->dpy, 
 			   c->frame,
 			   ShapeBounding, 0, 0, 
-			   c->title_frame,
-			   ShapeBounding, ShapeSet);
+			   c->frames_decor[NORTH],
+			   ShapeBounding, ShapeUnion);
+
+      XShapeCombineShape ( c->wm->dpy, 
+			   c->frame,
+			   ShapeBounding, 0, c->height + height, 
+			   c->frames_decor[SOUTH],
+			   ShapeBounding, ShapeUnion);
     }
+
+#if 0
 
 #ifdef STANDALONE
    XSetWindowBackgroundPixmap(w->dpy, c->title_frame, c->backing);
@@ -530,6 +542,8 @@ main_client_redraw(Client *c, Bool use_cache)
    mb_drawable_unref(c->backing);
    c->backing = NULL;
 #endif
+
+#endif /* if 0 */
 
    c->have_set_bg = True;
 }

@@ -330,6 +330,181 @@ client_get_highest_transient(Client *c, int client_flags)
 }
 
 void
+client_decor_frames_move_resize(Client *c, 
+			       int     width_west, 
+			       int     width_east, 
+			       int     height_north,
+			       int     height_south)
+{
+  Wm *w = c->wm;
+
+  if (c->frames_decor[NORTH])
+      XMoveResizeWindow(w->dpy, c->frames_decor[NORTH], 
+			0, 0, 
+			c->width + width_east + width_west, height_north);
+
+  if (c->frames_decor[SOUTH])
+      XMoveResizeWindow(w->dpy, c->frames_decor[SOUTH],
+			0, height_north + c->height, 
+			c->width + width_east + width_west, height_south);
+ 
+  if (c->frames_decor[EAST])
+      XMoveResizeWindow(w->dpy, c->frames_decor[EAST], 
+			c->width + width_west, height_north, 
+			width_east, c->height);
+
+  if (c->frames_decor[WEST])
+      XMoveResizeWindow(w->dpy, c->frames_decor[WEST], 
+			0, 
+			height_north, 
+			width_west, 
+			c->height);
+}
+
+void
+client_decor_frames_init(Client *c, 
+			 int     width_west, 
+			 int     width_east, 
+			 int     height_north,
+			 int     height_south)
+{
+  Wm *w = c->wm;
+
+  XSetWindowAttributes attr;
+  int                  i;
+#ifndef STANDALONE
+  MBPixbuf            *pb = w->pb;
+#endif
+
+  for(i=0; i<N_DECOR_FRAMES; i++)
+    if (c->frames_decor[i] != None)
+      XDestroyWindow(w->dpy, c->frames_decor[i]);
+
+  attr.override_redirect = True;
+  attr.background_pixel  = w->grey_col.pixel;  
+  attr.event_mask = ChildMask|ButtonMask|ExposureMask;
+
+  c->frames_decor[NORTH] =
+    XCreateWindow(w->dpy, 
+		  c->frame, 0, 0, 
+		  c->width + width_east + width_west, 
+		  height_north, 0,
+		  CopyFromParent, 
+		  CopyFromParent, CopyFromParent,
+		  CWBackPixel|CWEventMask, 
+		  &attr);
+
+  c->frames_decor[EAST] = 
+    XCreateWindow(w->dpy, c->frame,
+		  c->width + width_west, 
+		  height_north, 
+		  width_east, 
+		  c->height, 
+		  0, CopyFromParent, CopyFromParent, CopyFromParent,
+		  CWBackPixel/*|CWEventMask*/, &attr);
+
+
+  c->frames_decor[WEST] = 
+    XCreateWindow(w->dpy, c->frame,
+		  0, 
+		  height_north, 
+		  width_west, 
+		  c->height, 
+		  0, CopyFromParent, CopyFromParent, CopyFromParent,
+		  CWBackPixel/*|CWEventMask*/, &attr);
+
+  c->frames_decor[SOUTH] = 
+    XCreateWindow(w->dpy, c->frame,
+		  0, 
+		  c->height + height_north, 
+		  c->width + width_east + width_west, 
+		  height_south, 
+		  0, CopyFromParent, CopyFromParent, CopyFromParent,
+		  CWBackPixel/*|CWEventMask*/, &attr);
+
+
+#ifdef STANDALONE
+
+  for(i=0; i<N_DECOR_FRAMES; i++)
+    if (c->pixmaps_decor[i] != None)
+      XFreePixmap(w->dpy, c->pixmaps_decor[i]);
+
+  /* OLD TOGO */
+  if (c->backing != None) XFreePixmap(w->dpy, c->backing);
+
+  c->pixmaps_decor[NORTH] = XCreatePixmap(w->dpy, w->root, 
+					  c->width + width_east + width_west, 
+					  height_north,
+					  DefaultDepth(w->dpy, w->screen));
+
+  /* XXX should only need a north one...
+  c->pixmaps_decor[EAST]  = XCreatePixmap(w->dpy, w->root,
+					  width_east, 
+					  c->height, 
+					  DefaultDepth(w->dpy, w->screen));
+
+  c->pixmaps_decor[WEST]  = XCreatePixmap(w->dpy, w->root,
+					  width_west, 
+					  c->height, 
+					  DefaultDepth(w->dpy, w->screen));
+
+  c->pixmaps_decor[SOUTH] = XCreatePixmap(w->dpy, w->root,
+					  c->width + width_east + width_west, 
+					  height_south, 
+					  DefaultDepth(w->dpy, w->screen));
+  */
+
+  /* OLD TOGO */
+  c->backing = XCreatePixmap(w->dpy, w->root, width, height ,
+			     DefaultDepth(w->dpy, w->screen));
+
+#if defined (USE_XFT) 
+
+  /* Only NORTH frame has text */
+
+  if (c->xftdraw != NULL) XftDrawDestroy(c->xftdraw);
+
+  c->xftdraw = XftDrawCreate(w->dpy, (Drawable) c->pixmaps_decor[NORTH], 
+			     DefaultVisual(w->dpy, w->screen),
+			     DefaultColormap(w->dpy, w->screen));
+#endif
+#else
+
+  for(i=0; i<N_DECOR_FRAMES; i++)
+    if (c->drawables_decor[i] != NULL)
+      mb_drawable_unref(c->drawables_decor[i]);
+
+      /* OLD */
+   if (c->backing != NULL) 
+     mb_drawable_unref(c->backing);
+
+#ifdef USE_COMPOSITE
+   if (c->is_argb32)
+     {
+       pb = w->argb_pb;
+
+       c->backing = mb_drawable_new(w->argb_pb, width, height);
+       dbg("%s() XXXXX creating 32bit drawable ( %i, %ix%i ) XXXX\n", 
+	   __func__, w->argb_pb->depth, width, height);
+     }
+#endif
+
+   c->drawables_decor[NORTH] = mb_drawable_new(pb,
+					       c->width + width_east + width_west, 
+					       height_north);
+
+   /*
+   c->backing = mb_drawable_new(w->pb, width, height);
+
+   XFillRectangle(w->dpy, mb_drawable_pixmap(c->backing), 
+		  w->mbtheme->gc, 0, 0, width, height);
+   */
+#endif
+
+
+}
+
+void
 client_init_backing(Client* c, int width, int height)
 {
   Wm *w = c->wm;

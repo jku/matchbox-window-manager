@@ -54,6 +54,16 @@ base_client_new(Wm *w, Window win)
    for (i=0; i<MSK_COUNT; i++)
      c->backing_masks[i] = None;
 
+   for (i=0; i<N_DECOR_FRAMES; i++)
+     c->frames_decor[i] = None;
+
+   for (i=0; i<N_DECOR_FRAMES; i++)
+#ifdef STANDALONE
+     c->pixmaps_decor[i] = None;
+#else
+     c->drawables_decor[i] = NULL;
+#endif
+
    /* UTF8 Window Name */
 
    if ((c->name = ewmh_get_utf8_prop(w, win, w->atoms[_NET_WM_NAME])) != NULL)

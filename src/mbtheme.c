@@ -260,7 +260,7 @@ theme_frame_button_paint(MBTheme *theme,
 		b = (MBClientButton *)client_button_obj->data;
 
 	      /*attr.override_redirect = True; */
-	      attr.event_mask = /*ButtonPressMask|*/ ExposureMask;
+	      attr.event_mask = /*ButtonPressMask|*/ExposureMask;
 	      
 	      if (button->inputonly ) class = InputOnly;	      
 	      
@@ -268,7 +268,8 @@ theme_frame_button_paint(MBTheme *theme,
 		  button_x, button_y,
 		  button_w, button_h );
 
-	      button_xid = b->win = XCreateWindow(c->wm->dpy, c->title_frame,
+	      button_xid = b->win = XCreateWindow(c->wm->dpy, 
+						  client_title_frame(c),
 						  button_x, button_y,
 						  button_w, button_h, 0,
 						  CopyFromParent, 
@@ -612,6 +613,7 @@ theme_frame_paint( MBTheme *theme,
 		   int dw, 
 		   int dh )
 {
+  Wm *w = c->wm;
 
   MBFontRenderOpts  text_render_opts = MB_FONT_RENDER_OPTS_CLIP_TRAIL;
   Bool              have_img_cached = False, free_img = False;
@@ -621,10 +623,22 @@ theme_frame_paint( MBTheme *theme,
   MBThemeLayer     *layer_sublabel = NULL;
   struct list_item *layer_list_item;
   int               label_rendered_width;
+  int               decor_idx = 0;
+  MBDrawable       *drawable = NULL;
+  MBPixbuf         *pixbuf = w->pb;
+
+  dx = 0; dy = 0; /* XXX THESE PARAMS ARE NOT NEEDED, FIX FIX FIX  */
 
   frame = (MBThemeFrame *)list_find_by_id(theme->frames, frame_type);
 
   if (frame == NULL) return False;
+
+#ifdef USE_COMPOSITE
+   if (c->is_argb32)
+     pixbuf = w->argb_pb;
+#endif
+
+   drawable = mb_drawable_new(pixbuf, dw, dh);
 
   /* MBPixbufImage cache */
 
@@ -764,17 +778,33 @@ theme_frame_paint( MBTheme *theme,
 
   /* Finally paint to the pixmap. */
 
-#ifdef USE_COMPOSITE
-   if (c->is_argb32)
-     mb_pixbuf_img_render_to_drawable(theme->wm->argb_pb, img, 
-				      mb_drawable_pixmap(c->backing), 
-				      dx, dy);
-   else
-#endif
-     mb_pixbuf_img_render_to_drawable(theme->wm->pb, img, 
-				      mb_drawable_pixmap(c->backing), 
-				      dx, dy);
+  switch(frame_type)
+    {
+    case FRAME_MAIN_SOUTH:
+    case FRAME_DIALOG_SOUTH:
+    case FRAME_MSG_SOUTH:
+      decor_idx = SOUTH;
+      break;
+    case FRAME_MAIN_EAST: 
+    case FRAME_DIALOG_EAST:
+    case FRAME_MSG_EAST:
+      decor_idx = EAST;
+      break;
+    case FRAME_MAIN_WEST: 
+    case FRAME_DIALOG_WEST:
+    case FRAME_MSG_WEST:
+      decor_idx = WEST;
+      break;
+      /* FRAME_MAIN, FRAME_DIALOG, FRAME_MSG, FRAME_DIALOG_NORTH: */
+    default:
+      decor_idx = NORTH;
+      break;
+    }
   
+  mb_pixbuf_img_render_to_drawable(pixbuf, img, 
+				   mb_drawable_pixmap(drawable), 
+				   0, 0);
+
   if (c->backing_masks[MSK_NORTH] != None &&
       ( frame_type == FRAME_MAIN || frame_type == FRAME_DIALOG 
 	|| frame_type == FRAME_MSG || frame_type == FRAME_DIALOG_NORTH)
@@ -807,6 +837,7 @@ theme_frame_paint( MBTheme *theme,
 				 c->backing_masks[MSK_WEST],
 				 0, 0);
   
+
   if (free_img) mb_pixbuf_img_free(theme->wm->pb, img);
 
   /* Now paint text onto pixmap */
@@ -829,7 +860,7 @@ theme_frame_paint( MBTheme *theme,
 
 
       mb_font_render_simple (layer_label->label->font, 
-			     c->backing, 
+			     drawable, 
 			     frame->label_x,
 			     fy,
 			     frame->label_w,
@@ -841,7 +872,7 @@ theme_frame_paint( MBTheme *theme,
       if (layer_sublabel && c->subname)
 	{
 	  mb_font_render_simple (layer_label->label->font, 
-				 c->backing, 
+				 drawable, 
 				 frame->sublabel_x,
 				 fy,
 				 frame->sublabel_w,
@@ -850,8 +881,15 @@ theme_frame_paint( MBTheme *theme,
 				 text_render_opts);
 	}
 
-       XSync(c->wm->dpy, False);
+
     }
+
+  XSetWindowBackgroundPixmap(w->dpy, c->frames_decor[decor_idx], 
+			     mb_drawable_pixmap(drawable));
+  XClearWindow(w->dpy, c->frames_decor[decor_idx]);
+  XSync(c->wm->dpy, False);
+
+  mb_drawable_unref(drawable);
 
   return True;
 }
@@ -2324,7 +2362,8 @@ mbtheme_switch (Wm   *w,
 	  
 	  XUnionRectWithRegion (&rect, xregion, xregion);
 	  
-	  XShapeCombineRegion (w->dpy, p->title_frame, ShapeBounding, 0, 0, 
+	  XShapeCombineRegion (w->dpy, client_title_frame(p), 
+			       ShapeBounding, 0, 0, 
 			       xregion, ShapeSet);
 	  
 	  XShapeCombineRegion (w->dpy, p->frame,ShapeBounding, 0, 0, 

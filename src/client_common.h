@@ -29,6 +29,8 @@
 #include "list.h"
 #include "misc.h"
 
+#define client_title_frame(c) (c)->frames_decor[NORTH]
+
 void 
 client_set_state (Client *c, int state);
 
@@ -84,6 +86,20 @@ client_init_backing_mask (Client *c,
 			  int     height_north, 
 			  int     height_south );
 */
+
+void
+client_decor_frames_move_resize(Client *c, 
+				int     width_west, 
+				int     width_east, 
+				int     height_north,
+				int     height_south);
+
+void
+client_decor_frames_init(Client *c, 
+			 int     width_west, 
+			 int     width_east, 
+			 int     height_north,
+			 int     height_south);
 
 void
 client_init_backing_mask (Client *c, 

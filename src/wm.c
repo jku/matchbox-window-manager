@@ -621,7 +621,8 @@ wm_find_client(Wm *w, Window win, int mode)
     if (mode == FRAME) 
       {
 	stack_enumerate_reverse(w, c)
-	  if (c->frame == win || c->title_frame == win) 
+	  if (c->frame == win 
+	      || (client_title_frame(c) && client_title_frame(c) == win) )
 	    return c;
       } 
     else 
@@ -888,7 +889,8 @@ wm_handle_button_event(Wm *w, XButtonEvent *e)
 	   && w->config->dialog_stratergy != WM_DIALOGS_STRATERGY_STATIC)
 	 {
 	   /* raise the dialog up, handle focus etc */
-	   wm_activate_client(c);
+	   if (c != w->focused_client)
+	     wm_activate_client(c);
 	 }
        else
 	 {

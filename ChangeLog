@@ -1,3 +1,20 @@
+2004-12-08  mallum <mallum@openedhand.com>
+
+	* src/base_client.c: (base_client_new):
+	* src/client_common.c: (client_get_highest_transient):
+	* src/client_common.h:
+	* src/dialog_client.c: (dialog_client_move_resize),
+	(dialog_client_reparent), (dialog_client_redraw),
+	(dialog_client_drag):
+	* src/main_client.c: (main_client_reparent),
+	(main_client_move_resize), (main_client_redraw):
+	* src/mbtheme.c: (theme_frame_button_paint), (theme_frame_paint),
+	(mbtheme_switch):
+	* src/structs.h:
+	* src/wm.c: (wm_find_client), (wm_handle_button_event):
+	Add Initial support for new lower server memory frame decorations.
+	Composite and standalone will likely be BROKEN atm. 
+
 2004-12-07  Ross Burton  <ross@openedhand.com>
 
 	* configure.ac:
