@@ -1118,10 +1118,13 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 	    || c->wm->config->dialog_stratergy == WM_DIALOGS_STRATERGY_FREE)
        )
      {
-       xwc.width  = e->width;
-       xwc.height = e->height;
-       xwc.x = e->x;
-       xwc.y = e->y;
+       c->width  = xwc.width  = e->width;
+       c->height = xwc.height = e->height;
+       c->x      = xwc.x = e->x;
+       c->y      = xwc.y = e->y;
+
+       /* Make sure we get the damage before the move.. */
+       comp_engine_client_show(c->wm, c); 
 
        need_comp_update = True;
        

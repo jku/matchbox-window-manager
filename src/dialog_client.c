@@ -74,6 +74,15 @@ dialog_client_new(Wm *w, Window win, Client *trans)
 static void
 dialog_client_get_offsets(Client *c, int *e, int *s, int *w)
 {
+
+  /* no decor dialogs */
+  if (c->flags & CLIENT_TITLE_HIDDEN_FLAG)
+    {
+      *s = 0; *e = 0; *w = 0;
+      return;
+    }
+
+
 #ifdef USE_MSG_WIN
   if (c->flags & CLIENT_IS_MESSAGE_DIALOG)
     {
@@ -86,6 +95,7 @@ dialog_client_get_offsets(Client *c, int *e, int *s, int *w)
       return;
     }
 #endif 
+
    *s = theme_frame_defined_height_get(c->wm->mbtheme, 
 				       FRAME_DIALOG_SOUTH);
    *e = theme_frame_defined_width_get(c->wm->mbtheme, 
@@ -420,19 +430,9 @@ dialog_client_configure(Client *c)
       return;
     }
 
-  /* dont try and fix decoration free dialogs 
+  /* Allow decorationless dialogs to position themselves anywhere */
   if (c->flags & CLIENT_TITLE_HIDDEN_FLAG)
-    {
-      dbg("%s() title hidden, repositioning\n", __func__);
-      if ((c->x + c->width) > c->wm->dpy_width)
-	c->x = c->wm->dpy_width - c->width;
-
-      if (c->x < 0)
-	c->x = 0;
-
-      return;
-    }
-  */
+    return;
 
   /* Clip horizonal width */
   if (c->width > max_w) c->width = max_w;

@@ -1,3 +1,12 @@
+2004-03-22  Matthew Allum,,,  <mallum@handhelds.org>
+
+	* src/dialog_client.c: (dialog_client_get_offsets),
+	(dialog_client_configure):
+	Allow decorationless dialog to position themselves anywhere
+	Dont add invisible border to decorationless dialogs	
+	* src/wm.c: (wm_handle_configure_request):
+	Fix Composite for self moving dialogs
+
 2004-03-17  Matthew Allum,,,  <mallum@handhelds.org>
 
 	* configure.ac:
