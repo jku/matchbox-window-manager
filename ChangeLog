@@ -1,3 +1,8 @@
+2005-01-04  mallum,,,  <mallum@openedhand.com>
+
+	* configure.ac:
+	Bump up version to 0.9
+
 2004-12-23  mallum,,,  <mallum@openedhand.com>
 
 	* src/client_common.c: (client_set_focus),
