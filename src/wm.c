@@ -29,7 +29,7 @@ static void wm_sn_timeout_check (Wm *w);
 static void wm_sn_exec(Wm *w, char* name, char* bin_name, char *desc);
 
 static void wm_sn_monitor_event_func (SnMonitorEvent *event,
-				       void            *user_data);
+				      void           *user_data);
 
 static void wm_sn_cycle_update_root_prop(Wm *w);
 
@@ -38,9 +38,7 @@ static SnCycle *wm_sn_cycle_new(Wm *w, const char *bin_name);
 static void wm_sn_cycle_add(Wm *w, const char *bin_name);
 #endif
 
-
 static Cursor blank_curs;
-
 
 Wm*
 wm_new(int argc, char **argv)
@@ -1124,6 +1122,20 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
         } 
        return;
      } 
+
+   if (c->type == toolbar) 	/* can change height */
+     {
+       if ((e->value_mask & CWHeight) && e->height 
+	   && e->height != c->height && !(c->flags & CLIENT_IS_MINIMIZED))
+	 {
+	   int change_amount = c->height - e->height;
+	   
+	   c->height = e->height;
+	   c->move_resize(c);
+	   wm_restack(w, c, change_amount); 
+	   return;
+	 }
+     }
 
    xwc.width  = c->width;
    xwc.height = c->height;
