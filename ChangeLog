@@ -1,5 +1,10 @@
 2004-04-13  Matthew Allum,,,  <mallum@handhelds.org>
 
+	* src/Makefile.am:
+	Make clean target clean gcov data files
+
+2004-04-13  Matthew Allum,,,  <mallum@handhelds.org>
+
 	* src/ewmh.c: (ewmh_handle_root_message), (ewmh_hung_app_check):
 	* src/wm.c: (wm_usage), (wm_load_config), (wm_event_loop):
 

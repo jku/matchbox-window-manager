@@ -39,6 +39,7 @@ matchbox_window_manager_SOURCES =                        \
                    $(standalone_src)
 
 
-
+clean-local:
+	/bin/rm *.bb *.bbg *.da *.gcov || true
         
 
