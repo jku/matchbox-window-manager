@@ -122,6 +122,9 @@ dialog_client_check_for_state_hints(Client *c)
 	  comp_engine_client_show(c->wm, damaged);
 	}
     }
+
+  if (ewmh_state_check(c, c->wm->atoms[WINDOW_STATE_ABOVE]))
+    c->flags |= CLIENT_HAS_ABOVE_STATE;
 }
 
 void
@@ -166,7 +169,6 @@ dialog_client_move_resize(Client *c)
 		   c->window, 
 		   c->x, 
 		   c->y);
-
      }
    else
 #endif
@@ -299,9 +301,15 @@ dialog_client_show(Client *c)
 
   list_destroy(&transient_list);
 
+
   if (wm_get_visible_main_client(w))
-    stack_move_transients_to_top(w, wm_get_visible_main_client(w), 
-				 CLIENT_HAS_URGENCY_FLAG);
+    {
+      stack_move_transients_to_top(w, wm_get_visible_main_client(w), 
+				   CLIENT_HAS_URGENCY_FLAG);
+
+      stack_move_transients_to_top(w, wm_get_visible_main_client(w), 
+				   CLIENT_HAS_ABOVE_STATE);
+    }
 
   stack_move_transients_to_top(w, NULL, CLIENT_HAS_URGENCY_FLAG);
 

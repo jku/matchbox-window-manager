@@ -206,7 +206,7 @@ enum {
   MB_WIN_SUB_NAME,
   MB_GRAB_TRANSFER,
   WINDOW_TYPE_INPUT,
-  _NET_WM_STATE_ABOVE,
+  WINDOW_STATE_ABOVE,
   INTEGER,
   ATOM_COUNT
 
@@ -284,6 +284,7 @@ typedef struct _mb_client_button
 #define CLIENT_TOOLBARS_MOVED_FOR_FULLSCREEN (1<<24)
 #define CLIENT_IS_TRANSIENT_FOR_ROOT (1<<25)
 #define CLIENT_HAS_URGENCY_FLAG (1<<26)
+#define CLIENT_HAS_ABOVE_STATE (1<<27)
 
 /* Main Client structure */
 

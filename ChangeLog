@@ -1,3 +1,16 @@
+2004-11-08  mallum  <mallum@handhelds.org>
+
+	* src/composite-engine.c: (client_win_extents), (_render_a_client),
+	(comp_engine_render):
+	* src/dialog_client.c: (dialog_client_check_for_state_hints),
+	(dialog_client_move_resize), (dialog_client_show):
+	* src/stack.c: (stack_move_transients_to_top):
+	* src/structs.h:
+	* src/wm.c: (wm_handle_map_notify), (wm_activate_client):
+	Compositor now at least compiles again. 
+	Doesn't work 100% as yet ( crashes ).
+	Basic support for reading _NET_WM_STATE_ABOVE hint added. 
+
 2004-11-07  mallum,,,  <mallum@handhelds.org>
 
 	* src/structs.h:

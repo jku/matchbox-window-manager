@@ -611,26 +611,7 @@ wm_handle_map_notify(Wm *w, Window win)
       /* Set up the 'methods' - expect to be overidden */
       base_client_set_funcs(new_client);
 
-      /* Add the client to the circular list */
-      if (w->head_client == NULL)
-	{
-	  new_client->next = new_client;
-	  new_client->prev = new_client;
-	  w->head_client = new_client;
-	}
-      else
-	{
-	  if (w->main_client)
-	    {
-	      new_client->prev = w->main_client;
-	      new_client->next = w->main_client->next;
-	    } else {
-	      new_client->prev = w->head_client;
-	      new_client->next = w->head_client->next;
-	    }	    
-	  new_client->prev->next = new_client;
-	  new_client->next->prev = new_client;
-	}
+      stack_append_top(new_client);
 
       dbg("%s() client frame is %li\n", __func__, new_client->frame);
 
@@ -2074,8 +2055,6 @@ wm_activate_client(Client *c)
 	 We need to sync extra stuff up when displaying a new one.
        */
 
-      MBList *transient_list = NULL, *list_item = NULL;
-
       /* save focus state for transient dialogs of prev showing main win */
 
       if (w->stack_top_app != c && w->stack_top_app)
@@ -2104,15 +2083,6 @@ wm_activate_client(Client *c)
 
       /* Move transient dialogs to top */
 
-#if 0
-      client_get_transient_list(w, &transient_list, c);
-      
-      list_enumerate(transient_list, list_item)
-	{
-	  stack_move_top((Client *)list_item->data);
-	}
-#endif
-
       stack_move_transients_to_top(w, c, 0);
 
       /* Move transient for root dialogs to very top */
@@ -2123,14 +2093,6 @@ wm_activate_client(Client *c)
 
       stack_move_transients_to_top(w, c, CLIENT_HAS_URGENCY_FLAG);
 
-#if 0
-      list_enumerate(transient_list, list_item)
-	{
-	  Client *cur = (Client *)list_item->data;
-	  if (cur->flags & CLIENT_HAS_URGENCY_FLAG)
-	    stack_move_top((Client *)list_item->data);
-	}
-#endif
       /* Now move transient for root messages to top */
 
       stack_move_transients_to_top(w, NULL, CLIENT_HAS_URGENCY_FLAG);
@@ -2199,11 +2161,13 @@ wm_activate_client(Client *c)
 	}
     }
     
-  ewmh_update(c->wm);
+  ewmh_update(w);
 
   client_set_focus(client_to_focus); /* set focus if needed and ewmh active */
 
   stack_sync_to_display(w);
+
+  comp_engine_client_show(w, c);
 
   XSync(w->dpy, False);	    
 

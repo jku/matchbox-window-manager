@@ -35,114 +35,6 @@ static StackItem *comp_stack;
 
 /* List for stack rendering of dialogs etc */
 
-#if 0
-
-#define stack_enumerate(c) for((c) = comp_stack; (c); (c) = (c)->next)
-
-#define stack_enumerate_backwards(c) for((c) = stack_last(); (c); (c) = stack_prev((c)->client))
-
-
-static StackItem*
-stack_new(Client *client)
-{
-  StackItem* list;
-  list = malloc(sizeof(StackItem));
-  memset(list, 0, sizeof(StackItem));
-
-  list->client = client;
-  list->next   = NULL;
-
-  return list;
-}
-
-static StackItem*
-stack_last()
-{
-  StackItem* list = comp_stack;
-
-  if (list == NULL) return NULL;
-
-  while (list->next != NULL) list = list->next;
-
-  return list;
-}
-
-static StackItem*
-stack_prev(Client *client)
-{
-  StackItem* cur = NULL, *ret = NULL;
-
-  if ((cur = comp_stack) == NULL || cur->client == client)
-    return NULL;
-  
-  while (cur)
-    {
-      if (cur->next && cur->next->client == client)
-	return cur;
-
-      cur = cur->next;
-    }
-
-  return NULL;
-}
-
-static void
-stack_push(Client *client)
-{
-  StackItem* new = NULL;
-
-  if (comp_stack == NULL) 
-    {
-      comp_stack = stack_new(client);
-      return;
-    }
-
-  new          = stack_new(client);
-  new->next        = comp_stack;
-
-  comp_stack = new;
-}
-
-static StackItem*
-stack_remove(Client *client)
-{
-  StackItem* cur = NULL, *ret = NULL;
-
-  if ((cur = comp_stack) != NULL)
-    {
-      if (cur->client == client)
-	{
-	  ret = comp_stack;
-	  comp_stack = comp_stack->next;
-	  return ret;
-	}
-      while (cur != NULL)
-	{
-	  if (cur->next && cur->next->client == client)
-	    {
-	      ret = cur->next;
-	      cur->next = cur->next->next;
-	      return ret;
-	    }
-	  cur = cur->next;
-	}
-    }
-  return NULL;
-}
-
-static void
-stack_top(Client *client)
-{
-  StackItem* cur = NULL;  
-
-  if ((cur = stack_remove(client)) != NULL)
-    {
-      cur->next = comp_stack;
-      comp_stack = cur;
-    }
-}
-
-#endif
 
 /* Shadow Generation */
 
@@ -565,8 +457,8 @@ client_win_extents (Wm *w, Client *client)
 
   if (w->config->shadow_style)
     {
-      if (client->type == dialog 
-	  || client->type == menu 
+      if (client->type == MBCLIENT_TYPE_DIALOG 
+	  || client->type == MBCLIENT_TYPE_TASK_MENU 
 	  || client->type == MBCLIENT_TYPE_OVERRIDE)
 	{
 	  if (w->config->shadow_style == SHADOW_STYLE_SIMPLE)
@@ -1176,10 +1068,10 @@ _render_a_client(Wm           *w,
   /* Transparency only done for dialogs and overides */
 
   if ( (client->transparency == -1  
-       || client->type == mainwin 
-       || client->type == desktop
-       || client->type == toolbar
-	|| client->type == dock) && !client->is_argb32) 
+       || client->type == MBCLIENT_TYPE_APP
+       || client->type == MBCLIENT_TYPE_DESKTOP
+       || client->type == MBCLIENT_TYPE_TOOLBAR
+	|| client->type == MBCLIENT_TYPE_PANEL) && !client->is_argb32) 
     {
       XFixesSetPictureClipRegion (w->dpy, w->root_buffer, 0, 0, region);
 
@@ -1192,7 +1084,8 @@ _render_a_client(Wm           *w,
 
     }
 
-  if (want_lowlight && (client->type == mainwin || client->type == desktop))
+  if (want_lowlight 
+      && (client->type & (MBCLIENT_TYPE_APP|MBCLIENT_TYPE_DESKTOP)))
     {
       int title_offset = 0;
 
@@ -1200,7 +1093,7 @@ _render_a_client(Wm           *w,
 
       /* XXX Should modal for root lowlight entire display ? */
 
-      if (client->type == mainwin) 
+      if (client->type == MBCLIENT_TYPE_APP) 
 	title_offset = main_client_title_height(client);
 
       XRenderComposite (w->dpy, PictOpOver, w->lowlight_picture, None, 
@@ -1238,9 +1131,8 @@ comp_engine_render(Wm *w, XserverRegion region)
   Client       *c = NULL, *t = NULL;
   int           x,y,width,height;
   Bool          have_modal = False;
-  StackItem    *item; 
 
-  if (!w->have_comp_engine || !w->head_client) return;
+  if (!w->have_comp_engine || stack_empty(w)) return;
 
   dbg("%s() called\n", __func__);
 
@@ -1254,12 +1146,7 @@ comp_engine_render(Wm *w, XserverRegion region)
       region = XFixesCreateRegion (w->dpy, &r, 1);
     }
 
-  if (w->flags & DESKTOP_RAISED_FLAG)
-    c = wm_get_desktop(w);
-  else if (w->main_client)
-    c = w->main_client;
-  else
-    c = w->head_client;
+  c = wm_get_visible_main_client(w);
 
   if (!w->root_buffer)
     {
@@ -1297,21 +1184,29 @@ comp_engine_render(Wm *w, XserverRegion region)
 
   /* Render top -> bottom */
 
+  stack_enumerate_reverse(w, t) 
+    {
+      _render_a_client(w, t, region, False);
+      
+      if (t == c)
+	break;
+    }
+
+
+#if 0
   /* Menu's */
 
-  START_CLIENT_LOOP(w, t) 
+  stack_enumerate(w, t) 
     {
-      if ((t->type == menu || t->type == MBCLIENT_TYPE_OVERRIDE))
+      if ((t->type == MBCLIENT_TYPE_TASK_MENU || t->type == MBCLIENT_TYPE_OVERRIDE))
 	_render_a_client(w, t, region, False);
     } 
-  END_CLIENT_LOOP(w, t);
 
   /* Dialogs */
 
-  stack_enumerate(item)
+  stack_enumerate(w, t) 
     {
-      t = item->client;
-      if (t->type == dialog 
+      if (t->type == MBCLIENT_TYPE_DIALOG 
 	  && (t->trans == c || t->trans == NULL)  
 	  && t->mapped )
 	{
@@ -1325,12 +1220,13 @@ comp_engine_render(Wm *w, XserverRegion region)
 
   if (!(c && c->flags & CLIENT_FULLSCREEN_FLAG))
     {
-      START_CLIENT_LOOP(w, t) 
+      stack_enumerate(w, t) 
 	{
-	  if (t->type == dock || t->type == toolbar)
+	  if (t->type == MBCLIENT_TYPE_PANEL || t->type == MBCLIENT_TYPE_TOOLBAR)
 	    {
 	      /* dont render hidden titlebar panels */
-	      if (t->type == dock && t->flags & CLIENT_DOCK_TITLEBAR
+	      if (t->type == MBCLIENT_TYPE_PANEL 
+		  && t->flags & CLIENT_DOCK_TITLEBAR
 		  && (w->flags & DESKTOP_RAISED_FLAG 
 		      || !mbtheme_has_titlebar_panel(w->mbtheme)))
 		continue;
@@ -1339,10 +1235,9 @@ comp_engine_render(Wm *w, XserverRegion region)
 	      _render_a_client(w, t, region, False);
 	    }
 	} 
-      END_CLIENT_LOOP(w, t);
     }
 
-  if (c && ( c->type == mainwin || c->type == desktop ) && c->picture)
+  if (c && ( c->type & (MBCLIENT_TYPE_APP|MBCLIENT_TYPE_DESKTOP)) && c->picture)
     {
       _render_a_client(w, c, region, have_modal);
     }
@@ -1361,14 +1256,17 @@ comp_engine_render(Wm *w, XserverRegion region)
 
   XFixesSetPictureClipRegion (w->dpy, w->root_buffer, 0, 0, None);
 
+#endif
+
+  XFixesSetPictureClipRegion (w->dpy, w->root_buffer, 0, 0, None);
+
   /* Now render shadows */
 
-  stack_enumerate_backwards(item)
+  stack_enumerate_reverse(w,t)
     {
-      t = item->client;
-      if ((t->type == dialog 
-	   && (t->trans == c || t->trans == NULL)  
-	   && t->mapped) || t->type == menu || t->type == MBCLIENT_TYPE_OVERRIDE)
+      if ((t->type == MBCLIENT_TYPE_DIALOG && t->mapped) 
+	  || t->type == MBCLIENT_TYPE_TASK_MENU 
+	  || t->type == MBCLIENT_TYPE_OVERRIDE)
 	{
 	  if (!t->picture) {
 	    dbg("%s() no pixture for %s\n", __func__, t->name);
