@@ -449,11 +449,12 @@ dialog_constrain_geometry(Client *c,
   if (w->config->dialog_stratergy == WM_DIALOGS_STRATERGY_FREE)
     return True;
 
-  /* Allow decorationless dialogs to position themselves anywhere */
-  if (c->flags & CLIENT_TITLE_HIDDEN_FLAG)
+  /* Allow urgent dialogs to position themselves anywhere */
+  if (c->flags & CLIENT_HAS_URGENCY_FLAG)
     return True;
 
-  if (c->flags & CLIENT_HAS_URGENCY_FLAG)
+  /* Decorationless dialogs position anywhere */
+  if (c->flags & CLIENT_TITLE_HIDDEN_FLAG)
     return True;
 
   dialog_get_available_area(c,&avail_x, &avail_y, &avail_width, &avail_height);
@@ -534,9 +535,21 @@ dialog_init_geometry(Client *c)
   if (w->config->dialog_stratergy == WM_DIALOGS_STRATERGY_FREE)
     return;
 
-  /* Allow decorationless dialogs to position themselves anywhere */
+  /* Allow decorationless dialogs to position themselves anywhere 
+   * But centered initially if 0,0 
+  */
   if (c->flags & CLIENT_TITLE_HIDDEN_FLAG)
-    return;
+    {
+      if (c->x == 0 && c->y == 0)
+	{
+	  if (c->height < w->dpy_height)
+	    c->y = (w->dpy_height - c->height)/2;
+
+	  if (c->width < w->dpy_width)
+	    c->x = (w->dpy_width - c->width)/2;
+	}
+      return;
+    }
 
   dialog_get_available_area(c,&avail_x, &avail_y, &avail_width, &avail_height);
 
@@ -613,6 +626,8 @@ dialog_init_geometry(Client *c)
 void
 dialog_client_configure(Client *c)
 {
+  dbg("%s() client has border only hint: %s\n",
+      __func__, (c->flags & CLIENT_BORDERS_ONLY_FLAG) ? "yes" : "no");
   dialog_init_geometry(c);
 }
 

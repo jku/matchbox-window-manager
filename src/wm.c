@@ -921,6 +921,7 @@ wm_handle_button_event(Wm *w, XButtonEvent *e)
        XAllowEvents(w->dpy, ReplayPointer, CurrentTime);
        /* forward grabbed events */
 
+       return;
      }
 
    c = wm_find_client(w, e->window, FRAME);
