@@ -30,8 +30,6 @@
 #define n_stack_items(w) \
  (w)->stack_n_items
 
-void
-stack_add_below_client(Client *client, Client *client_above);
 
 void
 stack_add_above_client(Client *client, Client *client_below);
@@ -46,28 +44,15 @@ void
 stack_remove(Client *client);
 
 void
-stack_update_transients(Client *client, Client *client_below);
-
-void
-stack_move_above_extended(Client *client,       
-			  Client *client_below,
-			  int     type, 
-			  int     flags);
-
-void
 stack_move_transients_to_top(Wm *w, Client *client_trans_for, int flags);
 
 void
-stack_move_type_above_client(MBClientTypeEnum wanted_type, Client *client);
+stack_move_client_above_type(Client *client, int type_below);
 
 void
-stack_move_type_below_client(MBClientTypeEnum wanted_type, Client *client);
-
-void
-stack_move_below_type(Client *client, int type, int flags);
-
-void
-stack_move_below_client(Client *client, Client *client_above);
+stack_move_type_above_client(Wm               *w, 
+			     MBClientTypeEnum  wanted_type, 
+			     Client           *client);
 
 void
 stack_move_above_client(Client *client, Client *client_below);

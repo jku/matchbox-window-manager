@@ -271,7 +271,24 @@ client_get_transient_list(Wm *w, MBList **list, Client *c)
 	    { 			
 	      /* Transient for root dialogs */
 	      if (trans == NULL)
+		{
 		  list_add(list, NULL, 0, p);
+		}
+	      else
+		{
+		  /* The dialog isn't transient for root directly 
+                   * but possibly one of its transient parents are
+		   */
+
+		  while (trans->trans != NULL)
+		    trans = trans->trans;
+
+		  /* trans is now transient for nothing
+                   * so if its a dialog add it.
+		   */
+		  if (trans->type == MBCLIENT_TYPE_DIALOG)
+		    list_add(list, NULL, 0, p);
+		}
 	    }
 	  else
 	    {

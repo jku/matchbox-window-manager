@@ -2035,11 +2035,11 @@ wm_activate_client(Client *c)
       if (!(c->flags & CLIENT_FULLSCREEN_FLAG))
 	{
 	  dbg("%s() moving panels above %s\n", __func__, c->name);
-	  stack_move_type_above_client(MBCLIENT_TYPE_PANEL, c);
+	  stack_move_type_above_client(w, MBCLIENT_TYPE_PANEL, c);
 	  stack_dump(w);
 	}
 
-      stack_move_type_above_client(MBCLIENT_TYPE_TOOLBAR, c);
+      stack_move_type_above_client(w, MBCLIENT_TYPE_TOOLBAR, c);
 
       /* Move transient dialogs to top */
 
@@ -2062,8 +2062,6 @@ wm_activate_client(Client *c)
 
       stack_move_transients_to_top(w, NULL, CLIENT_HAS_URGENCY_FLAG);
 
-
-
       /* Deal with desktop flag etc */
       if (c->type != MBCLIENT_TYPE_DESKTOP)
 	{
@@ -2081,7 +2079,7 @@ wm_activate_client(Client *c)
 	      && mbtheme_has_titlebar_panel(w->mbtheme)
 	      && !(w->have_titlebar_panel->flags & CLIENT_DOCK_TITLEBAR_SHOW_ON_DESKTOP))
 	    {
-	      stack_move_below_client(w->have_titlebar_panel, c);
+	      stack_move_above_client(w->have_titlebar_panel, NULL);
 	    }
 	}
 
@@ -2108,12 +2106,12 @@ wm_activate_client(Client *c)
 
 
 	      /* Move just above main app win, therefore *below* dialogs */
-	      stack_move_type_above_client(MBCLIENT_TYPE_TOOLBAR
+	      stack_move_type_above_client(w, MBCLIENT_TYPE_TOOLBAR
 					   |MBCLIENT_TYPE_PANEL, 
 					   wm_get_visible_main_client(w));
 	    }
 	  else 	 /* move type above nothing - eg to bottom */
-	    stack_move_type_above_client(MBCLIENT_TYPE_TOOLBAR
+	    stack_move_type_above_client(w, MBCLIENT_TYPE_TOOLBAR
 					 |MBCLIENT_TYPE_PANEL, NULL);
 	  /* ABOVE is broken as no Wm reference !!! */
 	}
@@ -2127,11 +2125,12 @@ wm_activate_client(Client *c)
       && mbtheme_has_titlebar_panel(w->mbtheme)
       && !(w->have_titlebar_panel->flags & CLIENT_DOCK_TITLEBAR_SHOW_ON_DESKTOP))
     {
-      stack_move_below_client(c, w->client_desktop);
+      // stack_move_below_client(c, w->client_desktop);
       /* TODO: Change to stack move bottom ? 
        *
        * eg use stack_move_above_client(c, NULL)
       */
+      stack_move_above_client(c, NULL);
     }
 
   ewmh_update(w);

@@ -1,36 +1,5 @@
 #include "stack.h"
 
-void
-stack_add_below_client(Client *client, Client *client_above)
-{
-  Wm *w = client->wm;
-
-  if (client_above == NULL)
-    {
-      /* nothing above raising to top */
-      if (w->stack_top)
-	{
-	  client->below = w->stack_top;
-	  w->stack_top->below = client;
-	}
-
-      w->stack_top = client;
-    }
-  else
-    {
-      client->above = client_above;
-      client->below = client_above->below;
-
-      if (client_above->below) client_above->below->above = client;
-      client_above->below = client;
-    }
-
-  if (client_above == w->stack_bottom)
-    w->stack_bottom = client;
-
-  w->stack_n_items++;
-}
-
 
 void
 stack_add_above_client(Client *client, Client *client_below)
@@ -76,12 +45,8 @@ stack_append_top(Client *client)
 void   /* can this call above client ? */
 stack_prepend_bottom(Client *client)
 {
-  Wm *w = client->wm;
-
-  stack_add_below_client(client, w->stack_bottom);
+  stack_add_above_client(client, NULL);
 }
-
-
 
 void
 stack_remove(Client *client)
@@ -110,104 +75,20 @@ stack_remove(Client *client)
 }
 
 void
-stack_preppend(Client *client)
-{
-
-}
-
-void
-stack_update_transients(Client *client, Client *client_below)
+stack_move_client_above_type(Client *client, int type_below)
 {
   Wm     *w = client->wm;
-  Client *client_cur;
+  Client *highest_client = NULL, *c = NULL;
 
-  stack_enumerate_transients(w,client_cur,client)
+  stack_enumerate(w,c)
     {
-      stack_move_above_client(client_cur, client);
+      if ((c->type & type_below) && c->mapped)
+	highest_client = c;
     }
 
-  stack_enumerate_transients(w,client_cur,client_below)
-    {
-      stack_move_below_client(client_cur, client);
-    }
-
-
-}
-
-void
-stack_move_above_extended(Client *client,       
-			  Client *client_below,
-			  int     type, 
-			  int     flags)
-{
-  Wm     *w = client->wm;
-  Client *client_found_below = NULL, *client_cur;
-
-  if (client_below == NULL) 
-    client_below = w->stack_bottom;
-  else
-    client_below = client_below->above;
-
-  for (client_cur = client_below; 
-       client_cur; 
-       client_cur = client_cur->above)   
-    {
-      if (client_cur->type & type)
-	{
-	  if (flags)
-	    {
-	      if (client_cur->flags & flags)
-		client_found_below = client_cur;
-	    }
-	  else client_found_below = client_cur;
-	}
-    }
-
-
-  if (client_found_below)  /* TODO: what if this is NULL ?? */
-    {
-      dbg("%s() moving %s just above %s\n", 
-	  __func__, client->name, client_found_below->name); 
-      stack_move_above_client(client, client_found_below);
-    }
-}
-
-void 				/* XXX needed ? should sync with above */
-stack_move_below_type(Client *client, int type, int flags)
-{
-  Wm     *w = client->wm;
-  Client *client_above = NULL, *client_cur;
-
-  stack_enumerate_reverse(w, client_cur)
-    {
-      if (client_cur->type == type)
-	{
-	  if (flags)
-	    {
-	      if (client_cur->flags & flags)
-		client_above = client_cur;
-	    }
-	  else client_above = client_cur;
-	}
-    }
-
-  if (client_above)  /* TODO: what if this is NULL ?? */
-    stack_move_below_client(client, client_above);
-
-
-  /* must move any transients too */
-}
-
-void
-stack_move_below_client(Client *client, Client *client_above)
-{
-  if (client == client_above) return;
-
-  stack_remove(client);
-  stack_add_below_client(client, client_above);
-
-  /* must move any transients too */
-}
+  if (highest_client)
+    stack_move_above_client(client, highest_client);
+} 
 
 void
 stack_move_above_client(Client *client, Client *client_below)
@@ -216,39 +97,20 @@ stack_move_above_client(Client *client, Client *client_below)
 
   stack_remove(client);
   stack_add_above_client(client, client_below);
-
-  /* must move any transients too */
-  // stack_update_transients(client, client_below);
-
-  /* XXX Is this a good idea. I think it makes more sense to just
-   *     provide mechanism here and add the policy higher up.
-   *
-   */
-
 }
 
 void
-stack_move_type_above_client(MBClientTypeEnum wanted_type, Client *client)
+stack_move_type_above_client(Wm               *w, 
+			     MBClientTypeEnum  wanted_type, 
+			     Client           *client)
 {
-  Wm     *w = client->wm;
   Client *c = NULL;
 
   stack_enumerate(w,c)
     if ((c->type & wanted_type) && c->mapped)
       stack_move_above_client(c, client);
-
 }
 
-void
-stack_move_type_below_client(MBClientTypeEnum wanted_type, Client *client)
-{
-  Wm     *w = client->wm;
-  Client *c = NULL;
-
-  stack_enumerate_reverse(w,c)
-    if ((c->type & wanted_type) && c->mapped)
-      stack_move_below_client(c, client);
-}
 
 void
 stack_move_transients_to_top(Wm *w, Client *client_trans_for, int flags)
@@ -312,7 +174,8 @@ stack_cycle_forward(Wm *w, MBClientTypeEnum type_to_cycle)
 
   c = stack_get_highest(w, type_to_cycle);
 
-  if (c) stack_move_below_type(c, type_to_cycle, 0);
+  /* Move to stack bottom   */
+  if (c) stack_move_above_client(c, NULL);
 
   /* now return the new highest */
   return stack_get_highest(w, type_to_cycle);
@@ -326,7 +189,7 @@ stack_cycle_backward(Wm *w, MBClientTypeEnum type_to_cycle)
 
   c = stack_get_lowest(w, type_to_cycle);
 
-  if (c) stack_move_above_extended(c, NULL, type_to_cycle, 0);
+  if (c) stack_move_client_above_type(c, type_to_cycle);
 
   return c;
 }
@@ -458,6 +321,168 @@ stack_sync_to_display(Wm *w)
     }
 
 }
+
+#if STACK_STUFF_DEPRECIATED
+
+void
+stack_add_below_client(Client *client, Client *client_above);
+
+void
+stack_move_type_below_client(MBClientTypeEnum wanted_type, Client *client);
+
+void
+stack_move_below_type(Client *client, int type, int flags);
+
+void
+stack_move_below_client(Client *client, Client *client_above);
+
+void
+stack_update_transients(Client *client, Client *client_below);
+
+void
+stack_move_above_extended(Client *client,       
+			  Client *client_below,
+			  int     type, 
+			  int     flags);
+
+void
+stack_add_below_client(Client *client, Client *client_above)
+{
+  Wm *w = client->wm;
+
+  if (client_above == NULL)
+    {
+      /* nothing above raising to top */
+      if (w->stack_top)
+	{
+	  client->below = w->stack_top;
+	  w->stack_top->below = client;
+	}
+
+      w->stack_top = client;
+    }
+  else
+    {
+      client->above = client_above;
+      client->below = client_above->below;
+
+      if (client_above->below) client_above->below->above = client;
+      client_above->below = client;
+    }
+
+  if (client_above == w->stack_bottom)
+    w->stack_bottom = client;
+
+  w->stack_n_items++;
+}
+
+void
+stack_move_type_below_client(MBClientTypeEnum wanted_type, Client *client)
+{
+  Wm     *w = client->wm;
+  Client *c = NULL;
+
+  stack_enumerate_reverse(w,c)
+    if ((c->type & wanted_type) && c->mapped)
+      stack_move_below_client(c, client);
+}
+
+void
+stack_move_below_client(Client *client, Client *client_above)
+{
+  if (client == client_above) return;
+
+  stack_remove(client);
+  stack_add_below_client(client, client_above);
+
+  /* must move any transients too */
+}
+
+void 				/* XXX needed ? should sync with above */
+stack_move_below_type(Client *client, int type, int flags)
+{
+  Wm     *w = client->wm;
+  Client *client_above = NULL, *client_cur;
+
+  stack_enumerate_reverse(w, client_cur)
+    {
+      if (client_cur->type == type)
+	{
+	  if (flags)
+	    {
+	      if (client_cur->flags & flags)
+		client_above = client_cur;
+	    }
+	  else client_above = client_cur;
+	}
+    }
+
+  if (client_above)  /* TODO: what if this is NULL ?? */
+    stack_move_below_client(client, client_above);
+
+
+  /* must move any transients too */
+}
+
+void
+stack_update_transients(Client *client, Client *client_below)
+{
+  Wm     *w = client->wm;
+  Client *client_cur;
+
+  stack_enumerate_transients(w,client_cur,client)
+    {
+      stack_move_above_client(client_cur, client);
+    }
+
+  stack_enumerate_transients(w,client_cur,client_below)
+    {
+      stack_move_below_client(client_cur, client);
+    }
+
+
+}
+
+void
+stack_move_above_extended(Client *client,       
+			  Client *client_below,
+			  int     type, 
+			  int     flags)
+{
+  Wm     *w = client->wm;
+  Client *client_found_below = NULL, *client_cur;
+
+  if (client_below == NULL) 
+    client_below = w->stack_bottom;
+  else
+    client_below = client_below->above;
+
+  for (client_cur = client_below; 
+       client_cur; 
+       client_cur = client_cur->above)   
+    {
+      if (client_cur->type & type)
+	{
+	  if (flags)
+	    {
+	      if (client_cur->flags & flags)
+		client_found_below = client_cur;
+	    }
+	  else client_found_below = client_cur;
+	}
+    }
+
+
+  if (client_found_below)  /* TODO: what if this is NULL ?? */
+    {
+      dbg("%s() moving %s just above %s\n", 
+	  __func__, client->name, client_found_below->name); 
+      stack_move_above_client(client, client_found_below);
+    }
+}
+
+#endif
+
 
 #if 0
 

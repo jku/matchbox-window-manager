@@ -1,5 +1,24 @@
 2004-11-12  mallum,,,  <mallum@handhelds.org>
 
+	* src/client_common.c: (client_get_transient_list):
+	Fixes for stacking dialogs transient for transient .. for root. 
+	
+	* src/desktop_client.c: (desktop_client_show):
+	* src/dockbar_client.c: (dockbar_client_show):
+	* src/stack.c: (stack_prepend_bottom),
+	(stack_move_client_above_type), (stack_move_above_client),
+	(stack_move_type_above_client), (stack_cycle_forward),
+	(stack_cycle_backward), (stack_add_below_client),
+	(stack_move_type_below_client), (stack_move_below_client),
+	(stack_move_below_type), (stack_update_transients),
+	(stack_move_above_extended):
+	* src/stack.h:
+	* src/toolbar_client.c: (toolbar_client_show):
+	* src/wm.c: (wm_activate_client):
+	Refactor stack 'api' making code much smaller
+
+2004-11-12  mallum,,,  <mallum@handhelds.org>
+
 	* src/dialog_client.c: (dialog_client_destroy):
 	* src/structs.h:
 	* src/wm.c: (wm_event_loop), (wm_make_new_client),

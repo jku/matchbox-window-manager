@@ -75,23 +75,17 @@ desktop_client_show(Client *c)
 {
   Wm *w = c->wm;
 
-  // base_client_show(c);
-  // wm_toggle_desktop(c->wm);
+  stack_move_top(c);
+
+  /* All clients use the above move to base */
   
-  // stack_move_above_extended(c, NULL, mainwin, 0);
-
-   stack_move_top(c);
-
-   /* All clients use the above move to base */
-
-   if (!c->mapped)
-     {
-       XMapSubwindows(w->dpy, c->frame);
-       XMapWindow(w->dpy, c->frame);
-     }
-
+  if (!c->mapped)
+    {
+      XMapSubwindows(w->dpy, c->frame);
+      XMapWindow(w->dpy, c->frame);
+    }
+  
   c->mapped = True;
-
 }
 
 void

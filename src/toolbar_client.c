@@ -195,8 +195,7 @@ toolbar_client_show(Client *c)
 
    toolbar_client_move_resize(c);
 
-   stack_move_above_extended(c, NULL, 
-			     MBCLIENT_TYPE_APP|MBCLIENT_TYPE_DESKTOP, 0);
+   stack_move_client_above_type(c, MBCLIENT_TYPE_APP|MBCLIENT_TYPE_DESKTOP);
 
    XMapSubwindows(w->dpy, c->frame);
    XMapWindow(w->dpy, c->frame);
