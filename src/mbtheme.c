@@ -116,27 +116,17 @@ void theme_frame_icon_paint(MBTheme *t, Client *c,
 			    MBPixbufImage *img_dest, 
 			    int x, int y)
 {
-  int            i = 0;
   MBPixbufImage *img = NULL;
   int           *data = NULL;
-  unsigned char *p;
 
   if (c->icon_rgba_data != NULL)
     {
       data = c->icon_rgba_data;
-      img = mb_pixbuf_img_new(t->wm->pb, data[0], data[1] ); 
-      p = img->rgba;
 
-      dbg("%s() Got icon %i * %i, painting at %i,%i\n", __func__, 
-	  data[0], data[1], x, y);
+      img = mb_pixbuf_img_new_from_int_data(t->wm->pb,
+					    (data+2),
+					    data[0], data[1]);
 
-      for (i =0 ; i < (data[0]*data[1]); i++)
-	{
-	  *p++ = (data[i+2] >> 16) & 0xff;  
-	  *p++ = (data[i+2] >> 8) & 0xff;  
-	  *p++ = data[i+2] & 0xff;  
-	  *p++ = data[i+2] >> 24; 
-	}
     }
   else 
     {
@@ -448,7 +438,7 @@ _theme_paint_gradient(MBTheme*       theme,
 	  
 	  for(tx=0; tx<w; tx++)
 	    {
-	      mb_pixbuf_img_set_pixel(img_dest, tx, ty, r, g, b);
+	      mb_pixbuf_img_plot_pixel(theme->wm->pb, img_dest, tx, ty, r, g, b);
 	      mb_pixbuf_img_set_pixel_alpha(img_dest, tx, ty, a);
 	    }
 	}
@@ -462,7 +452,7 @@ _theme_paint_gradient(MBTheme*       theme,
 	  
 	  for(ty=0; ty<h; ty++)
 	    {
-	      mb_pixbuf_img_set_pixel(img_dest, tx, ty, r, g, b);
+	      mb_pixbuf_img_plot_pixel(theme->wm->pb, img_dest, tx, ty, r, g, b);
 	      mb_pixbuf_img_set_pixel_alpha(img_dest, tx, ty, a);
 	    }
 	}

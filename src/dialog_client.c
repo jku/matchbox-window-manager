@@ -722,6 +722,7 @@ dialog_client_redraw(Client *c, Bool use_cache)
       rects[0].width = total_w - offset_west - offset_east;
       rects[0].height = total_h - offset_south - offset_north;
 
+
       XShapeCombineRectangles ( c->wm->dpy, c->frame, 
 				ShapeBounding,
 				0, 0, rects, 1, ShapeSet, 0 );
@@ -754,6 +755,7 @@ dialog_client_redraw(Client *c, Bool use_cache)
       else
 #endif
 	{
+
 	  XShapeCombineMask( c->wm->dpy, c->frames_decor[NORTH], 
 			     ShapeBounding, 0, 0, 
 			     c->backing_masks[MSK_NORTH], ShapeSet);
@@ -794,6 +796,7 @@ dialog_client_redraw(Client *c, Bool use_cache)
 			       total_w - offset_east, offset_north,
 			       c->frames_decor[EAST],
 			       ShapeBounding, ShapeUnion);
+
 	}
     }
 }

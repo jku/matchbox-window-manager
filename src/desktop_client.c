@@ -66,7 +66,7 @@ desktop_client_move_resize(Client *c)
 void
 desktop_client_configure(Client *c)
 {   
-   c->width = c->wm->dpy_width;
+   c->width  = c->wm->dpy_width;
    c->height = c->wm->dpy_height;
 
    c->x = 0;
