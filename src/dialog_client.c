@@ -1099,7 +1099,7 @@ dialog_client_iconize(Client *c)
     if (p->trans == c)
       p->iconize(p);
 
-  if ((d = dialog_client_set_focus_next(d)) != NULL)
+  if ((d = dialog_client_set_focus_next(c)) != NULL)
     wm_activate_client(d);
 }
  
