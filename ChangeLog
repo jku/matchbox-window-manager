@@ -1,3 +1,8 @@
+2004-02-07  Matthew Allum,,,  <mallum@handhelds.org>
+
+	* configure.ac:
+	fix startup notification 
+
 2004-02-06  Matthew Allum,,,  <mallum@handhelds.org>
 
 	* data/themes/borillo/theme.xml:

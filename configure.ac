@@ -33,9 +33,9 @@ AC_ARG_ENABLE(composite,
   [  --enable-composite        enable composite support.],
   enable_composite=$enableval, enable_composite=no)
 
-AC_ARG_ENABLE(startup-notification,
+AC_ARG_ENABLE(startup_notification,
   [  --enable-startup-notification   enable startup notification support],
-     enable_sn=$enableval, enable_sn=no )
+     enable_startup_notification=$enableval, enable_startup_notification=no )
 
 AC_ARG_ENABLE(debug,
   [  --enable-debug    enable debug ( verbose ) build],
@@ -265,7 +265,7 @@ fi
 
 dnl ------ Startup Notification ---------------------------------------------
 
-if test x$enable_sn != xno; then
+if test x$enable_startup_notification != xno; then
   PKG_CHECK_MODULES(SN, libstartup-notification-1.0, ,
 			   AC_MSG_ERROR([*** Required Startup Notification Librays not installed ***]))
 
@@ -382,7 +382,7 @@ echo "
         Building with Expat:                ${enable_expat}
 
         Building with GConf:                ${enable_gconf}
-        Building with Startup-Notification: ${enable_sn}
+        Building with Startup-Notification: ${enable_startup_notification}
         Building with composite manager:    ${enable_composite}
         Building with Message Windows:      ${enable_message_wins}
 
