@@ -17,7 +17,7 @@
 
 <!-- Showdow -->
 
-<color id="shadowcol"   def="#66666666" />
+<color id="shadowcol"   def="#11111166" />
 
 <font id="titlefont" def="Sans bold shadow 20px" />
 <font id="menufont"  def="Sans bold 20px" />
