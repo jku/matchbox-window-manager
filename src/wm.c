@@ -1331,6 +1331,7 @@ wm_handle_unmap_event(Wm *w, XUnmapEvent *e)
 	 dbg("%s() calling client destroy\n", __func__);
 	 client_set_state(c, WithdrawnState);
 	 XReparentWindow(w->dpy, c->window, w->root, c->x, c->y); 
+	 XUnmapWindow(w->dpy, c->window);
 	 c->destroy(c);
        }
        XUngrabServer(w->dpy);
