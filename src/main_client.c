@@ -14,7 +14,7 @@
 */
 
 /*
-  $Id: main_client.c,v 1.16 2004/11/11 18:09:37 mallum Exp $
+  $Id: main_client.c,v 1.17 2004/11/16 16:07:44 mallum Exp $
 */
 
 #include "main_client.h"
@@ -648,6 +648,7 @@ main_client_show(Client *c)
 
    if (!c->mapped)
      {
+       client_set_state(c, NormalState);
        XMapSubwindows(w->dpy, c->frame);
        XMapWindow(w->dpy, c->frame);
      }

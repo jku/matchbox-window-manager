@@ -1,3 +1,10 @@
+2004-11-16  mallum,,,  <mallum@handhelds.org>
+
+	* src/main_client.c: (main_client_show):
+	Make uniconized main clients set correct state
+	* src/wm.c: (wm_handle_button_event):
+	Dont try and set main app focus if task menu is active ( crasher )
+
 2004-11-15 0.9rc1 released. 
 
 2004-11-15  mallum,,,  <mallum@handhelds.org>

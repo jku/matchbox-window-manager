@@ -753,7 +753,7 @@ wm_handle_button_event(Wm *w, XButtonEvent *e)
 
    /* Raise dialogs, set focus if needed  */
 
-   if (c)
+   if (c && !(w->flags & MENU_FLAG))
      {
        /* Click was on window rather than decorations */
 
