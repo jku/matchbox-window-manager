@@ -544,6 +544,13 @@ typedef struct _wm
   Client*           main_client;    /* currently viewable main client */
   Client*           prev_main_client; /* used for decorated desktop */
 
+  /* New stack stuff */
+
+  Client           *stack_top, *stack_bottom;
+  int               stack_n_items;     
+
+  /*******************/
+
   Wm_config        *config;  
 
   Window            last_click_window;

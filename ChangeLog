@@ -1,3 +1,19 @@
+2004-10-20  mallum,,,  <mallum@handhelds.org>
+
+	* src/Makefile.am:
+	* src/stack.c: (stack_add_below_client), (stack_add_above_client),
+	(stack_append_top), (stack_prepend_bottom), (stack_remove),
+	(stack_preppend), (stack_update_transients),
+	(stack_move_above_type), (stack_move_below_type),
+	(stack_move_below_client), (stack_move_above_client),
+	(stack_get_window_list), (stack_sync_to_display), (main):
+	* src/stack.h:
+	* src/structs.h:
+	Add initial new stack API. Note nothing uses it as yet. 
+
+	* src/wm.c: (wm_make_new_client):
+	Remove extra ';' typo ausing probs on gcc2.96 
+
 2004-10-15  mallum,,,  <mallum@handhelds.org>
 
 	* src/wm.c: (wm_handle_unmap_event):

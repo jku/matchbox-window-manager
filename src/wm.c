@@ -1542,7 +1542,7 @@ Client*
 wm_make_new_client(Wm *w, Window win)
 {
    Window        trans_win;
-   Atom          realType, *value = NULL;;
+   Atom          realType, *value = NULL;
    unsigned long n, extra, val[1];
    int           format, status;
    Client       *c = NULL, *t = NULL, *old_main_client = NULL;
