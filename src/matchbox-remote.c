@@ -72,6 +72,45 @@ getRootProperty(char * name, Bool delete)
 
 }
 
+static void
+mbpanelcommand(int cmd_id, int panel_id)
+{
+  XEvent	ev;
+  Window	root, panel;
+  Atom          cmd_prop, system_tray_atom;
+  char          atomName[64];
+
+  root = DefaultRootWindow(dpy);
+  
+  snprintf(atomName, 64, "_NET_SYSTEM_TRAY_S%d", panel_id);
+  
+  system_tray_atom = XInternAtom(dpy, atomName, False);
+  cmd_prop         = XInternAtom(dpy, "_MB_COMMAND", False);
+  
+  if (cmd_id == MB_CMD_PANEL_TOGGLE_VISIBILITY)
+    {
+      panel = XGetSelectionOwner(dpy, system_tray_atom);
+      
+      if (panel != None)
+	{
+	  memset(&ev, '\0', sizeof ev);
+	  ev.xclient.type   = ClientMessage;
+	  ev.xclient.window = root;
+	  ev.xclient.message_type = cmd_prop;
+	  ev.xclient.format = 8;
+	  ev.xclient.data.l[0] = cmd_id;
+	  
+	  XSendEvent(dpy, panel,False,
+		     SubstructureRedirectMask|SubstructureNotifyMask, &ev);
+	  
+	}
+      else 
+	{
+	  fprintf(stderr, "Cant find panel %i\n", panel_id);
+	  exit(1);
+	}
+    }
+}
 
 static void
 mbcommand(int cmd_id, char *data) {
@@ -87,12 +126,6 @@ mbcommand(int cmd_id, char *data) {
    if (cmd_id == MB_CMD_SET_THEME)
    {
       theme_prop = XInternAtom(dpy, "_MB_THEME", False);
-      if (theme_prop == None)
-      {
-	 fprintf(stderr, "No such property '%s'\n", "_MB_THEME");
-	 return;
-      }
-
       XChangeProperty(dpy, root, theme_prop, XA_STRING, 8,
 		      PropModeReplace, data, strlen(data));
    }
@@ -102,7 +135,7 @@ mbcommand(int cmd_id, char *data) {
        /* Check if desktop is running */
        if (!XGetSelectionOwner(dpy, desktop_manager_atom))
 	 {
-	   fprintf(stderr, "Desktop not running, execing...");
+	   fprintf(stderr, "Desktop not running, exiting...\n");
 	   switch (fork())
 	     {
 	     case 0:
@@ -117,10 +150,6 @@ mbcommand(int cmd_id, char *data) {
      }
    
    cmd_prop = XInternAtom(dpy, "_MB_COMMAND", False);
-   if (cmd_prop == None) {
-      fprintf(stderr, "No such property '%s'\n", "_MB_COMMAND");
-      return;
-   }
          
    memset(&ev, '\0', sizeof ev);
    ev.xclient.type = ClientMessage;
@@ -130,7 +159,8 @@ mbcommand(int cmd_id, char *data) {
 
    ev.xclient.data.l[0] = cmd_id;
 
-   XSendEvent(dpy, root, False, SubstructureRedirectMask|SubstructureNotifyMask, &ev);
+   XSendEvent(dpy, root, False, 
+	      SubstructureRedirectMask|SubstructureNotifyMask, &ev);
 
 }
 
@@ -141,18 +171,15 @@ usage(char *progname)
 {
    printf("Usage: %s [options...]\n", progname);
    printf("Options:\n");
-   printf("  -t       <matchbox theme name>  switch matchbox theme\n");
-   printf("  -r       Print current matchbox theme to stdout \n");
-   printf("  -exit    Request matchbox to exit \n");
-   printf("  -next    Page to next window \n");
-   printf("  -prev    Page to previous window \n");
-   printf("  -desktop Toggle desktop visibility\n");
+   printf("  -t                       <matchbox theme name>  switch matchbox theme\n");
+   printf("  -r                       Print current matchbox theme to stdout \n");
+   printf("  -exit                    Request matchbox to exit \n");
+   printf("  -next                    Page to next window \n");
+   printf("  -prev                    Page to previous window \n");
+   printf("  -desktop                 Toggle desktop visibility\n");
+   printf("  -menu                    Activate mb-applet-menu-launcher\n");
+   printf("  -panel-toggle [panel id] Toogle panel visibility\n");
 
-
-   printf("  -mbmenu  Toggle mbmenu\n");
-
-   printf("  -panel-id   <int>\n");
-   printf("  -panel-toggle\n");
    /*
    printf("  -panel-size <int>\n");
    printf("  -panel-orientate <north|east|south|west>\n");
@@ -165,13 +192,15 @@ int main(int argc, char* argv[])
 {
   char *display_name = (char *)getenv("DISPLAY");
   int i;
+
+  if (argc < 2) usage(argv[0]);
   
   dpy = XOpenDisplay(display_name);
   if (dpy == NULL) {
      printf("Cant connect to display: %s\n", display_name);
      exit(1);
   }
-  
+
   /* pass command line */
   for (i=1; argv[i]; i++) {
      char *arg = argv[i];
@@ -197,16 +226,25 @@ int main(int argc, char* argv[])
 	      mbcommand(MB_CMD_NEXT, NULL);
 	      break;
 	   case 'p':
-	      mbcommand(MB_CMD_PREV, NULL);
-	      break;
+	     if (!strcmp(arg+1,"panel-toggle"))
+	       {
+		 int panel_id = 0;
+
+		 if (argc > i+1) panel_id = atoi(argv[i+1]);
+		 mbpanelcommand(MB_CMD_PANEL_TOGGLE_VISIBILITY, panel_id);
+	       }
+	     else if (strcmp(arg+1,"prev") == 0 || strlen(arg+1) == 1)
+	       {
+		 mbcommand(MB_CMD_PREV, NULL);
+	       }
+	     else usage(argv[0]);
+	     break;
 	   case 'm':
 	      mbcommand(MB_CMD_SHOW_EXT_MENU, NULL);
 	      break;
 	   case 'x':
 	      mbcommand(MB_CMD_MISC, NULL);
 	      break;
-	    
-
 	   default:
 	      usage(argv[0]);
 	      break;
