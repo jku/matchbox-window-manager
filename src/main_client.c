@@ -236,6 +236,7 @@ main_client_reparent(Client *c)
 {
   Wm *w = c->wm;
   XSetWindowAttributes attr;
+  int   frame_north_height;
 
   int offset_north = main_client_title_height(c);
   int offset_south = theme_frame_defined_height_get(w->mbtheme, 
@@ -261,18 +262,25 @@ main_client_reparent(Client *c)
 
   dbg("%s frame created : %i*%i+%i+%i\n",
       __func__, c->width, c->height + offset_north, c->x, c->y);
-  /*  
-  c->title_frame =
-    XCreateWindow(w->dpy, c->frame, 0, 0, 
-		  c->width + ( offset_east + offset_west), 
-		  frm_size + c->height + offset_south, 0,
-		  CopyFromParent, CopyFromParent, CopyFromParent,
-		  CWBackPixel|CWEventMask, &attr);
-  */
+
+  frame_north_height = offset_north;
+
+  if (!c->wm->config->use_title && c->flags & CLIENT_FULLSCREEN_FLAG) 
+  {
+    /* make sure the top frame is not 0 pixels high if fullscreen
+     * else toggling will break. 
+    */
+    frame_north_height = theme_frame_defined_height_get(c->wm->mbtheme, 
+							FRAME_MAIN);
+  }
+
 
   client_decor_frames_init(c, 
-			   offset_west, offset_east, 
-			   offset_north, offset_south);
+			   offset_west, 
+			   offset_east, 
+			   ( c->flags & CLIENT_FULLSCREEN_FLAG) ?
+			    : offset_north, 
+			   offset_south);
 
   XClearWindow(w->dpy, c->frame);
 

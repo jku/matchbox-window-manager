@@ -1,3 +1,8 @@
+2004-12-23  mallum,,,  <mallum@openedhand.com>
+
+	* src/main_client.c: (main_client_reparent):
+	Fix frames getting set up right for fullscreen windows
+
 2004-12-20  mallum <mallum@openedhand.com>
 
 	* data/Makefile.am:
