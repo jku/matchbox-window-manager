@@ -110,6 +110,7 @@ ewmh_init(Wm *w)
     "_MB_GRAB_TRANSFER",
     "_NET_WM_WINDOW_TYPE_INPUT",
     "_NET_WM_STATE_ABOVE",
+    "WM_TRANSIENT_FOR",
     "INTEGER" 			/* XXX Needed ? */
 
   };

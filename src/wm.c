@@ -453,11 +453,6 @@ wm_load_config (Wm   *w,
      free(geom);
    }
 #endif
-
-   if (getenv("MB_AWT_WORKAROUND"))
-     w->config->awt_workaround = True;
-   else
-     w->config->awt_workaround = False;
 }
 
 
@@ -1040,32 +1035,18 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 {
    Client         *c = wm_find_client(w, e->window, WINDOW);
    XWindowChanges  xwc;
-   Bool            no_configure       = False;
-   unsigned long   value_mask         = 0;
-   Bool            need_config_notify = False;
-   Bool            need_comp_update   = False;
+   unsigned long   value_mask = 0;
 
    int             req_x = e->x;
    int             req_y = e->y;
    int             req_w = e->width;
    int             req_h = e->height;
 
-   /* TODO: Really need to check ICCCM on this code. 
-    *       Should be able to make it more compact too 
-    *       ( maybe configure_request() methods for each client type ? )
+   /* TODO: Double check ICCCM on this code. 
+    *       see http://tronche.com/gui/x/icccm/sec-4.html#s-4.1.5
+    *       Only send synthetic configure notify on no change.
     *
-    * see http://tronche.com/gui/x/icccm/sec-4.html#s-4.1.5
-    *
-    * XXX Too many fake configure notifys are being sent. 
-    *     - Only send one when no change takes place
-    *     - Do not send when real configure used
-    *         - *but* do we need to send one if XSYNC is used ?    
-    *           - dont think so ? just block until wm has resized. 
-    *             need to figure this out. 
-    *       How is flicker therefore reduced ? Becuase wm wont resize
-    *       its frames or do anything else till client has finished 
-    *       painting. 
-    *     - CHeck any changes still work with awt. 
+    *       XSYNC smooth resizing code.
     */  
 
    if (!c ) 
@@ -1091,24 +1072,13 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
        e->width, c->x, e->x, c->y, e->y );
 
    /* Process exactly what changes have been reuested */
+
    if (!(e->value_mask & CWWidth))  req_w = c->width;
    if (!(e->value_mask & CWHeight)) req_h = c->height;
    
    if (e->x <= 0 || !(e->value_mask & CWX)) req_x = c->x;
    if (e->y <= 0 || !(e->value_mask & CWY)) req_y = c->y;
-   
 
-   /* Defualts, main clients will likely end up with this 
-    * MB is a pretty restrictive WM, so much stuff allowed to change. 
-    */
-   xwc.width        = c->width;
-   xwc.height       = c->height;
-   xwc.x            = c->x;
-   xwc.y            = c->y;
-   xwc.border_width = 0;
-   xwc.sibling      = e->above;
-   xwc.stack_mode   = e->detail;
-   value_mask       = e->value_mask;
 
    /* Deal with raising - needs work, not sure if anything really
     * relies on this / or how it fits with mb. 
@@ -1177,9 +1147,8 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 	   
 	   c = wm_make_new_client(w, win_tmp);
 	   if (c) c->ignore_unmap++;
-	   
+	   return;
         } 
-       return;
      } 
 
    if (c->type == MBCLIENT_TYPE_TOOLBAR) 	/* can change height */
@@ -1189,7 +1158,6 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 	   int change_amount = c->height - e->height;
 	   c->y += change_amount;
 	   c->height = e->height;
-	   client_deliver_config(c);
 	   c->move_resize(c);
 	   wm_update_layout(w, c, change_amount); 
 	   return;
@@ -1215,75 +1183,47 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
        if (req_x != c->x || req_y != c->y 
 	   || req_w != c->width || req_h != c->height)
 	 {
+	   Bool want_fake_configure = False;
+	   
 	   dialog_constrain_geometry(c, &req_x, &req_y, &req_w, &req_h);
+
+	   if (c->width == req_w && c->height == req_h)
+	     want_fake_configure = True; 
 
 	   /* make sure buttons get repositioned */
 	   if (c->width != req_w)
 	     client_buttons_delete_all(c);
-	   
+
+	   /* TODO: fix composite for this */
 	   comp_engine_client_hide(c->wm, c);
 	   
 	   xwc.width  = c->width  = req_w;
 	   xwc.height = c->height = req_h;
 	   xwc.x      = c->x      = req_x;
 	   xwc.y      = c->y      = req_y; 
-	   
-	   /* for below - kind of dumb */
-	   no_configure = True; 
 
+	   /* ICCCM says if window only moved - not size change,
+            * then we send a fake one too.
+	    */
+	   if (want_fake_configure)
+	     client_deliver_config(c);
+	   
 	   dialog_client_move_resize(c);
 
-	   client_deliver_config(c); /* XXX Needed ? */
+	   /* make sure composite does any needed updates */
+	   comp_engine_client_configure(w, c);
+	   comp_engine_client_show(w, c);
 
-	   /* Make sure we get the damage before the move.. */
-
-	   need_comp_update = True;
+	   return;
 	 }
-       /* XXX else nothing has changed but ICCCM still send synthetic config 
-        * Code should fall back to this.
-        */
      }
 
-   if (!no_configure) 
-     {
-
-       /* 
-        * For some reason awt ( kaffe ) apps dont like getting anything
-        * other than what they've asked for in there *first* configure_request
-        * response ( they dont paint there UI otherwise ).
-        * This is a quick fix which sends 2 configure differering events  
-        * which seems to make things better. Im not sure what the best fix is. 
-        *
-        * Set MB_AWT_WORKAROUND env var to enable this. 
-        *
-        * 10/11/2004 TODO: dont think this is needed anymore. 
-        *                  seems to have magically fixed itself.
-        */
-
-       if (w->config->awt_workaround)
-	 {
-	   xwc.width  = e->width;
-	   xwc.height = e->height;
-
-	   XConfigureWindow(w->dpy, e->window, e->value_mask, &xwc);
-
-	   xwc.width  = c->width;
-	   xwc.height = c->height;
-
-	 }
-
-       XConfigureWindow(w->dpy, e->window, value_mask, &xwc);
-
-       client_deliver_config(c);
-     }
+   /* Nothing has changed but ICCCM still send synthetic config 
+    * Code should fall back to this.
+    */
+   client_deliver_config(c);
 
 
-   /* make sure composite does any needed updates */
-   if (need_comp_update == True)
-     {
-       comp_engine_client_configure(w, c);
-       comp_engine_client_show(w, c);
-     }
 }
 
 
@@ -1303,8 +1243,8 @@ wm_handle_map_request(Wm *w, XMapRequestEvent *e)
 void
 wm_handle_unmap_event(Wm *w, XUnmapEvent *e)
 {
-   XEvent ev;
    Client *c = wm_find_client(w, e->window, WINDOW);
+
    if (!c) return;
 
    dbg("%s() for client %s\n", __func__, c->name);
@@ -1315,33 +1255,9 @@ wm_handle_unmap_event(Wm *w, XUnmapEvent *e)
      }
    else
      {
-       if (!c->mapped) return;
+       if (!c->mapped) return; 	/* TODO: Check this */
 
-       XGrabServer(w->dpy);
-
-       if (XCheckTypedWindowEvent(c->wm->dpy, c->frame, DestroyNotify, &ev)) 
-	 {
-	   dbg("%s() destroy on its way....\n", __func__ );
-	   wm_handle_destroy_event(w, &ev.xdestroywindow);
-	 } 
-       else
-	 {
-	   dbg("%s() calling client destroy\n", __func__);
-	   Window win_old;
-
-	   /* If there is no DestroyNotify seen by us in the queue  
-	    * but there *is* one. Its likely the below will fire a    
-            * couple of X errors.
-	    *
-	    */
-
-	   client_set_state(c, WithdrawnState);
-	   win_old = c->window;
-	   c->destroy(c);
-	   XReparentWindow(w->dpy, win_old, w->root, 0, 0); 
-	 }
-
-       XUngrabServer(w->dpy);
+       wm_remove_client(w, c);
      }
 }
 
@@ -1470,8 +1386,17 @@ wm_handle_property_change(Wm *w, XPropertyEvent *e)
 
   if (c->type == MBCLIENT_TYPE_OVERRIDE) return;
 
-  dbg("%s() on %s, atom is %li\n", __func__, c->name, e->atom );
-   
+#ifdef DEBUG
+ {
+   char *atomname = XGetAtomName(w->dpy, e->atom);
+
+   dbg("%s() on %s, atom is %li ( %s )\n", 
+       __func__, c->name, e->atom, atomname );
+
+   if (atomname) free(atomname);
+ }
+#endif   
+
   /* Window Name changes */
   if (e->atom == XA_WM_NAME && !c->name_is_utf8)
     {
@@ -1480,6 +1405,22 @@ wm_handle_property_change(Wm *w, XPropertyEvent *e)
       base_client_process_name(c);
       dbg("%s() XA_WM_NAME change, name is %s\n", __func__, c->name);
       update_titlebar = True;
+    }
+  else if (e->atom == w->atoms[WM_TRANSIENT_FOR])
+    {
+      Client *new_trans_client;
+      Window  trans_win = 0;
+
+      if (!XGetTransientForHint(w->dpy, c->window, &trans_win))
+	dbg("%s() transient hint failed\n", __func__);
+
+      if ((new_trans_client = wm_find_client(w, trans_win, WINDOW)) != NULL)
+	c->trans = new_trans_client;
+      else
+	c->trans = NULL;
+
+      dbg("%s transient changed to %li, ( %s )\n", __func__, 
+	  trans_win, c->trans ? c->trans->name : "root" );
     }
   else if (e->atom == w->atoms[MB_WIN_SUB_NAME])
     {
@@ -1782,8 +1723,22 @@ wm_remove_client(Wm *w, Client *c)
 {
   dbg("%s() called for %s\n", __func__, c->name);
 
-  XGrabServer(c->wm->dpy);
+  XGrabServer(w->dpy);
+
+  misc_trap_xerrors(); 	/* below likely to genrate errors */
+
+  /* Set win state to withdrawn and reparent to root. 
+   * If below is not done - suttle bugs appear with toolkits ( GTK )
+   */
+  client_set_state(c, WithdrawnState);
+  XReparentWindow(w->dpy, c->window, w->root, 0, 0); 
+  XRemoveFromSaveSet(w->dpy, c->window);
+
+  misc_untrap_xerrors();
+
   c->destroy(c);
+
+  XSync(w->dpy, False);
   XUngrabServer(w->dpy);
 }
 

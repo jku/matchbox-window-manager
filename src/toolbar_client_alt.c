@@ -178,7 +178,6 @@ void
 toolbar_client_show(Client *c)
 {
   Wm   *w = c->wm;
-  long win_state; 
 
   if (!c->mapped)
     {
@@ -208,7 +207,7 @@ toolbar_client_show(Client *c)
 void
 toolbar_client_hide(Client *c)
 {
-  Wm   *w = c->wm;
+  /* TODO: Make this work */
 
   if (c->flags & CLIENT_IS_MINIMIZED || client_get_state(c) == IconicState) 
     return;

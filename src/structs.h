@@ -200,6 +200,7 @@ enum {
   MB_GRAB_TRANSFER,
   WINDOW_TYPE_INPUT,
   WINDOW_STATE_ABOVE,
+  WM_TRANSIENT_FOR,
   INTEGER,
   ATOM_COUNT
 
@@ -475,8 +476,6 @@ typedef struct _wm_config
   int           shadow_style;
   unsigned char shadow_color[4];
 
-
-
 #endif
    
   Time         dbl_click_time;
@@ -484,7 +483,6 @@ typedef struct _wm_config
   char        *ping_handler;
   MBConfigKbd *kb;
 
-  Bool         awt_workaround;
   char        *force_dialogs;
 } Wm_config;
 
