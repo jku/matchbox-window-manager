@@ -221,6 +221,11 @@ toolbar_client_show(Client *c)
 	  /* resize the main client were transient for */
 	  
 	  Client *app_client = c->trans;
+
+	  /* Call this so, map of toolbar hopefully happens before
+           * resize preventing potential flash of desktop win. 
+	  */
+	  XSync(w->dpy, False);
 	  
 	  if (app_client)
 	    {

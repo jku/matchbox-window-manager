@@ -2145,6 +2145,38 @@ wm_update_layout(Wm         *w,
  ewmh_update_rects(w);
 }
 
+
+static void
+wm_stack_dialogs_for_transient(Wm *w, Client *trans)
+{
+  /* Correctly stack dialogs in respect to a transient ( app/desktop ) 
+   * parent. Utility call for activate_client()
+  */
+  if (trans == NULL)
+    return;
+
+  /* Move transient dialogs to top */
+
+  stack_move_transients_to_top(w, trans, 0);
+
+  /* Above dialogs go above transient for root  */
+
+  stack_move_transients_to_top(w, trans, CLIENT_HAS_ABOVE_STATE 
+			       /* CLIENT_HAS_URGENCY_FLAG */);
+
+  /* Move transient for root dialogs to very top */
+  
+  stack_move_transients_to_top(w, NULL, 0);
+  
+  /* Move transient for root with state above to top  */
+  
+  stack_move_transients_to_top(w, NULL, CLIENT_HAS_ABOVE_STATE );
+  
+  /* Now move transient for root messages to top */
+  
+  stack_move_transients_to_top(w, NULL, CLIENT_HAS_URGENCY_FLAG);
+}
+
 /* wm_activate_client() is called to 'activate', eg raise or show
  * a client stack wise.
  */
@@ -2208,26 +2240,7 @@ wm_activate_client(Client *c)
 
       stack_move_type_above_client(w, MBCLIENT_TYPE_TOOLBAR, c);
 
-      /* Move transient dialogs to top */
-
-      stack_move_transients_to_top(w, c, 0);
-
-      /* Above dialogs go above transient for root  */
-
-      stack_move_transients_to_top(w, c, CLIENT_HAS_ABOVE_STATE 
-				   /* CLIENT_HAS_URGENCY_FLAG */);
-
-      /* Move transient for root dialogs to very top */
-
-      stack_move_transients_to_top(w, NULL, 0);
-
-      /* Move transient for root with state above to top  */
-
-      stack_move_transients_to_top(w, NULL, CLIENT_HAS_ABOVE_STATE );
-
-      /* Now move transient for root messages to top */
-
-      stack_move_transients_to_top(w, NULL, CLIENT_HAS_URGENCY_FLAG);
+      wm_stack_dialogs_for_transient(w, c);
 
       /* Deal with desktop flag etc */
       if (c->type != MBCLIENT_TYPE_DESKTOP
@@ -2264,11 +2277,10 @@ wm_activate_client(Client *c)
       /* A Little insurance - on mapping, a dialog can end up below 
        * panels and toolbars. May be a cleaner way than this.
        */
+      Client *top_main_client = NULL;
 
       if (!(w->flags & DESKTOP_RAISED_FLAG))
 	{
-	  Client *top_main_client = NULL;
-
 	  if ((top_main_client = wm_get_visible_main_client(w)) != NULL)
 	    {
 
@@ -2285,6 +2297,14 @@ wm_activate_client(Client *c)
 	  else 	 /* move type above nothing - eg to bottom */
 	    stack_move_type_above_client(w, MBCLIENT_TYPE_TOOLBAR
 					 |MBCLIENT_TYPE_PANEL, NULL);
+	}
+      else
+	{
+	  /* Desktop is raised. dialogs ( trans for desktop ) can end up 
+           * below panels for some reason on initial map so we take  
+           * below sledgehammer approach which seems to fix things. 
+	  */
+	  wm_stack_dialogs_for_transient(w, wm_get_visible_main_client(w));
 	}
     }
 
