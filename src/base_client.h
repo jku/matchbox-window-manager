@@ -18,6 +18,8 @@
  *
  */
 
+#define _GNU_SOURCE
+
 #ifndef _BASE_CLIENT_H_
 #define _BASE_CLIENT_H_
 

@@ -17,6 +17,7 @@
  *  GNU General Public License for more details.
  *
  */
+#define _GNU_SOURCE
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>

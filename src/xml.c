@@ -26,6 +26,8 @@
  *  This isn't used by a standalone matchbox. 
  */
 
+#define _GNU_SOURCE
+
 #include "xml.h"
 
 #ifdef USE_EXPAT
