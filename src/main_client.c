@@ -14,7 +14,7 @@
 */
 
 /*
-  $Id: main_client.c,v 1.6 2004/08/05 16:37:19 mallum Exp $
+  $Id: main_client.c,v 1.7 2004/08/11 21:51:45 mallum Exp $
 */
 
 #include "main_client.h"
@@ -73,9 +73,60 @@ main_client_check_for_single(Client *c)
       c->wm->flags ^= SINGLE_FLAG; /* turn on single flag */      
 }
 
+/* Handle the case for showing input methods ( toolbars ) 
+ * for fullscreen 
+ */
+int
+main_client_manage_toolbars_for_fullscreen(Client *c, Bool main_client_showing)
+{
+  Wm     *w = c->wm;
+  Client *p  = NULL;
+  int     south_panel_size = 0, south_total_size = 0;
+
+  if (main_client_showing 
+      && (c->flags & CLIENT_TOOLBARS_MOVED_FOR_FULLSCREEN))
+    return 0;
+
+  if (!main_client_showing 
+      && !(c->flags & CLIENT_TOOLBARS_MOVED_FOR_FULLSCREEN))
+    return 0;
+
+  south_panel_size = wm_get_offsets_size(w, SOUTH, NULL, False); 
+  south_total_size = wm_get_offsets_size(w, SOUTH, NULL, True); 
+
+  c->flags ^= CLIENT_TOOLBARS_MOVED_FOR_FULLSCREEN;    
+
+  if (south_total_size > south_panel_size) /* there are toolbars */
+    {
+      START_CLIENT_LOOP(w, p)
+	{
+	  /* move toolbar wins up/down over panels */
+	  if (p->type == toolbar && p->mapped) 
+	    {
+	      if (main_client_showing)
+		p->y += south_panel_size; 
+	      else
+		p->y -= south_panel_size; 
+	      p->move_resize(p);
+	      XMapRaised(w->dpy, p->frame);
+	    }
+	  else if (p->type == dock && main_client_showing)
+	    {
+	      XLowerWindow(w->dpy, p->frame);
+	    }
+	}
+      END_CLIENT_LOOP(w, p);
+
+      return (south_total_size - south_panel_size);
+    }
+
+  return 0;
+}
+
 void
 main_client_configure(Client *c)
 {
+  Wm *w = c->wm;
   int frm_size = main_client_title_height(c);
   int offset_south = theme_frame_defined_height_get(c->wm->mbtheme, 
 						    FRAME_MAIN_SOUTH);
@@ -84,15 +135,15 @@ main_client_configure(Client *c)
   int offset_west  = theme_frame_defined_width_get(c->wm->mbtheme, 
 						   FRAME_MAIN_WEST );
 
-  int h = wm_get_offsets_size(c->wm, SOUTH, NULL, True);
+  int h = wm_get_offsets_size(w, SOUTH, NULL, True);
 
    if ( c->flags & CLIENT_FULLSCREEN_FLAG )
      { 
-       dbg("%s() window is fullscreen\n", __func__ );
        c->y = 0;  
        c->x = 0;
-       c->height = c->wm->dpy_height;
-       c->width  = c->wm->dpy_width;
+       c->width  = w->dpy_width;
+       c->height = w->dpy_height - main_client_manage_toolbars_for_fullscreen(c, True);
+       
      }
    else
      {
@@ -103,6 +154,7 @@ main_client_configure(Client *c)
 	 - wm_get_offsets_size(c->wm, WEST,  NULL, False);
 
        c->height = c->wm->dpy_height - c->y - h - offset_south;
+       main_client_manage_toolbars_for_fullscreen(c, False);
      }
 
    dbg("%s() configured as %i*%i+%i+%i, frame size is %i\n", 
@@ -518,8 +570,15 @@ main_client_toggle_title_bar(Client *c)
 void
 main_client_hide(Client *c)
 {
-   base_client_hide(c);
+  Wm *w = c->wm;
 
+  dbg("%s() called\n", __func__);
+
+  base_client_hide(c);
+  
+  if ( c->flags & CLIENT_FULLSCREEN_FLAG )
+    main_client_manage_toolbars_for_fullscreen(c, False);
+  
    /* lower window to bottom of stack */
    XLowerWindow(c->wm->dpy, c->frame);
 }
@@ -539,7 +598,9 @@ main_client_iconize(Client *c)
 void
 main_client_show(Client *c)
 {
+  Wm     *w       = c->wm;
   Client *desktop = NULL;
+
    dbg("%s() called on %s\n", __func__, c->name);
    
    if (c->wm->flags & DESKTOP_RAISED_FLAG) 
@@ -578,6 +639,9 @@ main_client_show(Client *c)
       c->wm->focused_client = c;
    }
 
+   if (c->flags & CLIENT_FULLSCREEN_FLAG)
+     main_client_manage_toolbars_for_fullscreen(c, True);
+
    /* deal with transients etc */
    base_client_show(c);
 }
@@ -591,6 +655,9 @@ main_client_destroy(Client *c)
    dbg("%s called for %s\n", __func__, c->name);
   
    /* What main clients are left?, need to decide what nav buttons appear */
+
+  if ( c->flags & CLIENT_FULLSCREEN_FLAG )
+    main_client_manage_toolbars_for_fullscreen(c, False);
 
    if (c == w->main_client)
    {

@@ -432,7 +432,6 @@ ewmh_set_active(Wm *w)
   else if (w->main_client)
     { 
       val[0] = w->main_client->window; 
-
     }
   else val[0] = 0;
    

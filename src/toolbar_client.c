@@ -61,6 +61,7 @@ toolbar_client_configure(Client *c)
   c->width = c->wm->dpy_width - toolbar_win_offset(c)
     - wm_get_offsets_size(c->wm, WEST,  NULL, False)
     - wm_get_offsets_size(c->wm, EAST,  NULL, False);
+
 }
 
 void
@@ -147,6 +148,10 @@ toolbar_client_show(Client *c)
 #endif
 
    c->mapped = True;
+
+  if (c->wm->main_client 
+      && (c->wm->main_client->flags & CLIENT_FULLSCREEN_FLAG))
+    main_client_manage_toolbars_for_fullscreen(c, True);
 
    win_state = client_get_state(c);
 

@@ -651,7 +651,8 @@ comp_engine_set_defualts(Wm *w)
 void
 comp_engine_theme_init(Wm *w)
 {
-  Pixmap                        transPixmap, blackPixmap, lowlightPixmap;
+  Pixmap                        transPixmap, blackPixmap, lowlightPixmap, 
+                                redPixmap;
   XRenderPictureAttributes	pa;
   XRenderColor                  c;
   int                           i;
@@ -716,6 +717,22 @@ comp_engine_theme_init(Wm *w)
   dbg("%s() shadow alpha is %i\n", __func__, c.alpha);
 
   XRenderFillRectangle (w->dpy, PictOpSrc, w->black_picture, &c, 0, 0, 1, 1);
+
+#if DEBUG
+  /* for visual composite debugging */
+
+  redPixmap = XCreatePixmap (w->dpy, w->root, 1, 1, 32);
+
+  w->red_picture 
+    = XRenderCreatePicture (w->dpy, redPixmap,
+			    XRenderFindStandardFormat (w->dpy, PictStandardARGB32),
+			    CPRepeat,
+			    &pa);
+
+  c.red = 0xffff; c.green = 0; c.blue = 0; c.alpha = 0xffff; 
+
+  XRenderFillRectangle (w->dpy, PictOpSrc, w->red_picture, &c, 0, 0, 1, 1);
+#endif
 
   /* Used for lowlights */
 
@@ -1261,10 +1278,11 @@ comp_engine_render(Wm *w, XserverRegion region)
 #if DEBUG
   if (w->flags & DEBUG_COMPOSITE_VISIBLE_FLAG)
     {
-      XRenderComposite (w->dpy, PictOpSrc, w->black_picture, 
+      XRenderComposite (w->dpy, PictOpSrc, w->red_picture, 
 			None, w->root_picture,
 			0, 0, 0, 0, 0, 0, w->dpy_width, w->dpy_height);
-      return;
+      XSync(w->dpy, False);
+      /* return; */
     }
 #endif
 

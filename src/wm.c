@@ -1899,7 +1899,7 @@ wm_restack(Wm         *w,
 	     switch (p->type)
 	       {
 	       case mainwin :
-		 if (p->flags & CLIENT_FULLSCREEN_FLAG) break;
+		 /* if (p->flags & CLIENT_FULLSCREEN_FLAG) break; */
 		 p->height += change_amount;
 		 p->move_resize(p);
 		 theme_img_cache_clear( w->mbtheme, FRAME_MAIN );

@@ -584,13 +584,13 @@ dialog_init_geometry(Client *c)
    */
   if (c->flags & CLIENT_IS_MESSAGE_DIALOG)
     {
-      int total_win_width  = c->width + bdr_east + bdr_west;
-      int total_win_height = c->height + bdr_south + bdr_north;
+      int win_width  = c->width + bdr_east;
+      int win_height = c->height + bdr_south;
 
-      if (c->x > w->dpy_width) 
+      if (c->x >= w->dpy_width) 
 	c->x = w->dpy_width - total_win_width - (c->x - w->dpy_width );
 
-      if (c->y > w->dpy_height) 
+      if (c->y >= w->dpy_height) 
 	c->y = w->dpy_height - total_win_height - (c->y - w->dpy_height );
 
       return;

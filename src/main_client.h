@@ -40,6 +40,11 @@ main_client_init(Client *c);
 void 
 main_client_configure(Client *c);
 
+int
+main_client_manage_toolbars_for_fullscreen(Client *c, 
+					   Bool    main_client_showing);
+
+
 void 
 main_client_reparent(Client *c);
 

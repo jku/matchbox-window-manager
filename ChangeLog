@@ -1,3 +1,24 @@
+2004-08-11  mallum,,,  <mallum@handhelds.org>
+
+	* src/composite-engine.c: (comp_engine_theme_init),
+	(comp_engine_render):
+	Use red rectangles for visual debug. 	
+
+	* src/dialog_client.c: (dialog_init_geometry):
+	Message window positioning fixes
+
+	* src/ewmh.c: (ewmh_set_active):
+	* src/main_client.c: (main_client_manage_toolbars_for_fullscreen),
+	(main_client_configure), (main_client_hide), (main_client_show),
+	(main_client_destroy):
+	* src/main_client.h:
+	* src/structs.h:
+	* src/toolbar_client.c: (toolbar_client_configure),
+	(toolbar_client_show):
+	* src/wm.c: (wm_restack):
+	Add intial support for showing toolbar windows for fullscreen 
+	windows
+
 2004-08-06  mallum,,,  <mallum@handhelds.org>
 
 	* src/wm.c: (wm_handle_button_event),

@@ -279,7 +279,8 @@ typedef struct _mb_client_button
 #define CLIENT_DOCK_TITLEBAR   (1<<17)
 #define CLIENT_IS_MOVING       (1<<19) /* Used by comosite engine */
 #define CLIENT_DOCK_TITLEBAR_SHOW_ON_DESKTOP (1<<20)
-#define CLIENT_IS_MINIMIZED    (1<<23)
+#define CLIENT_IS_MINIMIZED    (1<<23) /* used by toolbars */
+#define CLIENT_TOOLBARS_MOVED_FOR_FULLSCREEN (1<<24)
 
 /* Main Client structure */
 
@@ -602,6 +603,10 @@ typedef struct _wm
   Picture	    trans_picture;
   Picture	    black_picture;
   Picture	    lowlight_picture;
+
+#ifdef DEBUG
+  Picture           red_picture; /* for visual composite debugging */
+#endif
 
   /* shadow pieces */
 
