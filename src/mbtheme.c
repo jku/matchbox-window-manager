@@ -74,7 +74,7 @@ static struct frame_lookup_t
   { "main-west",     FRAME_MAIN_WEST    },
   { "main-south",    FRAME_MAIN_SOUTH   },
   { "dialog",        FRAME_DIALOG       },
-  { "dialog-north",   FRAME_DIALOG_NORTH },
+  { "dialog-north",  FRAME_DIALOG_NORTH },
   { "dialog-east",   FRAME_DIALOG_EAST  },
   { "dialog-west",   FRAME_DIALOG_WEST  },
   { "dialog-south",  FRAME_DIALOG_SOUTH },
@@ -126,7 +126,6 @@ void theme_frame_icon_paint(MBTheme *t, Client *c,
       img = mb_pixbuf_img_new_from_int_data(t->wm->pb,
 					    (data+2),
 					    data[0], data[1]);
-
     }
   else 
     {
@@ -171,10 +170,9 @@ theme_frame_button_paint(MBTheme *theme,
 			 int      dest_h )
 {
   MBThemeFrame *frame = NULL;
-  int button_x, button_y, button_w, button_h;
-
-  struct list_item* client_button_obj = c->buttons;
-  struct list_item* theme_button_list  = NULL;
+  MBList       *client_button_obj = c->buttons;
+  MBList       *theme_button_list  = NULL;
+  int           button_x, button_y, button_w, button_h;
 
   frame = (MBThemeFrame *)list_find_by_id(theme->frames, frame_type);
 
@@ -198,9 +196,8 @@ theme_frame_button_paint(MBTheme *theme,
       if (theme_button_list->id == action)
 	{
 	  MBThemeButton *button = (MBThemeButton *)theme_button_list->data;
-
-	  Window button_xid = None;
-	  Bool found = False;
+	  Window         button_xid = None;
+	  Bool           found = False;
 
 	  /* HACK. param_get() has no client* ref so need to  
            * do stuff here to get position relevant to 
@@ -390,10 +387,10 @@ theme_frame_button_paint(MBTheme *theme,
 Bool 
 theme_frame_wants_shaped_window( MBTheme *theme, int frame_type)
 {
-  MBThemeFrame *frame;
-  frame = (MBThemeFrame *)list_find_by_id(theme->frames, frame_type);
+  MBThemeFrame *frame = NULL;
 
-  if (frame == NULL) return False;
+  if ((frame = (MBThemeFrame *)list_find_by_id(theme->frames, frame_type)) == NULL)
+    return False;
 
   return frame->wants_shape;
 }
@@ -413,8 +410,9 @@ static void
 _theme_paint_gradient(MBTheme*       theme, 
 		      MBThemeLayer*  layer_cur, 
 		      MBPixbufImage* img_dest, 
-		      int w, int h, 
-		      int direction)
+		      int            w, 
+		      int            h, 
+		      int            direction)
 {
   int tx, ty, r, rs, re, b, bs, be, g, gs, ge, a, as, ae;
 
@@ -427,6 +425,14 @@ _theme_paint_gradient(MBTheme*       theme,
   as = mb_col_alpha(layer_cur->color);
   ae = mb_col_alpha(layer_cur->color_end);
 
+  if (rs == re && gs == ge && bs == be && as == ae)
+    {
+      /* If start and end points are the same, fastpath it */
+
+      mb_pixbuf_img_fill(theme->wm->pb, img_dest, rs, gs, bs, as);
+      return;
+    }
+
   if (direction == VERTICAL)
     {
       for(ty=0; ty<h; ty++)
@@ -438,7 +444,8 @@ _theme_paint_gradient(MBTheme*       theme,
 	  
 	  for(tx=0; tx<w; tx++)
 	    {
-	      mb_pixbuf_img_plot_pixel(theme->wm->pb, img_dest, tx, ty, r, g, b);
+	      mb_pixbuf_img_plot_pixel(theme->wm->pb, img_dest, tx, ty, 
+				       r, g, b);
 	      mb_pixbuf_img_set_pixel_alpha(img_dest, tx, ty, a);
 	    }
 	}
@@ -452,7 +459,8 @@ _theme_paint_gradient(MBTheme*       theme,
 	  
 	  for(ty=0; ty<h; ty++)
 	    {
-	      mb_pixbuf_img_plot_pixel(theme->wm->pb, img_dest, tx, ty, r, g, b);
+	      mb_pixbuf_img_plot_pixel(theme->wm->pb, img_dest, tx, ty, 
+				       r, g, b);
 	      mb_pixbuf_img_set_pixel_alpha(img_dest, tx, ty, a);
 	    }
 	}
@@ -460,32 +468,35 @@ _theme_paint_gradient(MBTheme*       theme,
 }
 
 static void
-_theme_paint_core( MBTheme *theme, Client *c, MBThemeFrame *frame,
-		   MBPixbufImage *img, int dx, int dy, int dw, int dh )
+_theme_paint_core( MBTheme       *theme, 
+		   Client        *c, 
+		   MBThemeFrame  *frame,
+		   MBPixbufImage *img, 
+		   int            dx, 
+		   int            dy, 
+		   int            dw, 
+		   int            dh )
 {
+  /* Basically render a frame layers to 'img' */
+
   MBThemeLayer *layer_cur = NULL;
-  struct list_item* layer_list_item = frame->layers; 
+  MBList       *layer_list_item = frame->layers; 
 
   while (layer_list_item != NULL)
     {
-      MBPixbufImage *img_tmp = NULL; /* Temporary vars */
-      int tx, ty, tw, th; 	
-      int x, y, w, h;
+      MBPixbufImage *img_tmp = NULL;
+      int            tx, ty, tw, th, x, y, w, h;
 
       layer_cur = (MBThemeLayer *)layer_list_item->data;
-      
+
+      /* Get Layer Rect */
+
       x = param_get(frame, layer_cur->x, dw);
       y = param_get(frame, layer_cur->y, dh);
       w = param_get(frame, layer_cur->w, dw);
       h = param_get(frame, layer_cur->h, dh);
 
-      /* Clip if calculated sizes are bigger than dest */
-      if (w > dw) w = dw;
-      if (h > dh) h = dh;
-	
-      /* more safety */
-      if (w <= 0) w = 1;
-      if (h <= 0) h = 1;
+      /* Minor hack to handle 'object' size attribute */
 
       if ( layer_list_item->id == LAYER_PIXMAP 
 	   || layer_list_item->id == LAYER_PIXMAP_TILED)
@@ -493,6 +504,16 @@ _theme_paint_core( MBTheme *theme, Client *c, MBThemeFrame *frame,
 	  if ( layer_cur->w->unit == object) w = layer_cur->img->width;
 	  if ( layer_cur->h->unit == object) h = layer_cur->img->height;
 	}
+
+      /* Clip if calculated sizes are bigger than dest */
+
+      if (w > dw) w = dw;
+      if (h > dh) h = dh;
+	
+      /* ..And more safety */
+
+      if (w <= 0) w = 1;
+      if (h <= 0) h = 1;
 	
       switch (layer_list_item->id)
 	{
@@ -546,16 +567,14 @@ _theme_paint_core( MBTheme *theme, Client *c, MBThemeFrame *frame,
 	  break;
 
 	case LAYER_ICON:
-	  /* We cant cache the icon  */
+	  /* We cant cache the icon, so we dont paint it here  */
 	  break;
 	}
       
       if (img_tmp)
 	{
-	  dbg("%s() copying  %ix%i to +%i+%i\n", __func__, 
-	      w, h, x + dx, y + dy);
-	  
-	  /* Clip image if needed - object params for example */
+	  /* Clip image if needed ( more safety ) -*/
+
 	  if (w > img->width)  w = img->width; 
 	  if (h > img->height) h = img->height; 
 
@@ -571,9 +590,9 @@ _theme_paint_core( MBTheme *theme, Client *c, MBThemeFrame *frame,
 Bool
 theme_frame_paint( MBTheme *theme, 
 		   Client  *c, 
-		   int frame_type, 
-		   int dw, 
-		   int dh )
+		   int      frame_type, 
+		   int      dw, 
+		   int      dh )
 {
   Wm *w = c->wm;
 
@@ -909,7 +928,7 @@ theme_frame_paint( MBTheme *theme,
   return True;
 }
 
-/* Task list painting */
+/**** Task list painting *******/
 
 Bool
 theme_frame_menu_get_dimentions(MBTheme* theme, int *w, int *h)
@@ -922,13 +941,12 @@ theme_frame_menu_get_dimentions(MBTheme* theme, int *w, int *h)
 
   frame =  (MBThemeFrame*)list_find_by_id(theme->frames, FRAME_MENU );
 
-  if (frame == NULL) return False; 
+  if (frame == NULL)       return False; 
   if (frame->font == NULL) return False;
 
   stack_enumerate(theme->wm, p)
   {
-    if ((p->type == MBCLIENT_TYPE_APP 
-	 || p->type == MBCLIENT_TYPE_DESKTOP) 
+    if ((p->type == MBCLIENT_TYPE_APP || p->type == MBCLIENT_TYPE_DESKTOP) 
 	&& p->name && p->mapped
 	&& p != wm_get_visible_main_client(theme->wm))
       {
@@ -941,13 +959,12 @@ theme_frame_menu_get_dimentions(MBTheme* theme, int *w, int *h)
 	
 	height += MBMAX(theme->wm->config->use_icons,
 			mb_font_get_height(frame->font) + MENU_ENTRY_PADDING );
-
+	
 	if (this_width > width) width = this_width;
       }
    }
 
-
-  if (!height) return False;
+  if (!height) return False; 	/* No clients */
     
   width += MENU_ENTRY_PADDING;
 
@@ -977,23 +994,22 @@ _theme_frame_menu_paint_text_entry(MBTheme      *theme,
 				   int           x,
 				   int           y)
 {
+  int text_height, text_width, y_offset;
 
-  int item_h = MBMAX( c->wm->config->use_icons + MENU_ICON_PADDING,
+  text_height = MBMAX( c->wm->config->use_icons + MENU_ICON_PADDING,
 		      mb_font_get_height(font) + MENU_ENTRY_PADDING );
 
-  int  offset = (item_h - (mb_font_get_height(font)))/2;
+  text_width  = c->width - c->wm->config->use_icons - MENU_ENTRY_PADDING;
+
+  y_offset    = y + (text_height - (mb_font_get_height(font)))/2;
 
   mb_font_set_color (font, color);
 
-  mb_font_render_simple (font, 
-			 dest,
-			 x,
-			 y + offset,
-			 c->width - c->wm->config->use_icons - MENU_ENTRY_PADDING,
+  mb_font_render_simple (font, dest, x, y_offset, text_width,
 			 (unsigned char*)entry->name,
-			 (entry->name_is_utf8) ? MB_ENCODING_UTF8 : MB_ENCODING_LATIN,
+			 (entry->name_is_utf8) ? 
+			    MB_ENCODING_UTF8 : MB_ENCODING_LATIN,
 			 MB_FONT_RENDER_OPTS_CLIP_TRAIL);
-
 }
 
 void
@@ -1007,18 +1023,16 @@ theme_frame_menu_highlight_entry(Client         *c,
   int            xx, yy;
   unsigned char  r=0x99, g = 0x99, b = 0x99;
   MBDrawable    *drw;
-
   MBThemeFrame  *frame;
   MBFont        *font;
   MBColor       *color;
-
   Client        *entry = (Client *)button->data;
-
   int            offset, item_h;
 
   frame = (MBThemeFrame *)list_find_by_id(theme->frames, FRAME_MENU);
 
-  if (frame == NULL) return;
+  if (frame == NULL) 
+    return;
 
   font  = frame->font;
   color = frame->color;
@@ -1029,10 +1043,6 @@ theme_frame_menu_highlight_entry(Client         *c,
       g = mb_col_green(frame->hl_color);
       b = mb_col_blue(frame->hl_color);
     } 
-  else
-    {
-      r = 0x99; g = 0x99; b = 0x99;
-    }
 
   dbg("%s() painting +%i+%i %ix%i\n", __func__, 
       button->x, button->y, button->w, button->h);
@@ -1082,7 +1092,7 @@ theme_frame_menu_highlight_entry(Client         *c,
       item_h = MBMAX( c->wm->config->use_icons + MENU_ICON_PADDING,
 		      mb_font_get_height(font) + MENU_ENTRY_PADDING );
 
-      offset = (item_h - (mb_font_get_height(font) /*+ MENU_ENTRY_PADDING */))/2;
+      offset = (item_h - (mb_font_get_height(font))) / 2;
 
       mb_font_render_simple (font, 
 			     drw,
@@ -1093,7 +1103,6 @@ theme_frame_menu_highlight_entry(Client         *c,
 			     (entry->name_is_utf8) ? MB_ENCODING_UTF8 : MB_ENCODING_LATIN,
 			     MB_FONT_RENDER_OPTS_CLIP_TRAIL);
       
-
       XCopyArea(w->dpy, mb_drawable_pixmap(drw), 
 		c->frame, w->mbtheme->gc, 0, 0, 
 		button->w, button->h, button->x, button->y);
@@ -1146,7 +1155,7 @@ theme_frame_menu_paint(MBTheme* theme, Client *c)
   item_h = MBMAX( c->wm->config->use_icons + MENU_ICON_PADDING,
 		  mb_font_get_height(font) + MENU_ENTRY_PADDING );
 
-  icon_offset = (item_h - c->wm->config->use_icons)/2;
+  icon_offset = (item_h - c->wm->config->use_icons) / 2;
 
   if (icon_offset < 0) icon_offset = 0;
 
@@ -1165,7 +1174,7 @@ theme_frame_menu_paint(MBTheme* theme, Client *c)
       p = (Client*)item->data;
       if (p->type == MBCLIENT_TYPE_APP 
 	  && p->name && !(p->flags & CLIENT_IS_DESKTOP_FLAG)
-	  && p->mapped /* client_get_state(p) == NormalState */
+	  && p->mapped
 	  && p != wm_get_visible_main_client(w))
 	{
 	  theme_frame_icon_paint(theme, p, img, 
@@ -1219,13 +1228,15 @@ theme_frame_menu_paint(MBTheme* theme, Client *c)
   item_x = MENU_ENTRY_PADDING + c->wm->config->use_icons + frame->border_w;
   item_text_w = c->width - (frame->border_e + frame->border_w);
 
+  /* Visible apps */
+
   list_enumerate(w->client_age_list, item)
     {
       p = (Client*)item->data;
 
       if (p->type == MBCLIENT_TYPE_APP 
 	  && p->name && !(p->flags & CLIENT_IS_DESKTOP_FLAG)
-	  && p->mapped /* client_get_state(p) == NormalState */
+	  && p->mapped
 	  && p != wm_get_visible_main_client(w))
 	{
 	  _theme_frame_menu_paint_text_entry(theme, font, color, 
@@ -1244,13 +1255,15 @@ theme_frame_menu_paint(MBTheme* theme, Client *c)
 	}
     }
     
+  /* Iconized / hidden apps */
+
   list_enumerate(w->client_age_list, item)
     {
       p = (Client*)item->data;
 
       if (p->type == MBCLIENT_TYPE_APP 
 	  && p->name && !(p->flags & CLIENT_IS_DESKTOP_FLAG)
-	  && !p->mapped /* client_get_state(p) == IconicState */
+	  && !p->mapped
 	  && p != wm_get_visible_main_client(w))
 	{
 	  _theme_frame_menu_paint_text_entry(theme, font, color, 
@@ -1269,6 +1282,8 @@ theme_frame_menu_paint(MBTheme* theme, Client *c)
 	}
     }
   
+  /* The desktop at the bottom, if there is one. */
+
   if ((p = wm_get_desktop(c->wm)) != NULL) 
     {
       _theme_frame_menu_paint_text_entry(theme, font, color, 
@@ -1337,6 +1352,7 @@ theme_frame_button_get_x_pos(MBTheme *theme,
 						button_type );
       return param_get( frame, button->x, width);
     }
+
   return 0;
 }
 
@@ -1354,7 +1370,7 @@ theme_frame_defined_width_get( MBTheme *theme, int frame_type )
     {
       return frame->set_width;
     }
-  dbg("%s() couldn't find type for width\n", __func__);
+
   return 0;
 }
 
@@ -1372,6 +1388,7 @@ theme_frame_defined_height_get( MBTheme *theme, int frame_type )
     {
       return frame->set_height;
     }
+
   return 0;
 }
 
@@ -1421,7 +1438,7 @@ get_attr(XMLNode *node, char *key)
 }
 
 
-  /* Parsing calls */
+/* Parsing calls */
 
 static MBThemeParam *
 param_parse(char *def_str)
@@ -1547,8 +1564,7 @@ mbtheme_button_new (MBTheme *theme,
 		    char *img_inactive_id,
 		    int  active_blend,
 		    int  inactive_blend,
-		    char *options
-		   )
+		    char *options)
 {
   MBThemeButton *button = malloc(sizeof(MBThemeButton));
   memset(button, 0, sizeof(MBThemeButton));
@@ -1597,8 +1613,6 @@ mbtheme_button_new (MBTheme *theme,
 
   return button;
 }
-
-
   
 static int 
 parse_frame_button_tag(MBTheme *theme, MBThemeFrame *frame, XMLNode *inode)
