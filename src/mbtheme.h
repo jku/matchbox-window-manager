@@ -100,9 +100,6 @@ typedef struct _mb_theme_layer {
   MBColor  *color;
   MBPixbufImage *img;
   MBThemeLabel  *label;  
-  MBThemeLabel  *sublabel;  
-
-
   
   MBColor  *color_end; 	/* for gradients */
   

@@ -1,3 +1,14 @@
+2005-01-13  mallum,,,  <mallum@openedhand.com>
+
+	* src/mbtheme.c: (theme_frame_button_paint),
+	(parse_frame_layer_tag), (mbtheme_free):
+	* src/mbtheme.h:
+	Free up toolbar panel params on theme switch.
+	Reformat a little.
+
+	* src/toolbar_client_alt.c: (toolbar_client_reparent):
+	Remove stray old removed client* ref causing breakage.
+
 2005-01-12  mallum,,,  <mallum@openedhand.com>
 
 	* configure.ac:

@@ -166,8 +166,6 @@ toolbar_client_reparent(Client *c)
   
   attr.background_pixel = w->grey_col.pixel;
   
-  c->title_frame = None;
-  
   XSetWindowBorderWidth(w->dpy, c->window, 0);
   XAddToSaveSet(w->dpy, c->window);
   XSelectInput(w->dpy, c->window,

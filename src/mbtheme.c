@@ -275,7 +275,7 @@ theme_frame_button_paint(MBTheme *theme,
 	      MBPixbufImage *img_backing = NULL;
 	      Pixmap         pxm_button;
 	      MBPixbuf      *pb = w->pb;
-	      
+
 #ifdef USE_COMPOSITE
 	      /* 32 ARGB wins require 'special' pixbuf ref */
 	      if (c->is_argb32)
@@ -1726,11 +1726,6 @@ parse_frame_layer_tag (MBTheme      *theme,
 					    get_attr(inode, "justify") );
       if (layer_new->label == NULL) return ERROR_INCORRECT_PARAMS;
       break;
-    case LAYER_SUB_LABEL:
-      layer_new->sublabel = mbtheme_sublabel_new(theme,
-						 get_attr(inode, "labelw")); 
-      if (layer_new->sublabel == NULL) return ERROR_INCORRECT_PARAMS;
-      break;
       
     }
 
@@ -2206,6 +2201,11 @@ mbtheme_free (Wm      *w,
 	      MBTheme *theme)
 {
   struct list_item* next = NULL, *cur = NULL;
+
+  if (theme->toolbar_panel_x) free(theme->toolbar_panel_x);
+  if (theme->toolbar_panel_y) free(theme->toolbar_panel_y);
+  if (theme->toolbar_panel_w) free(theme->toolbar_panel_w);
+  if (theme->toolbar_panel_h) free(theme->toolbar_panel_h);
 
   cur = theme->frames;
   while (cur != NULL)
