@@ -1,3 +1,9 @@
+2004-04-27  Matthew Allum,,,  <mallum@handhelds.org>
+
+	* configure.ac:
+	* data/Makefile.am:
+	Bump up version. Fix schema Makefile gubbins for BSD Make
+
 2004-04-26  Matthew Allum,,,  <mallum@handhelds.org>
 
 	* src/base_client.c: (base_client_show):
