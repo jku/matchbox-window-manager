@@ -106,6 +106,7 @@ ewmh_init(Wm *w)
     "_NET_WM_WINDOW_TYPE_MENU",
     "CM_TRANSLUCENCY",
     "_MB_DOCK_TITLEBAR_SHOW_ON_DESKTOP",
+    "_MB_WIN_SUB_NAME",
     "INTEGER" 			/* XXX Needed ? */
   };
 

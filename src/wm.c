@@ -1399,6 +1399,11 @@ wm_handle_property_change(Wm *w, XPropertyEvent *e)
       dbg("%s() XA_WM_NAME change, name is %s\n", __func__, c->name);
       update_titlebar = True;
     }
+  else if (e->atom == w->atoms[MB_WIN_SUB_NAME])
+    {
+      ewmh_get_utf8_prop(w, c->window, w->atoms[MB_WIN_SUB_NAME]);
+      update_titlebar = True;
+    }
   else if (e->atom == w->atoms[_NET_WM_NAME])
     {
       if (c->name) XFree(c->name);
@@ -2003,6 +2008,10 @@ wm_toggle_desktop(Wm *w)
 
 	   wm_activate_client(wm_get_desktop(w));
 	   w->flags ^= DESKTOP_RAISED_FLAG;
+
+	   if (w->have_titlebar_panel 
+	       && mbtheme_has_titlebar_panel(w->mbtheme))
+	     XMapRaised(w->dpy, w->have_titlebar_panel->frame);
 	 }
        return;
      }

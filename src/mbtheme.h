@@ -27,9 +27,17 @@
 
 typedef struct _mb_theme_param 
 {
-   enum { pixel, percentage, object, textx, textw } unit;
-   signed int value;
-   signed int offset;
+   enum { 
+     pixel, 
+     percentage, 
+     object, 
+     textx, 
+     textw, 
+     MBParamLabelEnd, 
+     MBParamTotalLabelWidth, 
+   } unit;
+  signed int value;
+  signed int offset;
 
 } MBThemeParam;
 
@@ -43,6 +51,7 @@ enum {
   LAYER_PICTURE,
   LAYER_PICTURE_TILED,
   LAYER_ICON,
+  LAYER_SUB_LABEL,
 
 } MBThemeLayerType;
 
@@ -52,6 +61,7 @@ typedef struct _mb_theme_label
   MBColor   *col;
   MBColor   *bgcol;
   MBFont    *font;
+  MBThemeParam  *sublabel_label_clip_w;
 } MBThemeLabel;
 
 typedef struct _mb_theme_button {
@@ -60,6 +70,8 @@ typedef struct _mb_theme_button {
 
   Bool inputonly;
   Bool wants_dbl_click;
+
+  Bool press_activates; 
    
   MBThemeParam *x;
   MBThemeParam *y;
@@ -84,6 +96,9 @@ typedef struct _mb_theme_layer {
   MBColor  *color;
   MBPixbufImage *img;
   MBThemeLabel  *label;  
+  MBThemeLabel  *sublabel;  
+
+
   
   MBColor  *color_end; 	/* for gradients */
   
@@ -113,6 +128,10 @@ typedef struct _mb_theme_frame
   int                     label_w;
   int                     label_h; 
   int                     label_x;
+
+  int                     sublabel_x;
+  int                     sublabel_w;
+
 
   MBFont                 *font;
   MBColor                *color;
@@ -264,5 +283,9 @@ mbtheme_get_titlebar_panel_rect(MBTheme    *theme,
 
 Bool
 mbtheme_has_titlebar_panel(MBTheme *theme);
+
+Bool
+mbtheme_button_press_activates(MBThemeButton* button);
+
 
 #endif

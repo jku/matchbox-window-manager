@@ -14,7 +14,7 @@
 */
 
 /*
-  $Id: main_client.c,v 1.4 2004/06/29 13:41:01 mallum Exp $
+  $Id: main_client.c,v 1.5 2004/07/30 12:12:32 mallum Exp $
 */
 
 #include "main_client.h"
@@ -609,7 +609,8 @@ main_client_destroy(Client *c)
 	 else wm_activate_client(w->head_client);
 
 	 /* Hide a dock in titlebar of exists, should call hide() ? */
-	 if (w->have_titlebar_panel)
+	 if (w->have_titlebar_panel
+	     && !(w->have_titlebar_panel->flags & CLIENT_DOCK_TITLEBAR_SHOW_ON_DESKTOP))
 	   {
 	     dbg("%s() unmapping panel\n", __func__);
 	     XUnmapWindow(w->dpy, w->have_titlebar_panel->frame); 

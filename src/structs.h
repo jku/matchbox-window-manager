@@ -206,6 +206,7 @@ enum {
   WINDOW_TYPE_MENU,
   CM_TRANSLUCENCY,
   MB_DOCK_TITLEBAR_SHOW_ON_DESKTOP,
+  MB_WIN_SUB_NAME,
   INTEGER,
   ATOM_COUNT
 
@@ -297,6 +298,11 @@ typedef struct _client
 #else
   char	           *name;
 #endif
+
+  unsigned char    *subname ;             /* For optional subname title prop */
+
+  int               name_rendered_end_pos;  /* used by theme engine */
+  int               name_total_width;
 
   Bool              is_argb32; 	/* This is composite only, but saves on a few
 				   ifdefs keeping it here */

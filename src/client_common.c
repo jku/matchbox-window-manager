@@ -409,6 +409,16 @@ client_button_do_ops(Client *c, XButtonEvent *e, int frame_type, int w, int h)
 	 && ( !wm_get_desktop(c->wm) || c->wm->flags & DESKTOP_DECOR_FLAG))
        return -1;
 
+#ifndef STANDALONE
+
+       if (mbtheme_button_press_activates(button_item->data))
+	 {
+	   XUngrabPointer(c->wm->dpy, CurrentTime); 
+	   return button_item->id;
+	 }
+
+#endif
+
      if (XGrabPointer(c->wm->dpy, e->subwindow, False,
 		      ButtonPressMask|ButtonReleaseMask|
 		      PointerMotionMask|EnterWindowMask|LeaveWindowMask,

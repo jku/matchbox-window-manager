@@ -17,6 +17,7 @@ layer_lookup[] = {
   { "picture",        LAYER_PICTURE       },
   { "picture-tiled",  LAYER_PICTURE_TILED  },
   { "label",          LAYER_LABEL         },
+  { "sublabel",       LAYER_SUB_LABEL     },
   { "icon",           LAYER_ICON          }
 };
 
@@ -191,9 +192,24 @@ theme_frame_button_paint(MBTheme *theme,
 	  Window button_xid = None;
 	  Bool found = False;
 
-	  button_x = param_get(frame, button->x, dest_w);
+	  /* HACK. param_get() has no client* ref so need to  
+           * do stuff here to get position relevant to 
+           * label end point :(. 
+	   */
+	  if (button->x->unit == MBParamLabelEnd)
+	    {
+	      button_x = c->name_rendered_end_pos + button->x->offset;
+	    }	  
+	  else button_x = param_get(frame, button->x, dest_w);
+
 	  button_y = param_get(frame, button->y, dest_h);
-	  button_w = param_get(frame, button->w, dest_w);
+
+	  if (button->w->unit == MBParamTotalLabelWidth)
+	    {
+	      button_w = c->name_total_width + button->w->offset;
+	    }
+	  else button_w = param_get(frame, button->w, dest_w);
+
 	  button_h = param_get(frame, button->h, dest_h);
 
 	  dbg("%s() found theme action %i - dest_w: %i dest_h: %i\n", __func__, action, dest_w, dest_h);
@@ -564,22 +580,9 @@ theme_frame_paint( MBTheme *theme,
   MBThemeFrame     *frame;
   MBPixbufImage    *img;
   MBThemeLayer     *layer_label = NULL, *layer_icon = NULL;
+  MBThemeLayer     *layer_sublabel = NULL;
   struct list_item *layer_list_item;
-
-#ifdef USE_EXTRAS
-
-#define MAX_OFFSETS 5
-
-   struct {
-
-     int n_bytes;  		/* both since last boundary */
-     int n_pixels;              
-
-   }                offsets[MAX_OFFSETS];
-
-   int              n_offsets = 0;
-
-#endif
+  int               label_rendered_width;
 
   frame = (MBThemeFrame *)list_find_by_id(theme->frames, frame_type);
 
@@ -623,6 +626,71 @@ theme_frame_paint( MBTheme *theme,
 
       frame->label_x = param_get(frame, layer_label->x, dw);
       frame->label_w = param_get(frame, layer_label->w, dw);
+
+      label_rendered_width = mb_font_render_simple_get_width (layer_label->label->font, 
+							      frame->label_w,
+							      (unsigned char*) c->name,
+							      (c->name_is_utf8) ? MB_ENCODING_UTF8 : MB_ENCODING_LATIN,
+							      text_render_opts );
+
+      dbg("%s() label_rendered_width = %i, frame clip width = %i\n",
+	  __func__, label_rendered_width, frame->label_w);
+
+      /* Has text changed or first render */
+
+      if (c->name_rendered_end_pos != (frame->label_x + label_rendered_width))
+	{
+	  c->name_rendered_end_pos = (frame->label_x + label_rendered_width);
+	}
+
+
+      /* now do sublabel if exists */
+
+      if (c->subname)
+	{
+	  layer_sublabel = (MBThemeLayer*)list_find_by_id(frame->layers, 
+							  LAYER_SUB_LABEL);
+	  if (layer_sublabel)
+	    {
+	      /* 
+	       * The sub label can set its own clip width for the main label
+	       * when visible. we need to reset various vars if this is 
+	       * case. 
+               */
+	      if (layer_sublabel->sublabel->sublabel_label_clip_w) 
+		{
+		  int sub_clip_w_pixels = param_get(frame, layer_sublabel->sublabel->sublabel_label_clip_w, dw);
+		  
+
+		  if (label_rendered_width > sub_clip_w_pixels)
+		    {
+		      label_rendered_width = mb_font_render_simple_get_width (layer_label->label->font, 
+									      sub_clip_w_pixels,
+									      (unsigned char*) c->name,
+									      (c->name_is_utf8) ? MB_ENCODING_UTF8 : MB_ENCODING_LATIN,
+									      text_render_opts );
+
+		      frame->label_w = sub_clip_w_pixels;
+		      c->name_rendered_end_pos = (frame->label_x + label_rendered_width);
+		    }
+		}
+
+	      /* Hack round param_get not taking client param ... */
+
+	      if (layer_sublabel->x->unit == MBParamLabelEnd)
+		{
+		  frame->sublabel_x = c->name_rendered_end_pos + layer_sublabel->x->offset;
+		}
+	      else
+		frame->sublabel_x = param_get(frame, layer_sublabel->x, dw);
+
+	      frame->sublabel_w = param_get(frame, layer_sublabel->w, dw);
+
+	      c->name_total_width = (frame->sublabel_x + frame->sublabel_w) - frame->label_x;
+	     
+	    }
+	}
+      else c->name_total_width = label_rendered_width;
     }
 
   if (!have_img_cached)
@@ -655,77 +723,6 @@ theme_frame_paint( MBTheme *theme,
 			     param_get(frame, layer_icon->x, dw), 
 			     param_get(frame, layer_icon->y, dh));
     } 
-
-#ifdef USE_EXTRAS
-
-  n_offsets = 0;
-
-   if (layer_label 
-       && c->name 
-       && !(c->flags & CLIENT_BORDERS_ONLY_FLAG)
-       && c->type != dialog
-       && theme->subst_img)
-     {
-       MBPixbufImage *img_tmp = NULL;
-       unsigned char *cur_offsetp = NULL, *orig_name = NULL, *name = NULL;
-       int            img_pixel_offset = frame->label_x;
-
-
-       dbg("%s() figuring out offsets\n", __func__);
-
-       /* Sort the cache - FIXME: need to combine with icon stuff rather than
-        *                         dupe the code!!
-        */
-      if (have_img_cached && !free_img)
-	{
-	  img_tmp = mb_pixbuf_img_clone(theme->wm->pb, 
-					theme->img_caches[frame_type]);
-	  img = img_tmp;
-	}
-      else
-	{
-	  img = mb_pixbuf_img_clone(theme->wm->pb, img);
-	}
-
-      free_img = True;
-
-
-       n_offsets = 0;
-
-       orig_name = name = strdup(c->name);
-
-       while ((cur_offsetp = strchr(name, (int)theme->subst_char)) != NULL)
-	 {
-	   if ((img_pixel_offset - frame->label_x)  > frame->label_w)
-	     break;
-
-	   offsets[n_offsets].n_bytes  = cur_offsetp - name;
-	   offsets[n_offsets].n_pixels 
-	     = mb_font_get_txt_width (layer_label->label->font, 
-				      name, 
-				      offsets[n_offsets].n_bytes, 
-				      (c->name_is_utf8) ? MB_ENCODING_UTF8 : MB_ENCODING_LATIN);
-
-	   img_pixel_offset += offsets[n_offsets].n_pixels;
-
-	   if ((img_pixel_offset - frame->label_x)  < frame->label_w)
-	     mb_pixbuf_img_composite(theme->wm->pb, img, theme->subst_img, 
-				     img_pixel_offset, 
-				     param_get(frame, layer_label->y, dh));
-
-	   name += (offsets[n_offsets].n_bytes + 1);
-
-	   /* Move past the image */
-	   img_pixel_offset += mb_pixbuf_img_get_width(theme->subst_img);
- 
-	   n_offsets++;
-	 }
-
-       free(orig_name);
-     }
-
-
-#endif
 
   /* Finally paint to the pixmap. */
 
@@ -774,6 +771,7 @@ theme_frame_paint( MBTheme *theme,
   
   if (free_img) mb_pixbuf_img_free(theme->wm->pb, img);
 
+  /* Now paint text onto pixmap */
 
   if (layer_label && c->name && !(c->flags & CLIENT_BORDERS_ONLY_FLAG))
     {
@@ -783,53 +781,6 @@ theme_frame_paint( MBTheme *theme,
 
       mb_font_set_color (layer_label->label->font, layer_label->label->col);
 
-#ifdef USE_EXTRAS
-      if (n_offsets)
-	{
-	  int            i            = 0;
-	  int            pixel_offset = frame->label_x;
-	  unsigned char *name_orig, *name = strdup(c->name);
-
-	  name_orig = name;
-
-	  dbg("%s() doing img substitution pxiel_offset: %i \n", 
-	      __func__, frame->label_x);
-
-	  while (i <= n_offsets)
-	    {
-	      dbg("%s() doing img substitution pxiel_offset: %i \n", 
-	      __func__, pixel_offset);
-
-	      if (i != n_offsets)
-		name[offsets[i].n_bytes] = '\0';
-
-	      dbg("%s() rendering '%s' text - width %i, %i, %i, %i\n", __func__, 
-		  name, frame->label_x , frame->label_w, pixel_offset, (frame->label_x + frame->label_w) - pixel_offset  );
-
-	      mb_font_render_simple (layer_label->label->font, 
-				     c->backing, 
-				     pixel_offset,
-				     fy,
-				     (frame->label_x + frame->label_w) - pixel_offset,
-				     (unsigned char*) name,
-				     (c->name_is_utf8) ? MB_ENCODING_UTF8 : MB_ENCODING_LATIN,
-				    text_render_opts );
-	      
-	      name  += offsets[i].n_bytes + 1;
-
-	      pixel_offset += (offsets[i].n_pixels + mb_pixbuf_img_get_width(theme->subst_img)); 
-
-	      if (pixel_offset > (frame->label_x + frame->label_w))
-		break;
-
-	      i++;
-	    }
-
-	  free(name_orig);
-
-	  return True;
-	}
-#endif 
       dbg("%s() painting text '%s' with r: %i, g: %i, b: %i, a: %i\n",
 	  __func__, 
 	  (unsigned char*) c->name,
@@ -837,6 +788,7 @@ theme_frame_paint( MBTheme *theme,
 	  mb_col_green(layer_label->label->col),
 	  mb_col_blue(layer_label->label->col),
 	  mb_col_alpha(layer_label->label->col));
+
 
       mb_font_render_simple (layer_label->label->font, 
 			     c->backing, 
@@ -847,6 +799,18 @@ theme_frame_paint( MBTheme *theme,
 			     (c->name_is_utf8) ? MB_ENCODING_UTF8 : MB_ENCODING_LATIN,
 			     text_render_opts);
       dbg("%s() rendered text\n", __func__);
+
+      if (layer_sublabel && c->subname)
+	{
+	  mb_font_render_simple (layer_label->label->font, 
+				 c->backing, 
+				 frame->sublabel_x,
+				 fy,
+				 frame->sublabel_w,
+				 (unsigned char*) c->subname,
+				 MB_ENCODING_UTF8,
+				 text_render_opts);
+	}
 
        XSync(c->wm->dpy, False);
     }
@@ -1352,7 +1316,25 @@ param_parse(char *def_str)
 	 g->offset = strtol(&def_str[6], (char **)NULL, 10);
       return g;
    }
-   
+
+   if (!strncmp(def_str,"labelend",8))
+   {
+      g->unit = MBParamLabelEnd;
+      g->value = 1;
+      if (def_str[8] != '\0')
+	 g->offset = strtol(&def_str[8], (char **)NULL, 10);
+      return g;
+   }
+
+   if (!strncmp(def_str,"totallabelw",11))
+   {
+      g->unit = MBParamTotalLabelWidth;
+      g->value = 1;
+      if (def_str[11] != '\0')
+	 g->offset = strtol(&def_str[11], (char **)NULL, 10);
+      return g;
+   }
+
    while(*p != '%' && *p != '\0') { p++; }
 
    if (*p == '%')
@@ -1405,6 +1387,12 @@ lookup_button_action(char *name)
   return -1;
 }
 
+Bool
+mbtheme_button_press_activates(MBThemeButton* button)
+{
+  return button->press_activates;
+}
+
 
 MBThemeButton*
 mbtheme_button_new (MBTheme *theme, 
@@ -1442,6 +1430,12 @@ mbtheme_button_new (MBTheme *theme,
 	  if (strstr(options, "doubleclick"))
 	    button->wants_dbl_click = True;
 	}
+
+      if (strstr(options, "press_activates"))
+	{
+	  button->press_activates = True;
+	}
+
     }
 
   button->img_active   = (MBPixbufImage*)list_find_by_name(theme->images, 
@@ -1551,6 +1545,17 @@ mbtheme_label_new(MBTheme* theme,
    return label;
 }
 
+MBThemeLabel *
+mbtheme_sublabel_new(MBTheme* theme, char* sublabel_label_clip_w)
+{
+   MBThemeLabel *label = malloc(sizeof(MBThemeLabel));
+   memset(label, 0, sizeof(MBThemeLabel));
+
+   label->sublabel_label_clip_w = param_parse(sublabel_label_clip_w);
+
+   return label;
+}
+
 
 static int 
 lookup_layer_type(char *name)
@@ -1649,6 +1654,12 @@ parse_frame_layer_tag (MBTheme      *theme,
 					    get_attr(inode, "justify") );
       if (layer_new->label == NULL) return ERROR_INCORRECT_PARAMS;
       break;
+    case LAYER_SUB_LABEL:
+      layer_new->sublabel = mbtheme_sublabel_new(theme,
+						 get_attr(inode, "labelw")); 
+      if (layer_new->sublabel == NULL) return ERROR_INCORRECT_PARAMS;
+      break;
+      
     }
 
   return 1;
@@ -1967,9 +1978,9 @@ parse_lowlight_tag (MBTheme *theme,
 
   /* matchbox not running with lowlight switch */
 #ifndef USE_COMPOSITE
-  dbg("LOWLIGHT IS %i\n", theme->wm->config->dialog_shade);
   if (!theme->wm->config->dialog_shade) return 1; 
 #endif
+
   if ( color_attr == NULL ) return ERROR_MISSING_PARAMS;
 
   color = (MBColor*)list_find_by_name(theme->colors, color_attr);
@@ -2008,26 +2019,6 @@ parse_app_icon_tag (MBTheme *theme,
   return 1;
 }
 
-#ifdef USE_EXTRAS
-static int
-parse_subst_tag (MBTheme *theme, XMLNode *node)
-{
-  char *img_def       = get_attr(node, "pixmap");
-  char *char_def      = get_attr(node, "char");
-
-  if ( img_def == NULL || char_def == NULL) return ERROR_MISSING_PARAMS;
-
-  theme->subst_img = (MBPixbufImage*)list_find_by_name(theme->images, img_def);
-
-  if (theme->subst_img == NULL) return ERROR_INCORRECT_PARAMS;
-  
-  theme->subst_char = char_def[0];
-
-  return 1;
-}
-
-
-#endif
 
 #ifdef USE_COMPOSITE
 static int
@@ -2488,19 +2479,6 @@ mbtheme_init (Wm   *w,
 	  }
 	 continue;
       }
-
-#ifdef USE_EXTRAS
-      if (!strcmp("subst", cnode->tag))
-      {
-	if ((err = parse_subst_tag(w->mbtheme, cnode)) < 0)
-	  {
-	    show_parse_error(w, cnode, theme_filename, err);
-	    xml_parser_free(parser, root_node); 
-	    return mbtheme_init (w, NULL); 
-	  }
-	 continue;
-      }
-#endif
 
 #ifdef USE_COMPOSITE
       if (!strcmp("shadow", cnode->tag))

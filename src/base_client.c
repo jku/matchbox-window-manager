@@ -14,7 +14,7 @@
 */
 
 /*
-  $Id: base_client.c,v 1.5 2004/04/26 17:17:38 mallum Exp $
+  $Id: base_client.c,v 1.6 2004/07/30 12:12:32 mallum Exp $
 */
 
 
@@ -59,6 +59,8 @@ base_client_new(Wm *w, Window win)
    
    if ((c->name = ewmh_get_utf8_prop(w, win, w->atoms[_NET_WM_NAME])) != NULL)
      c->name_is_utf8 = True;
+
+   c->subname = ewmh_get_utf8_prop(w, win, w->atoms[MB_WIN_SUB_NAME]);
 
    base_client_process_name(c);
    

@@ -1,3 +1,20 @@
+2004-07-30  mallum,,,  <mallum@handhelds.org>
+
+	* data/schemas/Makefile.am:
+	Fix disable schemas install. 
+	* src/base_client.c: (base_client_new):
+	* src/client_common.c: (client_button_do_ops):
+	* src/ewmh.c: (ewmh_init):
+	* src/main_client.c: (main_client_destroy):
+	* src/mbtheme.c: (theme_frame_button_paint), (theme_frame_paint),
+	(param_parse), (mbtheme_button_press_activates),
+	(mbtheme_button_new), (mbtheme_sublabel_new),
+	(parse_frame_layer_tag), (mbtheme_init):
+	* src/mbtheme.h:
+	* src/structs.h:
+	* src/wm.c: (wm_handle_property_change), (wm_toggle_desktop):
+	Add initial support for sub name/label property. 
+
 2004-07-19  Matthew Allum,,,  <mallum@handhelds.org>
 
 	* data/themes/blondie/theme.xml:

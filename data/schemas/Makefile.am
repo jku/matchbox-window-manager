@@ -1,6 +1,6 @@
 EXTRA_DIST = matchbox.schemas
 
-if ENABLE_SCHEMAS
+if GCONF_SCHEMAS_INSTALL
 
 schemadir   = @GCONF_SCHEMA_FILE_DIR@
 schema_DATA = matchbox.schemas
