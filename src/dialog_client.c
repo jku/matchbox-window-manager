@@ -733,13 +733,16 @@ dialog_client_redraw(Client *c, Bool use_cache)
 			       total_w, offset_north);
 
       if (c->flags & CLIENT_ACCEPT_BUTTON_FLAG)
-	theme_frame_button_paint(c->wm->mbtheme, c, BUTTON_ACTION_ACCEPT, 
+	theme_frame_button_paint(w->mbtheme, c, BUTTON_ACTION_ACCEPT, 
 				 INACTIVE, FRAME_DIALOG,total_w, offset_north);
 
       if (c->flags & CLIENT_HELP_BUTTON_FLAG)
-	theme_frame_button_paint(c->wm->mbtheme, c, BUTTON_ACTION_HELP, 
+	theme_frame_button_paint(w->mbtheme, c, BUTTON_ACTION_HELP, 
 				 INACTIVE, FRAME_DIALOG,total_w, offset_north);
 
+      if (c->flags & CLIENT_CUSTOM_BUTTON_FLAG)
+	theme_frame_button_paint(w->mbtheme, c, BUTTON_ACTION_CUSTOM, 
+				 INACTIVE, FRAME_DIALOG, total_w,offset_north);
     }
 
 
@@ -845,13 +848,17 @@ dialog_client_button_press(Client *c, XButtonEvent *e)
 			       offset_north))
    {
       case BUTTON_ACTION_CLOSE:
-	 client_deliver_delete(c);
-	 break;
+	client_deliver_delete(c);
+	break;
       case BUTTON_ACTION_HELP:
-	client_deliver_wm_protocol(c, c->wm->atoms[_NET_WM_CONTEXT_HELP]);
-	 break;
+	client_deliver_wm_protocol(c, w->atoms[_NET_WM_CONTEXT_HELP]);
+	break;
       case BUTTON_ACTION_ACCEPT:
-	client_deliver_wm_protocol(c, c->wm->atoms[_NET_WM_CONTEXT_ACCEPT]);
+	client_deliver_wm_protocol(c, w->atoms[_NET_WM_CONTEXT_ACCEPT]);
+	break;
+      case BUTTON_ACTION_CUSTOM:
+	client_deliver_wm_protocol(c, w->atoms[_NET_WM_CONTEXT_CUSTOM]);
+	break;
       case -1: 		 /* Cancelled  */
 	 break;
       case 0:

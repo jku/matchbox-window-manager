@@ -1,3 +1,9 @@
+2005-02-18  mallum,,,  <mallum@openedhand.com>
+
+	* src/dialog_client.c: (dialog_client_redraw),
+	(dialog_client_button_press):
+	Support 'custom' buttons on dialogs.
+
 2005-02-17  mallum,,,  <mallum@openedhand.com>
 
 	* src/main_client.c: (main_client_button_press):
