@@ -1,3 +1,9 @@
+2004-11-16  mallum <mallum@handhelds.org>
+
+	* src/xml.c:
+	Really free up parsed params for non expat parser. 
+	Should fix bug #100
+
 2004-11-16  mallum,,,  <mallum@handhelds.org>
 
 	* src/main_client.c: (main_client_show):

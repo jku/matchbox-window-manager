@@ -137,9 +137,7 @@ node_start_cb( XMLParser *parser, const char *tag, Params *attr)
       parser->_current_node = tmp->data; 
     }
 
-#ifdef USE_EXPAT
-  _params_free(attr);
-#endif 
+  _params_free(attr); /* xml_node_new rather confusingly make a copy */
 }
 
 #ifdef USE_EXPAT
@@ -227,9 +225,12 @@ _params_free(Params *params)
   while(params != NULL)
     {
       params_cpy = params;
+
       params = params_cpy->next;
+
       if (params_cpy->key) free(params_cpy->key);
       if (params_cpy->value) free(params_cpy->value);
+
       free (params_cpy);
     }
 }
@@ -250,6 +251,7 @@ _xml_parser_free(XMLNode *node)
     {
       old_tmp = tmp->next;
       _xml_parser_free(tmp->data);
+      
       free(tmp);
       tmp = old_tmp;
     }
