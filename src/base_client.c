@@ -14,7 +14,7 @@
 */
 
 /*
-  $Id: base_client.c,v 1.11 2004/11/09 17:04:56 mallum Exp $
+  $Id: base_client.c,v 1.12 2004/11/10 15:28:12 mallum Exp $
 */
 
 
@@ -25,15 +25,14 @@ base_client_new(Wm *w, Window win)
 {
    XWindowAttributes attr;
 
-   Client *c = NULL;
-   int i = 0, n = 0, format;
-   XWMHints *wmhints = NULL;
-   Atom *protocols   = NULL;
+   Client        *c = NULL;
+   int            i = 0, n = 0, format;
+   XWMHints      *wmhints = NULL;
+   Atom          *protocols = NULL;
    XTextProperty  text_prop;
-
-   Atom type;
-   long bytes_after, n_items;
-   long *data = NULL;
+   Atom           type;
+   long           bytes_after, n_items, *data = NULL;
+   unsigned long  val[1];
 
    dbg("%s() called  \n", __func__);
 
@@ -95,10 +94,11 @@ base_client_new(Wm *w, Window win)
 #if 0
 
    /* Get size hints */
+
    c->size = XAllocSizeHints();
 
    /* 
-    * Dont bother with WMNOrmalHints anymore, reasoning;
+    * Dont bother with WMNormalHints anymore, reasoning;
     * 
     * - mb forces app window sizes anyway ( and static )
     * - We dont let users resize dialogs 
@@ -128,6 +128,11 @@ base_client_new(Wm *w, Window win)
    }
 #endif
 
+   /* EWMH Icon */
+
+#ifndef STANDALONE
+   c->icon_rgba_data = ewmh_get_icon_prop_data(w, win);
+#endif
 
    /* WM Hints */
 
@@ -140,6 +145,22 @@ base_client_new(Wm *w, Window win)
 
       if (wmhints->flags & XUrgencyHint)
 	c->flags |= CLIENT_HAS_URGENCY_FLAG;
+
+      if (w->config->use_icons && c->icon_rgba_data == NULL)
+	{
+	  if (wmhints->flags & IconPixmapHint)
+	    {
+	      dbg("%s() got icon hint\n", __func__); 
+	      c->icon = wmhints->icon_pixmap;
+	      if (wmhints->flags & IconMaskHint)
+		{
+		  c->icon_mask = wmhints->icon_mask;
+		}
+	    } else {
+	      c->icon = None;
+	      c->icon_mask = None;
+	    }
+	}
    }
 
    dbg("%s() window group %li\n", __func__, c->win_group);
@@ -148,6 +169,8 @@ base_client_new(Wm *w, Window win)
 
 
 #ifdef USE_LIBSN
+
+   /* Startup Notification */
 
    c->startup_id = ewmh_get_utf8_prop(w, win, w->atoms[_NET_STARTUP_ID]);
 
@@ -227,6 +250,20 @@ base_client_new(Wm *w, Window win)
        
        XFree(protocols);
     }
+
+
+   /* We dont do workspaces! */
+
+   val[0] = 1;
+   XChangeProperty(w->dpy, c->window, w->atoms[_NET_WM_DESKTOP] ,
+		   XA_CARDINAL, 32, PropModeReplace,
+		   (unsigned char *)val, 1);
+   
+   ewmh_set_allowed_actions(w, c);
+
+   if (w->config->no_cursor && w->blank_curs)
+     XDefineCursor(w->dpy, c->window, w->blank_curs);
+
 
    client_set_state(c, WithdrawnState);
 

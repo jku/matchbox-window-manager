@@ -38,8 +38,6 @@ static SnCycle *wm_sn_cycle_new(Wm *w, const char *bin_name);
 static void wm_sn_cycle_add(Wm *w, const char *bin_name);
 #endif
 
-static Cursor blank_curs;
-
 Wm*
 wm_new(int argc, char **argv)
 {
@@ -164,16 +162,10 @@ wm_new(int argc, char **argv)
    w->sn_mapping_list = NULL;
 #endif
 
-#if 0
-   w->msg_win_queue_head = NULL;
-#endif
-
    /* Panel/Dock in titlebar stuff */
    w->have_titlebar_panel = NULL;
 
    w->flags ^= STARTUP_FLAG; 	/* Remove startup flag */
-
-   /* below color used for frame window backgrounds */
 
    return w;
 }
@@ -274,7 +266,7 @@ wm_usage(char *progname)
 #endif
 
    printf("\nVisit http://matchbox.handhelds.org for more info.\n");
-   printf("(c) 2004 Matthew Allum\n");
+   printf("(c) 2004 OpenedHand Ltd\n");
    exit(0);
 }
 
@@ -320,12 +312,6 @@ wm_load_config (Wm   *w,
    w->config->dialog_shade     = False;   
    w->config->dialog_stratergy = WM_DIALOGS_STRATERGY_CONSTRAINED;
    w->config->ping_handler     = NULL;
-
-#if 0
-   w->config->theme            = "test-theme"; /* XXX remove this  */
-   strcpy(w->config->display_name, (char *)getenv("DISPLAY"));
-   w->dpy = XOpenDisplay(w->config->display_name);
-#endif
 
    if (XrmGetResource(rDB, "matchbox.display",
 		      "Matchbox.Display",
@@ -473,7 +459,6 @@ wm_load_config (Wm   *w,
    }
 #endif
 
-
    if (getenv("MB_AWT_WORKAROUND"))
      w->config->awt_workaround = True;
    else
@@ -515,13 +500,13 @@ wm_find_client(Wm *w, Window win, int mode)
 
     if (mode == FRAME) 
       {
-	stack_enumerate(w, c)
+	stack_enumerate_reverse(w, c)
 	  if (c->frame == win || c->title_frame == win) 
 	    return c;
       } 
     else 
       {
-	stack_enumerate(w, c)
+	stack_enumerate_reverse(w, c)
 	  if (c->window == win) 
 	    return c;
       }    
@@ -529,7 +514,7 @@ wm_find_client(Wm *w, Window win, int mode)
     return NULL;
 }
 
-
+/* Grab an X Event - block but With a timeout */
 static Bool
 get_xevent_timed(Display        *dpy, 
 		 XEvent         *event_return, 
@@ -563,11 +548,15 @@ get_xevent_timed(Display        *dpy,
     }
 }
 
-
 #ifdef USE_COMPOSITE
 
 /*  For the compositing engine we need to track overide redirect  
- *  windows. 
+ *  windows so the compositor can paint them. 
+ *
+ *  What we do is make a 'lightweight' client object. 
+ *
+ *  TODO: base_client_new() should really be able to do this. 
+ *        and avoid any extra code. 
  */
 void 
 wm_handle_map_notify(Wm *w, Window win)
@@ -594,9 +583,9 @@ wm_handle_map_notify(Wm *w, Window win)
       new_client = malloc(sizeof(Client));
       memset(new_client, 0, sizeof(Client));
 
-      new_client->x = attr.x;
-      new_client->y = attr.y;
-      new_client->width = attr.width;
+      new_client->x      = attr.x;
+      new_client->y      = attr.y;
+      new_client->width  = attr.width;
       new_client->height = attr.height;
       new_client->visual = attr.visual;
       
@@ -623,7 +612,7 @@ wm_handle_map_notify(Wm *w, Window win)
 }
 #endif
 
-
+/* Main event loop, timeout for polling stuff */
 void
 wm_event_loop(Wm* w)
 {
@@ -641,11 +630,6 @@ wm_event_loop(Wm* w)
       if (w->sn_busy_cnt)
 	tvt.tv_sec = 1;
 #endif      
-
-#if 0
-      if (w->msg_win_queue_head)
-	tvt.tv_sec = 1;
-#endif
 
 #ifdef USE_GCONF
       if (w->gconf_client != NULL)
@@ -717,13 +701,6 @@ wm_event_loop(Wm* w)
 	    wm_sn_timeout_check (w);
 #endif      
 
-#if 0
-	if (w->msg_win_queue_head)
-	  {
-	    wm_msg_win_queue_process (w);
-	  }
-#endif
-
 #ifdef USE_GCONF
 	if (w->gconf_client != NULL)
 	  g_main_context_iteration (w->gconf_context, FALSE);
@@ -737,8 +714,7 @@ wm_event_loop(Wm* w)
 	    ewmh_hung_app_check(w);
 	  }
 #endif
-   
-      }
+         }
 
 #ifdef USE_COMPOSITE
       if (w->all_damage)
@@ -755,12 +731,13 @@ wm_event_loop(Wm* w)
 void
 wm_handle_button_event(Wm *w, XButtonEvent *e)
 {
-   Client *p;
+   Client *p = NULL;
    Client *c = wm_find_client(w, e->window, WINDOW);
 
    dbg("%s() called", __func__);
 
    /* Raise dialogs, set focus if needed  */
+
    if (c)
      {
        /* Click was on window rather than decorations */
@@ -786,24 +763,6 @@ wm_handle_button_event(Wm *w, XButtonEvent *e)
 
    c = wm_find_client(w, e->window, FRAME);
 
-   /* find out if this is a double click - FIXME not used */
-   if (w->next_click_is_not_double) {
-      w->last_click_window = e->window;
-      w->last_click_time   = e->time;
-      w->next_click_is_not_double = False;
-   } else {
-      if (w->last_click_window == e->window
-	  && ((e->time - w->last_click_time) < w->config->dbl_click_time))
-      {
-	 w->flags ^= DBL_CLICK_FLAG;
-	 w->next_click_is_not_double = True;
-      } else {
-	 w->last_click_window = e->window;
-	 w->last_click_time   = e->time;
-	 w->next_click_is_not_double = False;
-      }
-   }
-
    /* remove task menu if its up */
    if (w->flags & MENU_FLAG)
    {
@@ -822,8 +781,6 @@ wm_handle_button_event(Wm *w, XButtonEvent *e)
    /* Pass the event on to the window class */
    if (c) c->button_press(c,e);
    
-   /* clear double click flag if set */
-   if (w->flags & DBL_CLICK_FLAG) w->flags ^= DBL_CLICK_FLAG;
 }
 
 
@@ -914,25 +871,10 @@ wm_handle_keypress(Wm *w, XKeyEvent *e)
 	      break;
 #endif
 	    case KEY_ACTN_NEXT_CLIENT:
-		  wm_activate_client(stack_cycle_backward(w, MBCLIENT_TYPE_APP));
-		  /*
-		  XGrabServer(w->dpy);
-		  base_client_hide_transients(w->main_client);
-		  wm_activate_client(client_get_next(w->main_client, mainwin));
-
-		  XSync(w->dpy, False);	    
-		  XUngrabServer(w->dpy);
-		  */
+	      wm_activate_client(stack_cycle_backward(w, MBCLIENT_TYPE_APP));
 	      break;
 	    case KEY_ACTN_PREV_CLIENT:
-		  wm_activate_client(stack_cycle_forward(w, MBCLIENT_TYPE_APP));
-		  /*
-		  XGrabServer(w->dpy);
-		  base_client_hide_transients(w->main_client);
-		  wm_activate_client(client_get_prev(w->main_client, mainwin));
-		  XSync(w->dpy, False);	    
-		  XUngrabServer(w->dpy);
-		  */
+	      wm_activate_client(stack_cycle_forward(w, MBCLIENT_TYPE_APP));
 	      break;
 	    case KEY_ACTN_CLOSE_CLIENT:
 	      if (w->stack_top_app)
@@ -971,6 +913,11 @@ wm_handle_configure_notify(Wm *w, XConfigureEvent *e)
 
    if (e->window == w->root) /* screen rotation */
    {
+     /* TODO:
+      * It would probably be cleaner ( though add a dep )
+      * to use randr here to get more info about the rotation     
+      * ( eg. direction )
+      */
       dbg("%s() configure notify event called on root", __func__ );
       if (e->width  != w->dpy_width ||
 	  e->height != w->dpy_height)
@@ -1051,15 +998,6 @@ wm_handle_configure_notify(Wm *w, XConfigureEvent *e)
 
 	 }
 
-#if 0
-	 if (!(w->flags & DESKTOP_RAISED_FLAG))
-	   wm_activate_client(previous_main_client);
-	 else
-	   { /* Let the desktop know is new workarea */
-	    
-	     ewmh_set_active(w);
-	   }
-#endif
 
 	 if (cdesktop)
 	   {
@@ -1082,6 +1020,7 @@ wm_handle_configure_notify(Wm *w, XConfigureEvent *e)
 	 wm_activate_client(wm_get_visible_main_client(w));
 
 	 XSync(w->dpy, False);
+
 	 XUngrabServer(w->dpy);
       }
    }
@@ -1196,9 +1135,7 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 	     client_buttons_delete_all(c);
 
 	   comp_engine_client_hide(c->wm, c);
-#ifdef USE_COMPOSITE
-	   XSync(w->dpy, False);
-#endif
+
 	   xwc.width  = c->width  = req_w;
 	   xwc.height = c->height = req_h;
 	   xwc.x      = c->x      = req_x;
@@ -1233,6 +1170,8 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
         *
         * Set MB_AWT_WORKAROUND env var to enable this. 
         *
+        * 10/11/2004 TODO: dont think this is needed anymore. 
+        *                  seems to have magically fixed itself.
         */
 
        if (w->config->awt_workaround)
@@ -1254,7 +1193,7 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 
 
 #if 0
-   /* XXX fix this crack xxx */
+   /* TODO: fix this crack ! */
    if (c->width == e->width && c->height == e->height)
      {
        if (e->detail == Above && !(w->flags & DESKTOP_RAISED_FLAG))
@@ -1294,7 +1233,6 @@ wm_handle_map_request(Wm *w, XMapRequestEvent *e)
       wm_activate_client(c);
    }
 }
-
 
 void
 wm_handle_unmap_event(Wm *w, XUnmapEvent *e)
@@ -1340,13 +1278,12 @@ wm_handle_unmap_event(Wm *w, XUnmapEvent *e)
      }
 }
 
-
 void
 wm_handle_expose_event(Wm *w, XExposeEvent *e)
 {
    Client *c = wm_find_client(w, e->window, FRAME);
 
-   if (c /* && e->count == 0 */)
+   if (c)
    {
      XEvent ev;
 
@@ -1426,7 +1363,7 @@ wm_handle_client_message(Wm *w, XClientMessageEvent *e)
 	 case MB_CMD_DESKTOP   :
 	   wm_toggle_desktop(w);
 	   break;
-	 case MB_CMD_MISC: 	/* This is used for random testing stuff */
+	 case MB_CMD_MISC:  /* This is used for random testing stuff */
 #ifdef DEBUG
 	   /* comp_engine_time(w); Not used atm XXX DO_TIMINGS */
 	   dbg("*** Toggling composite visual debugging ***\n");
@@ -1447,6 +1384,7 @@ wm_handle_client_message(Wm *w, XClientMessageEvent *e)
        return;
      }
 
+   /* Also handle any EWMH messages */
    ewmh_handle_root_message(w, e);   
 }
 
@@ -1464,6 +1402,7 @@ wm_handle_property_change(Wm *w, XPropertyEvent *e)
 
   dbg("%s() on %s, atom is %li\n", __func__, c->name, e->atom );
    
+  /* Window Name changes */
   if (e->atom == XA_WM_NAME && !c->name_is_utf8)
     {
       if (c->name) XFree(c->name);
@@ -1511,6 +1450,7 @@ wm_handle_property_change(Wm *w, XPropertyEvent *e)
   if (update_titlebar)  c->redraw(c, False);
 }
 
+/* If configured force a app window be treated as a dialog */
 Bool
 wm_win_force_dialog(Wm *w, Window win)
 {
@@ -1521,7 +1461,7 @@ wm_win_force_dialog(Wm *w, Window win)
     return result;
 
   if (XFetchName(w->dpy, win, (char **)&win_title))
-    if (strstr(w->config->force_dialogs, win_title)) /* XXX Improve search */
+    if (strstr(w->config->force_dialogs, win_title)) /* TODO: Improve search */
       result = True;
 
   if (win_title) XFree(win_title);
@@ -1534,23 +1474,21 @@ wm_make_new_client(Wm *w, Window win)
 {
    Window        trans_win;
    Atom          realType, *value = NULL;
-   unsigned long n, extra, val[1];
+   unsigned long n, extra;
    int           format, status;
    Client       *c = NULL, *t = NULL;
    XWMHints     *wmhints;
    int           mwm_flags = 0;
 
    XGrabServer(w->dpy);
-#if 0
-   if (w->main_client) old_main_client = w->main_client;
-#endif
+
    dbg("%s() initiated\n", __func__);
 
    if (wm_win_force_dialog(w, win))
      {
        /* Hackiness to allow app wins to be forced into dialogs   
         * ( see -froce_dialogs switch ). 
-        * Much better to fix the app.
+        * Much better to fix the app people!
         */
        c = dialog_client_new(w, win, NULL);
        if (c == NULL) goto end;
@@ -1599,52 +1537,6 @@ wm_make_new_client(Wm *w, Window win)
 		   c = dialog_client_new(w, win, NULL);
 		   if (c == NULL) goto end;
 		 }
-#if 0
-	       else if (value[0] == w->atoms[WINDOW_TYPE_MESSAGE])
-		 {
-		   
-		   dbg("%s() got type message atom\n", __func__ );
-		   if (w->msg_win_queue_head == NULL)
-		     {
-		       dbg("%s() queue empty add win to queue\n", __func__ );
-		       wm_msg_win_queue_add(w, win);
-		     }
-		   
-		   if (win == w->msg_win_queue_head->win)
-		     {
-		       dbg("%s() win is queue head, making client\n", 
-			   __func__ );
-		       c = dialog_client_new(w, win, NULL);
-		       if (c == NULL) goto end;
-		       c->flags ^= CLIENT_IS_MESSAGE_DIALOG; 
-		     }
-		   else
-		     {
-		       dbg("%s() win is not queue head adding to queue\n", 
-			   __func__ );
-		       wm_msg_win_queue_add(w, win);
-		   
-		       dbg("%s() returning from add\n", __func__);
-		       XUngrabServer(w->dpy);
-		       if (value) XFree(value);
-		       return NULL;
-		     }
-		   
-		 }
-	       else if (value[0] == w->atoms[WINDOW_TYPE_MESSAGE_STATIC_0])
-		 {
-		   c = dialog_client_new(w, win, NULL);
-		   if (c == NULL) goto end;
-		   c->flags ^= CLIENT_IS_MESSAGE_DIALOG|CLIENT_IS_MESSAGE_DIALOG_HI; 
-		 }
-	       else if (value[0] == w->atoms[WINDOW_TYPE_MESSAGE_STATIC_1])
-		 {
-		   c = dialog_client_new(w, win, NULL);
-		   if (c == NULL) goto end;
-		   c->flags ^= CLIENT_IS_MESSAGE_DIALOG|CLIENT_IS_MESSAGE_DIALOG_LO; 
-		 }
-#endif
-	       
 	     } 
 	 }
        
@@ -1694,98 +1586,45 @@ wm_make_new_client(Wm *w, Window win)
    
    if (c == NULL) /* default to a main client */
    {
-#if 0
-      /* make sure fullscreen window goes below any utility wins / docks etc */
-      if (w->main_client && (w->main_client->flags & CLIENT_FULLSCREEN_FLAG))
-	 main_client_hide(w->main_client);
-#endif
-      c = main_client_new(w, win);
+     c = main_client_new(w, win);
 
-      if (c == NULL) /* Something has gone wrong - prolly win dissapeared */
-	{
-	  dbg("%s() client dissapeared\n", __func__);
-	  goto end;
-	}
-
+     if (c == NULL) /* Something has gone wrong - prolly win dissapeared */
+       {
+	 dbg("%s() client dissapeared\n", __func__);
+	 goto end;
+       }
    }
-
-#ifndef STANDALONE
-   if ((c->icon_rgba_data = ewmh_get_icon_prop_data(w, win)) != NULL)
-     {
-       dbg("%s() : got ewmh icon data, size is %i x %i\n", __func__, 
-	   c->icon_rgba_data[0], c->icon_rgba_data[1] );
-       ; /* XXX fix this logic ! */
-     }
-   else
-#endif
-   if ((wmhints = XGetWMHints(w->dpy, win)) != NULL)
-   {
-      if (w->config->use_icons)
-      {
-	 if (wmhints->flags & IconPixmapHint)
-	 {
-	    dbg("%s() got icon hint\n", __func__); 
-	    c->icon = wmhints->icon_pixmap;
-	    if (wmhints->flags & IconMaskHint)
-	    {
-	       c->icon_mask = wmhints->icon_mask;
-	    }
-	 } else {
-	   c->icon = None;
-	   c->icon_mask = None;
-	 }
-      }
-      XFree(wmhints);
-   }
-
-   /* Fix for some panels - we dont do workspaces! */
-   val[0] = 1;
-   XChangeProperty(w->dpy, c->window, w->atoms[_NET_WM_DESKTOP] ,
-		   XA_CARDINAL, 32, PropModeReplace,
-		   (unsigned char *)val, 1);
-   
-   ewmh_set_allowed_actions(w, c);
 
    dbg("%s() calling configure method for new client\n", __func__);
-
-   if (w->config->no_cursor && c->type != MBCLIENT_TYPE_PANEL)
-     XDefineCursor (w->dpy, c->window, blank_curs);
    
-   c->configure(c);
+   c->configure(c); 		/* Size up the client */
 
    comp_engine_client_init(w, c);
 
    dbg("%s() reparenting new client\n", __func__ );
    
-   c->reparent(c);
+   c->reparent(c);             	/* reparent it to frames and decor */
 
    dbg("%s() move/resizing  new client\n", __func__);
    
-   c->move_resize(c);
+   c->move_resize(c);          	/* set pos + size */
 
    dbg("%s() showing new client\n", __func__);
 
-   c->redraw(c, False);
+   c->redraw(c, False);		/* draw the decorations */
 
-   wm_activate_client(c);
+   wm_activate_client(c);       /* Map it into stack, ( will call show()) */
 
    /* below is probably now mostly uneeded ? */
 
    XGrabButton(c->wm->dpy, Button1, 0, c->window, True, ButtonPressMask,
 	       GrabModeSync, GrabModeSync, None, None);
 
+   /* Let window know were all done */
+
    ewmh_state_set(c);
+
    client_set_state(c, NormalState);
-
-   /* This is really only for an lowlighting panels to make sure 
-      they get really hidden. 
-
-      XXX can probably go.
-   */
-#if 0
-   if (old_main_client && w->main_client != old_main_client)
-     base_client_hide_transients(old_main_client);
-#endif
 
  end:
 
@@ -1803,19 +1642,21 @@ wm_remove_client(Wm *w, Client *c)
   dbg("%s() called for %s\n", __func__, c->name);
 
   XGrabServer(c->wm->dpy);
-
   c->destroy(c);
-
   XUngrabServer(w->dpy);
 }
 
-
+/* wm_update_layout() is called in the presence of a panel/toolbar
+ * changing its size / appearing. It re-layouts all windows for it
+ * to fit. 
+ */
 void
 wm_update_layout(Wm         *w, 
 		 Client     *client_changed, 
 		 signed int  change_amount) /* XXX Change to relayout */
 {
- Client *p;
+ Client *p = NULL;
+
  XGrabServer(w->dpy);
 
  stack_enumerate(w,p)
@@ -1967,7 +1808,6 @@ wm_update_layout(Wm         *w,
 	     switch (p->type)
 	       {
 	       case MBCLIENT_TYPE_APP :
-		 /* if (p->flags & CLIENT_FULLSCREEN_FLAG) break; */
 		 p->height += change_amount;
 		 p->move_resize(p);
 		 theme_img_cache_clear( w->mbtheme, FRAME_MAIN );
@@ -1988,14 +1828,6 @@ wm_update_layout(Wm         *w,
 		   }
 		 break;
 	       case MBCLIENT_TYPE_DIALOG :
-		 /*
-		 if (p->flags & CLIENT_SHRUNK_FOR_TB_FLAG)
-		   {
-		     p->height += change_amount;
-		     p->move_resize(p);
-		     client_deliver_config(p);
-		   }
-		 */
 	       default:
 		 break;
 	       }
@@ -2027,24 +1859,25 @@ wm_update_layout(Wm         *w,
  ewmh_update_rects(w);
 }
 
+/* wm_activate_client() is called to 'activate', eg raise or show
+ * a client stack wise.
+ */
 void 
 wm_activate_client(Client *c)
 {
   Wm     *w;
   Client *client_to_focus = c;
 
-  if (c == NULL) return;
+  if (c == NULL) return; /* its possible? for this to happen */
 
   w = c->wm;
 
   dbg("%s() called for %s\n", __func__, c->name);
 
-  /* old code */
-
   XGrabServer(w->dpy);
 
-  c->show(c); 			/* Set 'relative' pos in stack, map windows
-				   if needed etc                           */
+  c->show(c); /* Set 'relative' pos in stack, map windows
+		 if needed etc                           */
 
   dbg("%s() DESKTOP_RAISED_FLAG is %i\n", 
       __func__, (w->flags & DESKTOP_RAISED_FLAG));
@@ -2097,9 +1930,6 @@ wm_activate_client(Client *c)
 
       stack_move_transients_to_top(w, NULL, CLIENT_HAS_URGENCY_FLAG);
 
-
-      // list_destroy(&transient_list);
-
       /* Deal with desktop flag etc */
       if (c->type != MBCLIENT_TYPE_DESKTOP)
 	{
@@ -2135,17 +1965,31 @@ wm_activate_client(Client *c)
 
       if (!w->flags & DESKTOP_RAISED_FLAG)
 	{
-	  Client *client_above;
 
+	  /*
 	  if (c->trans)
-	    client_above = c->trans;
-	  else if (wm_get_visible_main_client(w))
-	    client_above = wm_get_visible_main_client(w);
-	  else
-	    client_above = c; 
+	    {
+	      Client *client_above = c->trans;
 
-	  stack_move_type_below_client(MBCLIENT_TYPE_TOOLBAR
-				       |MBCLIENT_TYPE_PANEL, client_above);
+	      while (client_above->trans) 
+		client_above = client_above->trans;
+
+	      stack_move_type_below_client(MBCLIENT_TYPE_TOOLBAR
+					   |MBCLIENT_TYPE_PANEL, client_above);
+	    }
+	  else 
+	  */
+	  if (wm_get_visible_main_client(w))
+	    {
+	      /* Move above main app win, therefore below dialogs */
+	      stack_move_type_above_client(MBCLIENT_TYPE_TOOLBAR
+					   |MBCLIENT_TYPE_PANEL, 
+					   wm_get_visible_main_client(w));
+	    }
+	  else
+	    stack_move_type_below_client(MBCLIENT_TYPE_TOOLBAR
+					 |MBCLIENT_TYPE_PANEL, c);
+
 	}
     }
   else if (c->type == MBCLIENT_TYPE_PANEL)
@@ -2174,8 +2018,8 @@ wm_activate_client(Client *c)
   XUngrabServer(w->dpy);
 }
 
-
-Client*   /* Returns either desktop or main app client */
+/* Returns either desktop or main app client */
+Client*  
 wm_get_visible_main_client(Wm *w)
 {
   if (w->flags & DESKTOP_RAISED_FLAG)
@@ -2195,7 +2039,7 @@ wm_get_visible_main_client(Wm *w)
   return NULL;
 }
 
-
+/* Get area taken up on an edge by panels, toolbars */
 int
 wm_get_offsets_size(Wm*     w, 
 		    int     wanted_direction,
@@ -2204,13 +2048,11 @@ wm_get_offsets_size(Wm*     w,
 		    )
 {
   Client *p;
-  int result = 0;
-  int x,y,ww,h;
+  int     x, y, width, height, result = 0;
 
   if (stack_empty(w)) return 0;
 
   dbg("%s() called\n", __func__);
-
 
   stack_enumerate(w, p)
      {
@@ -2222,30 +2064,30 @@ wm_get_offsets_size(Wm*     w,
 	 case NORTH:
 	   if (p->type == MBCLIENT_TYPE_PANEL && p->flags & CLIENT_DOCK_NORTH)
 	     {
-	       p->get_coverage(p, &x, &y, &ww, &h);
-	       result += h;
+	       p->get_coverage(p, &x, &y, &width, &height);
+	       result += height;
 	     }
 	   break;
 	 case SOUTH:
 	   if ((p->type == MBCLIENT_TYPE_PANEL && p->flags & CLIENT_DOCK_SOUTH)
 	       || (p->type == MBCLIENT_TYPE_TOOLBAR && include_toolbars) )
 	     {
-	       p->get_coverage(p, &x, &y, &ww, &h);
-	       result += h;
+	       p->get_coverage(p, &x, &y, &width, &height);
+	       result += height;
 	     }
 	   break;
 	 case EAST:
 	   if (p->type == MBCLIENT_TYPE_PANEL && p->flags & CLIENT_DOCK_EAST)
 	   {
-	       p->get_coverage(p, &x, &y, &ww, &h);
-	       result += ww;
+	       p->get_coverage(p, &x, &y, &width, &height);
+	       result += width;
 	   }
 	   break;
 	 case WEST:
 	   if (p->type == MBCLIENT_TYPE_PANEL && p->flags & CLIENT_DOCK_WEST)
 	   {
-	       p->get_coverage(p, &x, &y, &ww, &h);
-	       result += ww;
+	       p->get_coverage(p, &x, &y, &width, &height);
+	       result += width;
 	   }
 	   break;
 	 }
@@ -2278,106 +2120,12 @@ wm_toggle_desktop(Wm *w)
        wm_activate_client(wm_get_desktop(w));
 
      }
-
-   // w->flags ^= DESKTOP_RAISED_FLAG; - now handled in dekstop->show & activate
-
-#if 0
-   /* Toggle decorated desktop */
-   if (w->flags & DESKTOP_DECOR_FLAG)
-     {
-       if (w->flags & DESKTOP_RAISED_FLAG)
-	 {
-	   if (w->prev_main_client)
-	     wm_activate_client(w->prev_main_client);
-	 }
-       else
-	 {
-	   if (w->main_client)
-	     w->prev_main_client = w->main_client;
-	   else
-	     w->prev_main_client = NULL;
-
-	   wm_activate_client(wm_get_desktop(w));
-	   w->flags ^= DESKTOP_RAISED_FLAG;
-
-	   if (w->have_titlebar_panel 
-	       && mbtheme_has_titlebar_panel(w->mbtheme))
-	     XMapRaised(w->dpy, w->have_titlebar_panel->frame);
-	 }
-       return;
-     }
-
-   /* toggle  */
-   XGrabServer(w->dpy);
-   if (w->flags & DESKTOP_RAISED_FLAG)
-   { 				/* Desktop is visible, raise everything! */
-     dbg("%s() Desktop is raised, hiding it\n", __func__);
-     if (w->main_client != NULL && w->main_client->type != desktop)
-       {
-	 XMapRaised(w->dpy, w->main_client->frame);
-	 wm_activate_client(w->main_client);
-       }
-     else if (!w->main_client || w->main_client->type == desktop)
-       { 			/* Nothing to raise above */
-	 XUngrabServer(w->dpy); 
-	 return;
-       }
-
-     if (w->flags & DESKTOP_RAISED_FLAG) /* client may reset the flag - yuk!*/
-       w->flags ^= DESKTOP_RAISED_FLAG;	
-
-   } else {
-     dbg("%s() Desktop is hidden, showing it\n", __func__);
-
-     stack_enumerate(w, p)
-	{
-	  if ( p->type == desktop) 
-	   {
-	     XMapRaised(w->dpy, p->window); /* HACK - show call desktop_show */
-	     if (client_want_focus(p))
-	       {
-		 dbg("%s() setting input focus on desktop\n", __func__);
-		 XSetInputFocus(p->wm->dpy, p->window,
-				RevertToPointerRoot, CurrentTime);
-		 w->focused_client = p;
-	       }
-	   }
-	}
-
-     stack_enumerate(w, p)
-	{
-	  if ( p->type == toolbar) 
-	    { XMapRaised(w->dpy, p->frame); }
-	  /* If panel is in titlebar. and wants to be hidden for desktop  */
-	  if ( p->type == dock && 
-	       ( !(p->flags & CLIENT_DOCK_TITLEBAR) 
-		 || (p->flags & CLIENT_DOCK_TITLEBAR_SHOW_ON_DESKTOP) )
-	       ) 
-	    XMapRaised(w->dpy, p->window);
-	  if (p->type == dialog && p->trans == NULL && p->mapped)
-	    {
-	      p->show(p);
-	    }
-	}
-
-      if (!(w->flags & DESKTOP_RAISED_FLAG))
-	w->flags ^= DESKTOP_RAISED_FLAG;	
-   }
-
-
-   XUngrabServer(w->dpy);
-
-   XSync(w->dpy, False);
-
-   ewmh_update(w);
-   ewmh_set_active(w);
-#endif
 }
 
 void
 wm_set_cursor_visibility(Wm *w, Bool visible)
 {
-  /* XXX do we need to free the cursors ? */
+  /* TODO: do we need to free the cursors ? */
   if (visible)
     {
       w->config->no_cursor = False;
@@ -2388,8 +2136,8 @@ wm_set_cursor_visibility(Wm *w, Bool visible)
       Pixmap pix = XCreatePixmap (w->dpy, w->root, 1, 1, 1);
       XColor col;
       memset (&col, 0, sizeof (col));
-      blank_curs = XCreatePixmapCursor (w->dpy, pix, pix, &col, &col, 1, 1);
-      w->curs = blank_curs;
+      w->blank_curs = XCreatePixmapCursor (w->dpy, pix, pix, &col, &col, 1, 1);
+      w->curs = w->blank_curs;
       XFreePixmap (w->dpy, pix);
       w->config->no_cursor = True;
     }     
@@ -2401,6 +2149,7 @@ wm_get_desktop(Wm *w)
 {
   return w->client_desktop;
 }
+
 
 #ifdef USE_XSETTINGS
 
@@ -2488,6 +2237,10 @@ wm_xsettings_notify_cb (const char       *name,
 
 #ifdef USE_LIBSN
 
+/* Various stuff for startup notification libs. 
+ * Mb uses it for both busy startup cursor and single instancing apps.
+ * Seems alot of code for just that ....
+ */
 static void 
 wm_sn_exec(Wm *w, char* name, char* bin_name, char *desc)
 {
@@ -2510,7 +2263,6 @@ wm_sn_exec(Wm *w, char* name, char* bin_name, char *desc)
       break;
     case 0:
       sn_launcher_context_setup_child_process (context);
-      //execlp ("/bin/sh", "sh", "-c", bin_name, NULL);
       execlp(bin_name, bin_name, NULL);
       fprintf (stderr, "Failed to exec %s \n", bin_name);
       _exit (1);
@@ -2518,7 +2270,6 @@ wm_sn_exec(Wm *w, char* name, char* bin_name, char *desc)
     }
   sn_launcher_context_unref (context);
 }
-
 
 static void 
 wm_sn_timeout_check (Wm *w)
@@ -2544,7 +2295,6 @@ wm_sn_timeout_check (Wm *w)
       XDeleteProperty(w->dpy, w->root, w->atoms[MB_CLIENT_STARTUP_LIST]);
     }
 }
-
 
 static void 
 wm_sn_cycle_update_root_prop(Wm *w)
@@ -2616,7 +2366,6 @@ wm_sn_cycle_update_root_prop(Wm *w)
   XUngrabServer(w->dpy);
 }
 
-
 static SnCycle * 
 wm_sn_cycle_new(Wm *w, const char *bin_name)
 {
@@ -2627,7 +2376,6 @@ wm_sn_cycle_new(Wm *w, const char *bin_name)
   new_cycle->next     = NULL;
   return new_cycle;
 }
-
 
 static void 
 wm_sn_cycle_add(Wm *w, const char *bin_name)
@@ -2662,7 +2410,6 @@ wm_sn_cycle_add(Wm *w, const char *bin_name)
     }
   wm_sn_cycle_update_root_prop(w);
 }
-
 
 void
 wm_sn_cycle_remove(Wm *w, Window xid)
@@ -2704,6 +2451,7 @@ wm_sn_cycle_update_xid(Wm *w, const char *bin_name, Window xid)
   /* destroy must call sn_cycle remove ? - unless theme switch flag is on */
 
   SnCycle *current_cycle = w->sn_cycles;
+
   dbg("%s() called with %s, %li\n", __func__, bin_name, xid);
 
   while(current_cycle != NULL)
@@ -2722,7 +2470,6 @@ wm_sn_cycle_update_xid(Wm *w, const char *bin_name, Window xid)
   dbg("%s() match failed\n", __func__);
   wm_sn_cycle_update_root_prop(w);
 }
-
 
 static void 
 wm_sn_monitor_event_func (SnMonitorEvent *event,
@@ -2799,7 +2546,7 @@ wm_sn_monitor_event_func (SnMonitorEvent *event,
 
 #endif
 
-
+/* Hacky way of dimming windows when no composite - not recommended */
 #ifndef USE_COMPOSITE
 void
 wm_lowlight(Wm *w, Client *c)
@@ -2809,21 +2556,6 @@ wm_lowlight(Wm *w, Client *c)
   int x, y;
   Pixmap pxm_tmp;
   XSetWindowAttributes attr;
-
-#if 0
-  Client *msg_client = NULL;
-
-  if (w->msg_win_queue_head)
-    {
-      if ((msg_client = wm_find_client(w, w->msg_win_queue_head->win, 
-				       WINDOW)) != NULL)
-	{
-	  msg_client->ignore_unmap++;
-	  XUnmapWindow(w->dpy, msg_client->frame);
-	  XSync(w->dpy, True);
-	}
-    }
-#endif
 
   attr.override_redirect = True;
   attr.event_mask = ChildMask|ButtonPressMask|ExposureMask;

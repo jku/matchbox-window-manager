@@ -1,3 +1,21 @@
+2004-11-10  mallum,,,  <mallum@handhelds.org>
+
+	* configure.ac:
+	Remove message win enable. Add input win enable. Bump up version
+	* src/base_client.c: (base_client_new):
+	* src/structs.h:
+	* src/wm.c: (wm_new), (wm_usage), (wm_load_config),
+	(wm_find_client), (wm_handle_map_notify), (wm_event_loop),
+	(wm_handle_button_event), (wm_handle_keypress),
+	(wm_handle_configure_notify), (wm_handle_configure_request),
+	(wm_handle_expose_event), (wm_handle_client_message),
+	(wm_handle_property_change), (wm_win_force_dialog),
+	(wm_make_new_client), (wm_remove_client), (wm_update_layout),
+	(wm_activate_client), (wm_get_offsets_size), (wm_toggle_desktop),
+	(wm_set_cursor_visibility), (wm_sn_exec), (wm_sn_cycle_update_xid),
+	(wm_lowlight):
+	Clean wm.c up. Move some functionality into base_client_new()
+
 2004-11-09  mallum,,,  <mallum@handhelds.org>
 
 	* src/composite-engine.c: (comp_engine_render):

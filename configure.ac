@@ -1,5 +1,5 @@
 AC_PREREQ(2.53)
-AC_INIT([matchbox-window-manager], 0.8.4, [mallum@handhelds.org])
+AC_INIT([matchbox-window-manager], 0.9rc1, [mallum@handhelds.org])
 AC_CONFIG_SRCDIR([src/wm.c])
 
 AM_INIT_AUTOMAKE()
@@ -63,9 +63,9 @@ AC_ARG_ENABLE(ping-protocol,
    		enable_ping_protocol=$enableval, 
 		enable_ping_protocol=yes)
 
-AC_ARG_ENABLE(message_wins,
-  [  --enable-message-wins         enable 'message' window support ( see docs )],
-  enable_message_wins=$enableval, enable_message_wins=no)
+AC_ARG_ENABLE(input_wins,
+  [  --enable-alternate-input-wins         enable alternate method of managing 'input windows' ( see docs )],
+  enable_input_wins=$enableval, enable_input_wins=no)
 
 AC_ARG_ENABLE(debug,
   [  --enable-debug                enable debug ( verbose ) build],
@@ -169,10 +169,10 @@ if test x$enable_ping_protocol = xno; then
       AC_MSG_RESULT([Disabling Ping Protocol Support.])	
 fi
 
-dnl ------ Message Wins----------------------------------------------------
+dnl ------ Input Wins----------------------------------------------------
 
-if test x$enable_message_wins = xyes; then
-      AC_DEFINE(USE_MSG_WIN, [1], [use Message Windows])
+if test x$enable_input_wins = xyes; then
+      AC_DEFINE(USE_ALT_INPUT_WIN, [1], [use alternative input Windows])
 fi
 
 
@@ -425,7 +425,7 @@ echo "
 
         Building with Keyboard:             ${enable_keyboard}
         Building with wm ping protocol:     ${enable_ping_protocol}
-        Building with Message Windows:      ${enable_message_wins}
+        Building with Alt input Windows:    ${enable_input_wins}
         Building with Expat:                ${enable_expat}
         Building with XSettings:            ${mb_have_xsettings}
         Building with Startup-Notification: ${enable_startup_notification}

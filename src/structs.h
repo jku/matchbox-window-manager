@@ -569,7 +569,7 @@ typedef struct _wm
 
   /* Theme / visual look related date */
 
-  Cursor            curs, curs_busy, curs_drag;
+  Cursor            curs, curs_busy, curs_drag, blank_curs;
 
   struct _mbtheme  *mbtheme;
   Pixmap            generic_icon, generic_icon_mask; 
