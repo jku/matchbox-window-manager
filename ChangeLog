@@ -1,5 +1,11 @@
 2005-02-18  mallum,,,  <mallum@openedhand.com>
 
+	* src/stack.c: (stack_sync_to_display):
+	* src/toolbar_client_alt.c: (toolbar_client_destroy):
+	Trap some more X Errors
+
+2005-02-18  mallum,,,  <mallum@openedhand.com>
+
 	* src/dialog_client.c: (dialog_get_available_area),
 	(dialog_constrain_geometry):
 	* src/toolbar_client_alt.c: (toolbar_client_new),

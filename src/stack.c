@@ -352,8 +352,10 @@ stack_sync_to_display(Wm *w)
   
   if (win_list)
     {
+      misc_trap_xerrors();
       XRestackWindows(w->dpy, win_list, w->stack_n_items);
       free(win_list);
+      misc_untrap_xerrors();
     }
 
 }
