@@ -53,6 +53,11 @@ dockbar_client_orientation_calc(Client *c)
       if (ewmh_state_check(c, c->wm->atoms[MB_WM_STATE_DOCK_TITLEBAR]))
 	{
 	  w->have_titlebar_panel = c;
+
+	  /* Does the panel still want to be shown when we map the desktop ? */
+	  if (ewmh_state_check(c, c->wm->atoms[MB_DOCK_TITLEBAR_SHOW_ON_DESKTOP]))
+	    return CLIENT_DOCK_TITLEBAR|CLIENT_DOCK_TITLEBAR_SHOW_ON_DESKTOP;
+
 	  return CLIENT_DOCK_TITLEBAR;
 	}
     }
@@ -183,6 +188,10 @@ dockbar_client_show(Client *c) /*TODO: show and hide share common static func*/
        if (c->wm->main_client 
 	   && !(c->wm->main_client->flags & CLIENT_FULLSCREEN_FLAG)
 	   && !(c->wm->flags & DESKTOP_RAISED_FLAG))
+	 XMapRaised(c->wm->dpy, c->window);
+
+       if (c->wm->flags & DESKTOP_RAISED_FLAG 
+	   && c->flags & CLIENT_DOCK_TITLEBAR_SHOW_ON_DESKTOP)
 	 XMapRaised(c->wm->dpy, c->window);
      }
    else XMapRaised(c->wm->dpy, c->window);

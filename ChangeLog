@@ -1,3 +1,14 @@
+2004-04-22  Matthew Allum,,,  <mallum@openedhand.com>
+
+	* src/dockbar_client.c: (dockbar_client_orientation_calc),
+	(dockbar_client_show):
+	* src/ewmh.c: (ewmh_init):
+	* src/structs.h:
+	* src/wm.c: (wm_make_new_client), (wm_toggle_desktop):
+	- Add support for keeping embedded titlebar panels visible
+	  when desktop is shown.
+        - Initial support for new message window types
+
 2004-04-13  Matthew Allum,,,  <mallum@handhelds.org>
 
 	* src/Makefile.am:
@@ -44,7 +55,7 @@
 	* src/dialog_client.c: (dialog_client_drag):
 	Fix underlying apps getting expose for invisable dialog drag.
 
-2004-03-22 matchbox-panel-0.8.1 released released tag: RELEASE_0_8_1
+2004-03-22 matchbox-window-manager-0.8.1 released released tag: RELEASE_0_8_1
 
 2004-03-22  Matthew Allum,,,  <mallum@handhelds.org>
 

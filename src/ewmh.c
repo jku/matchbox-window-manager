@@ -93,6 +93,8 @@ ewmh_init(Wm *w)
 
     "_MB_WM_WINDOW_TYPE_MESSAGE",
     "_MB_WM_WINDOW_TYPE_MESSAGE_TIMEOUT",
+    "_MB_WM_WINDOW_TYPE_MESSAGE_STATIC_0", /* Message wins which have the  */
+    "_MB_WM_WINDOW_TYPE_MESSAGE_STATIC_1", /* decor but not timing         */
 
     "_NET_WM_WINDOW_TYPE",
 
@@ -103,7 +105,8 @@ ewmh_init(Wm *w)
     "_NET_WM_CONTEXT_CUSTOM",
     "_NET_WM_WINDOW_TYPE_MENU",
     "CM_TRANSLUCENCY",
-    "INTEGER"
+    "_MB_DOCK_TITLEBAR_SHOW_ON_DESKTOP",
+    "INTEGER" 			/* XXX Needed ? */
   };
 
   XInternAtoms (w->dpy, atom_names, ATOM_COUNT,

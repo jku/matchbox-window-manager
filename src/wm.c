@@ -1470,10 +1470,12 @@ wm_make_new_client(Wm *w, Window win)
 	       c = dialog_client_new(w, win, NULL);
 	       if (c == NULL) goto end;
 	     }
+
+#ifdef USE_MSG_WIN
 	   
 	   else if (value[0] == w->atoms[WINDOW_TYPE_MESSAGE])
 	     {
-#ifdef USE_MSG_WIN
+
 	       dbg("%s() got type message atom\n", __func__ );
 	       if (w->msg_win_queue_head == NULL)
 		 {
@@ -1498,13 +1500,22 @@ wm_make_new_client(Wm *w, Window win)
 		   if (value) XFree(value);
 		   return NULL;
 		 }
-#else
-	       fprintf(stderr, 
-		       "matchbox: This matchbox build lacks support for message windows.\n"
-		       "          To support them rebuild matchbox with --enable-message-wins.\n" 
-		       );
-#endif
+
 	     }
+	   else if (value[0] == w->atoms[WINDOW_TYPE_MESSAGE_STATIC_0])
+	     {
+		   c = dialog_client_new(w, win, NULL);
+		   if (c == NULL) goto end;
+		   c->flags ^= CLIENT_IS_MESSAGE_DIALOG; 
+	     }
+	   else if (value[0] == w->atoms[WINDOW_TYPE_MESSAGE_STATIC_1])
+	     {
+		   c = dialog_client_new(w, win, NULL);
+		   if (c == NULL) goto end;
+		   c->flags ^= CLIENT_IS_MESSAGE_DIALOG; 
+	     }
+
+#endif
 	   
 	 } 
      }
@@ -2019,7 +2030,11 @@ wm_toggle_desktop(Wm *w)
 	{
 	  if ( p->type == toolbar) 
 	    { XMapRaised(w->dpy, p->frame); }
-	  if ( p->type == dock && !(p->flags & CLIENT_DOCK_TITLEBAR)) 
+	  /* If panel is in titlebar. and wants to be hidden for desktop  */
+	  if ( p->type == dock && 
+	       ( !(p->flags & CLIENT_DOCK_TITLEBAR) 
+		 || (p->flags & CLIENT_DOCK_TITLEBAR_SHOW_ON_DESKTOP) )
+	       ) 
 	    XMapRaised(w->dpy, p->window);
 	  if (p->type == dialog && p->trans == NULL && p->mapped)
 	    {
