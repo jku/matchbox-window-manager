@@ -1,3 +1,8 @@
+2004-02-26  Matthew Allum,,,  <mallum@openedhand.com>
+
+	* src/mbtheme.c: (_theme_paint_core), (theme_frame_paint):
+	Make sure overlarge theme pixmaps are clipped if not scaled
+
 2004-02-25  Matthew Allum,,,  <mallum@openedhand.com>
 
 	* src/main_client.c: (main_client_toggle_fullscreen):

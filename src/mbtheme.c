@@ -508,6 +508,11 @@ _theme_paint_core( MBTheme *theme, Client *c, MBThemeFrame *frame,
 	{
 	  dbg("%s() copying  %ix%i to +%i+%i\n", __func__, 
 	      w, h, x + dx, y + dy);
+	  
+	  /* Clip image if needed - object params for example */
+	  if (w > img->width)  w = img->width; 
+	  if (h > img->height) h = img->height; 
+
 	  mb_pixbuf_img_copy_composite(theme->wm->pb, img, img_tmp,
 				       0, 0, w, h, x, y); 
 	  mb_pixbuf_img_free(theme->wm->pb, img_tmp);
@@ -650,15 +655,20 @@ theme_frame_paint( MBTheme *theme,
      - finally render images at offsets. 
    */
 
+  n_offsets = 0;
+
    if (layer_label 
        && c->name 
        && !(c->flags & CLIENT_BORDERS_ONLY_FLAG)
-       && theme->subst_img)
+       && theme->subst_img
+       /* && strchr(c->name, (int)theme->subst_char) */)
      {
        MBPixbufImage *img_tmp = NULL;
        unsigned char *cur_offsetp = NULL, *orig_name = NULL, *name = NULL;
        int            img_pixel_offset = frame->label_x;
 
+
+       dbg("%s() figuring out offsets\n", __func__);
 
        /* Sort the cache - FIXME: need to combine with icon stuff rather than
         *                         dupe the code!!
