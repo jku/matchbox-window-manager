@@ -1,3 +1,9 @@
+2004-02-06  Matthew Allum,,,  <mallum@openedhand.com>
+
+	* src/keys.c: (keys_load_config):
+	* src/structs.h:
+	Fixed kbdconfig load. fixed defualt icon load
+
 2004-02-05  Matthew Allum, <mallum@openedhand.com>
 
 	* configure.ac:

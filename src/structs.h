@@ -73,6 +73,8 @@
 #include <X11/extensions/Xrender.h>
 #endif
 
+#define GENERIC_ICON        PKGDATADIR "/mbnoapp.xpm"
+
 #ifdef MB_HAVE_PNG
 
 #define DEFAULT_THEME       DATADIR "/themes/blondie/matchbox/theme.xml"
@@ -83,15 +85,10 @@
 
 #define DEFAULTTHEMENAME  "blondie"
 
-#define GENERIC_ICON        DATADIR "/pixmaps/mbnoapp.png"
-
-#define GENERICICON        DATADIR "/pixmaps/mbnoapp.png"
-
 #else
 
 #define DEFAULT_THEME       DATADIR "/themes/bluebox/matchbox/theme.xml"
 #define DEFAULT_THEME_NAME  "bluebox"
-#define GENERIC_ICON        DATADIR "/pixmaps/mbnoapp.xpm"
 
 #endif
 
