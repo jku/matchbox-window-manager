@@ -1,3 +1,10 @@
+2004-02-15  Matthew Allum,,,  <mallum@handhelds.org>
+
+	* src/dialog_client.c: (dialog_client_destroy):
+	Fix for possible crash from dialog destroy.
+
+2004-02-10 matchbox-panel-0.8 released released tag: RELEASE_0_8
+
 2004-02-10  Matthew Allum,,,  <mallum@handhelds.org>
 
 	* src/base_client.c: (base_client_new), (base_client_destroy):

@@ -784,7 +784,7 @@ void dialog_client_destroy(Client *c)
 	{
 	  XSetInputFocus(w->dpy, d->window,
 			 RevertToPointerRoot, CurrentTime);
-	  c->wm->focused_client = d;
+	  w->focused_client = d;
 	}
 
       if (w->flags & DESKTOP_RAISED_FLAG)
