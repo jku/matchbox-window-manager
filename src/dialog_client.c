@@ -66,6 +66,8 @@ dialog_client_new(Wm *w, Window win, Client *trans)
    c->get_coverage = &dialog_client_get_coverage;
    c->trans = trans;
 
+   // c->flags ^= CLIENT_TITLE_HIDDEN_FLAG; 
+
    dialog_client_check_for_state_hints(c);
 
    return c;
@@ -306,8 +308,11 @@ dialog_client_reparent(Client *c)
    dialog_client_get_offsets(c, &offset_east, &offset_south, &offset_west);
 
    attr.override_redirect = True; 
-   attr.background_pixel  = BlackPixel(c->wm->dpy, c->wm->screen);
+   attr.background_pixel  = 0; /* BlackPixel(c->wm->dpy, c->wm->screen); */
+   attr.border_pixel      = 0;
    attr.event_mask        = ChildMask|ButtonPressMask|ExposureMask;
+
+   attr.colormap          = c->cmap; 
 
    dbg("%s() want lowlight : wm:%i , client:%i\n", __func__,
        c->wm->config->dialog_shade, (c->flags & CLIENT_IS_MODAL_FLAG));
@@ -325,20 +330,31 @@ dialog_client_reparent(Client *c)
 	   c->frame = c->window;
 	 }
        else c->frame = XCreateWindow(c->wm->dpy, 
-				     c->wm->root, 
-				     0, 0,
-				     c->width + offset_east + offset_west, 
-				     c->height + offset_north + offset_south, 
+					  c->wm->root, 
+					  0, 0,
+					  c->width + offset_east + offset_west, 
+					  c->height + offset_north + offset_south, 
 				     0,
-				     CopyFromParent, 
+				     /*
+					  32,
+					  InputOutput,  
+					  c->visual,
+				     */
+#ifdef USE_COMPOSITE
+				     c->is_argb32 ? 32  : CopyFromParent,
+				     InputOutput,  
+				     c->is_argb32 ? c->visual : CopyFromParent,
+#else
+				     CopyFromParent,
 				     CopyFromParent, 
 				     CopyFromParent,
-				     CWOverrideRedirect|CWEventMask|CWBackPixel,
+
+#endif
+
+
+				     CWOverrideRedirect|CWEventMask|CWBackPixel|CWBorderPixel|CWColormap, 
 				     &attr);
      }
-
-
-   attr.background_pixel = BlackPixel(c->wm->dpy, c->wm->screen);
 
    if (c->flags & CLIENT_TITLE_HIDDEN_FLAG)
      {
@@ -353,10 +369,10 @@ dialog_client_reparent(Client *c)
 		       c->width + offset_east + offset_west, 
 		       c->height + offset_north + offset_south, 
 		       0,
+		       CopyFromParent, /* depth */
 		       CopyFromParent, 
-		       CopyFromParent, 
-		       CopyFromParent,
-		       CWOverrideRedirect|CWBackPixel|CWEventMask, 
+		       CopyFromParent, /* visual */
+		       CWOverrideRedirect|CWBackPixel|CWEventMask|CWBorderPixel|CWColormap, 
 		       &attr);
 
      }
@@ -519,7 +535,6 @@ dialog_client_redraw(Client *c, Bool use_cache)
       frame_ref_south = FRAME_MSG_SOUTH;
     }
 
-
   dbg("%s() c->width : %i , offset_east : %i, offset_west : %i\n",
       __func__, c->width, offset_east, offset_west );
 
@@ -562,11 +577,11 @@ dialog_client_redraw(Client *c, Bool use_cache)
   if (!(c->flags & CLIENT_BORDERS_ONLY_FLAG
 	|| c->flags & CLIENT_IS_MESSAGE_DIALOG))
     {
+
       theme_frame_button_paint(c->wm->mbtheme, c, 
 			       BUTTON_ACTION_CLOSE, 
 			       INACTIVE, FRAME_DIALOG, 
 			       total_w, offset_north);
-
 
       if (c->flags & CLIENT_ACCEPT_BUTTON_FLAG)
 	theme_frame_button_paint(c->wm->mbtheme, c, BUTTON_ACTION_ACCEPT, 
@@ -575,10 +590,11 @@ dialog_client_redraw(Client *c, Bool use_cache)
       if (c->flags & CLIENT_HELP_BUTTON_FLAG)
 	theme_frame_button_paint(c->wm->mbtheme, c, BUTTON_ACTION_HELP, 
 				 INACTIVE, FRAME_DIALOG,total_w, offset_north);
+
     }
 
   /* XXXX ifdef HAVE_SHAPE */
-  if (is_shaped)
+  if (is_shaped && !c->is_argb32)
     {
       XRectangle rects[1];
 
@@ -636,6 +652,7 @@ dialog_client_redraw(Client *c, Bool use_cache)
 
 	}
     }
+
 
 #ifdef STANDALONE
    XSetWindowBackgroundPixmap(c->wm->dpy, c->title_frame, c->backing);

@@ -1148,6 +1148,9 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
    /* allow decoration free dialogs to move themselves */
    if (c->type == dialog  	
        && ( c->flags & CLIENT_TITLE_HIDDEN_FLAG 
+	    || c->flags & CLIENT_IS_MESSAGE_DIALOG
+	    || c->flags & CLIENT_IS_MESSAGE_DIALOG_HI
+	    || c->flags & CLIENT_IS_MESSAGE_DIALOG_LO
 	    || c->wm->config->dialog_stratergy == WM_DIALOGS_STRATERGY_FREE)
        )
      {
@@ -1156,8 +1159,13 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
        c->x      = xwc.x = e->x;
        c->y      = xwc.y = e->y;
 
+       dbg("%s() moving window\n", __func__);
+
        /* Make sure we get the damage before the move.. */
-       comp_engine_client_show(c->wm, c); 
+       comp_engine_client_hide(c->wm, c);
+       comp_engine_render(c->wm, c->wm->all_damage);
+
+       dialog_client_move_resize(c);
 
        need_comp_update = True;
        
@@ -1620,6 +1628,8 @@ wm_make_new_client(Wm *w, Window win)
    
    c->configure(c);
 
+   comp_engine_client_init(w, c);
+
    dbg("%s() reparenting new client\n", __func__ );
    
    c->reparent(c);
@@ -1628,7 +1638,7 @@ wm_make_new_client(Wm *w, Window win)
    
    c->move_resize(c);
 
-   comp_engine_client_init(w, c);
+
 
    dbg("%s() showing new client\n", __func__);
 

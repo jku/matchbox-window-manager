@@ -37,6 +37,9 @@ static StackItem *comp_stack;
 
 #define stack_enumerate(c) for((c) = comp_stack; (c); (c) = (c)->next)
 
+#define stack_enumerate_backwards(c) for((c) = stack_last(); (c); (c) = stack_prev((c)->client))
+
+
 static StackItem*
 stack_new(Client *client)
 {
@@ -48,6 +51,37 @@ stack_new(Client *client)
   list->next   = NULL;
 
   return list;
+}
+
+static StackItem*
+stack_last()
+{
+  StackItem* list = comp_stack;
+
+  if (list == NULL) return NULL;
+
+  while (list->next != NULL) list = list->next;
+
+  return list;
+}
+
+static StackItem*
+stack_prev(Client *client)
+{
+  StackItem* cur = NULL, *ret = NULL;
+
+  if ((cur = comp_stack) == NULL || cur->client == client)
+    return NULL;
+  
+  while (cur)
+    {
+      if (cur->next && cur->next->client == client)
+	return cur;
+
+      cur = cur->next;
+    }
+
+  return NULL;
 }
 
 static void
@@ -62,7 +96,8 @@ stack_push(Client *client)
     }
 
   new          = stack_new(client);
-  new->next    = comp_stack;
+  new->next        = comp_stack;
+
   comp_stack = new;
 }
 
@@ -559,6 +594,42 @@ client_border_size (Wm *w, Client *c, int x, int y)
     return border;
 }
 
+static Visual*
+comp_engine_get_argb32_visual(Wm *w)
+{
+  XVisualInfo		*xvi;
+  XVisualInfo		template;
+  int			nvi;
+  int			i;
+  XRenderPictFormat	*format;
+  Visual		*visual = NULL;
+
+  template.screen = w->screen;
+  template.depth  = 32;
+  template.class  = TrueColor;
+
+  if ((xvi = XGetVisualInfo (w->dpy, 
+			     VisualScreenMask |
+			     VisualDepthMask |
+			     VisualClassMask,
+			     &template,
+			     &nvi)) == NULL)
+    return NULL;
+  
+  for (i = 0; i < nvi; i++)
+    {
+      format = XRenderFindVisualFormat (w->dpy, xvi[i].visual);
+      if (format->type == PictTypeDirect && format->direct.alphaMask)
+	{
+	  visual = xvi[i].visual;
+	  break;
+	}
+    }
+
+  XFree (xvi);
+  return visual;
+}
+
 void
 comp_engine_set_defualts(Wm *w)
 {
@@ -750,6 +821,7 @@ comp_engine_init (Wm *w)
   int		                xfixes_event, xfixes_error;
   int		                render_event, render_error;
   XRenderPictureAttributes	pa;
+  Pixmap                        tmp_pxm;
 
   dbg("%s() called\n", __func__);
 
@@ -808,12 +880,29 @@ comp_engine_init (Wm *w)
 
   dbg("%s() success \n", __func__);
 
+  /* Setup an mbpixbuf reference for 32bit argb rendering */
+
+  w->argb_pb = mb_pixbuf_new_extended(w->dpy, 
+				      w->screen, 
+				      comp_engine_get_argb32_visual(w),
+				      32);
+
+  /* A little hack to get the GC right */
+
+  tmp_pxm = XCreatePixmap(w->dpy, w->root, 16, 16, 32);
+
+  w->argb_pb->gc = XCreateGC(w->dpy, tmp_pxm, 0, NULL);
+
+  XFreePixmap(w->dpy, tmp_pxm);
+
    return True;
 }
 
 void
 comp_engine_client_init(Wm *w, Client *client)
 {
+  XRenderPictFormat *format;
+
   if (!w->have_comp_engine) return;
 
   client->damaged      = 0;
@@ -823,6 +912,17 @@ comp_engine_client_init(Wm *w, Client *client)
   client->borderSize   = None;
   client->extents      = None;
   client->transparency = -1;
+  client->is_argb32    = False;
+
+  /* Check visual */
+
+  format = XRenderFindVisualFormat (w->dpy, client->visual);
+  
+  if (format && format->type == PictTypeDirect && format->direct.alphaMask)
+    {
+      dbg("%s() client is ARGB32\n", __func__);
+      client->is_argb32 = True;
+    }
 
   comp_engine_client_get_trans_prop(w, client);
 
@@ -1049,16 +1149,19 @@ _render_a_client(Wm           *w,
 
   /* Transparency only done for dialogs and overides */
 
-  if ( client->transparency == -1 
+  if ( (client->transparency == -1  
        || client->type == mainwin 
        || client->type == desktop
        || client->type == toolbar
-       || client->type == dock)
+	|| client->type == dock) && !client->is_argb32) 
     {
       XFixesSetPictureClipRegion (w->dpy, w->root_buffer, 0, 0, region);
+
       XFixesSubtractRegion (w->dpy, region, region, winborder);
 
-      XRenderComposite (w->dpy, PictOpSrc, client->picture, None, w->root_buffer,
+      XRenderComposite (w->dpy, PictOpSrc, 
+			client->picture, 
+			None, w->root_buffer,
 			0, 0, 0, 0, x, y, width, height);
 
     }
@@ -1101,9 +1204,6 @@ comp_engine_destroy_root_buffer(Wm *w)
       w->root_buffer = None;
     }
 }
-
-
-
 
 void
 comp_engine_render(Wm *w, XserverRegion region)
@@ -1233,7 +1333,7 @@ comp_engine_render(Wm *w, XserverRegion region)
 
   /* Now render shadows */
 
-  stack_enumerate(item)
+  stack_enumerate_backwards(item)
     {
       t = item->client;
       if ((t->type == dialog 
@@ -1252,12 +1352,14 @@ comp_engine_render(Wm *w, XserverRegion region)
 	      t->get_coverage(t, &x, &y, &width, &height);  
 
 	  
-	      if (w->config->shadow_style == SHADOW_STYLE_SIMPLE)
+	      if (w->config->shadow_style == SHADOW_STYLE_SIMPLE) 
 		{
 		  XserverRegion shadow_region;
-		  
+
 		  /* Grab 'shape' region of window */
 		  shadow_region = client_border_size (w, t, x, y);
+		  
+
 		  
 		  /* Offset it. */
 		  XFixesTranslateRegion (w->dpy, shadow_region, 
@@ -1271,15 +1373,24 @@ comp_engine_render(Wm *w, XserverRegion region)
 		  XFixesSetPictureClipRegion (w->dpy, w->root_buffer, 
 					      0, 0, shadow_region);
 
-		  if (t->transparency != -1)
+		  /* shadows */
+		  if (t->is_argb32 )
 		    {
-		      /* No shadows currently for transparent windows */
 		      XRenderComposite (w->dpy, PictOpOver, 
-					t->picture, w->trans_picture,
-					w->root_buffer, 0, 0, 0, 0, 
-					x, y, width, height);
-		    } else {		  
-		      XRenderComposite (w->dpy, PictOpOver, w->black_picture, 
+					w->black_picture,
+					t->picture, 
+ 					w->root_buffer,
+					0, 0, 0, 0,
+					x + w->config->shadow_dx,
+					y + w->config->shadow_dy,
+					width  + w->config->shadow_padding_width, 
+					height + w->config->shadow_padding_height);
+
+		    }
+		  else
+		    {
+		      XRenderComposite (w->dpy, PictOpOver, 
+					w->black_picture, 
 					None, 
 					w->root_buffer,
 					0, 0, 0, 0,
@@ -1287,6 +1398,32 @@ comp_engine_render(Wm *w, XserverRegion region)
 					y + w->config->shadow_dy,
 					width  + w->config->shadow_padding_width, 
 					height + w->config->shadow_padding_height);
+		    }
+
+		  /* Paint any trans window contents */
+		  if (t->transparency != -1 || t->is_argb32 )
+		    {
+		      XFixesDestroyRegion (w->dpy, shadow_region);
+
+		      shadow_region = client_border_size (w, t, x, y);
+
+		      XFixesIntersectRegion (w->dpy, shadow_region,
+					     t->border_clip, shadow_region );
+		      
+		      XFixesSetPictureClipRegion (w->dpy, w->root_buffer, 
+						  0, 0, shadow_region);
+
+		      if (t->is_argb32)
+			XRenderComposite (w->dpy, PictOpOver, 
+					  t->picture, None,
+					  w->root_buffer, 0, 0, 0, 0, 
+					  x, y, width, height);
+		      else
+			XRenderComposite (w->dpy, PictOpOver, 
+					  t->picture, w->trans_picture,
+					  w->root_buffer, 0, 0, 0, 0, 
+					  x, y, width, height);
+
 		    }
 
 		  XFixesDestroyRegion (w->dpy, shadow_region);
@@ -1297,15 +1434,23 @@ comp_engine_render(Wm *w, XserverRegion region)
 		  XFixesSetPictureClipRegion (w->dpy, w->root_buffer, 
 					      0, 0, t->border_clip);
 
-		  if (t->transparency != -1)
+		  if (t->transparency != -1 || t->is_argb32 )
 		    {
 		      /* No shadows currently for transparent windows */
 		      XRenderComposite (w->dpy, PictOpOver, 
 					t->picture, w->trans_picture,
 					w->root_buffer, 0, 0, 0, 0, 
 					x, y, width, height);
+		      /*
+		      XRenderComposite (w->dpy, PictOpOver, 
+					t->picture, None,
+					w->root_buffer, 0, 0, 0, 0, 
+					x, y, width, height);
+		      */
+
 		    } else {		  
 		      /* Combine pregenerated shadow tiles */
+
 		      shadow_pic 
 			= shadow_gaussian_make_picture (w, 
 							width + w->config->shadow_padding_width, 
@@ -1320,6 +1465,7 @@ comp_engine_render(Wm *w, XserverRegion region)
 					width + w->config->shadow_padding_width, 
 					height + w->config->shadow_padding_height);
 		      XRenderFreePicture (w->dpy, shadow_pic);
+
 		    }
 		}
 	      
@@ -1327,6 +1473,7 @@ comp_engine_render(Wm *w, XserverRegion region)
 
 	}
     }
+
   
   XFixesSetPictureClipRegion (w->dpy, w->root_buffer, 0, 0, None);
 

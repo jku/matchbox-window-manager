@@ -13,6 +13,7 @@
 <color id="red" def="#ff0000" />
 <color id="lowlightcol" def="#aaaaaa99" />
 <color id="menuhlcol" def="#9d9a8a" />
+<color id="shadowcol"   def="#11111166" />
 
 <!-- Fonts, alternate fonts can be listed seperated by a '|'   
             The first matched will be used.                   -->
@@ -407,7 +408,8 @@
 
 
 <!-- tweak the shadow style -->
-<shadow style="gaussian" />
+<!-- <shadow style="gaussian" /> -->
+<shadow style="simple" dx="3" dy="3" color="shadowcol"/>
 
 <!-- You can specify a character to be replaced by an image in text labels
 <subst char=":" pixmap="que" />

@@ -86,6 +86,8 @@ comp_engine_render(Wm *w, XserverRegion region);
 #define comp_engine_handle_events(w, c) ;
 #define comp_engine_destroy_root_buffer(w) ;
 #define comp_engine_render(w, r) ;
+#define comp_engine_get_argb32_visual(w) ;
+
 
 #endif
 

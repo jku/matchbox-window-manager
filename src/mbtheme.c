@@ -261,9 +261,16 @@ theme_frame_button_paint(MBTheme *theme,
 	      img_backing = mb_pixbuf_img_rgb_new(theme->wm->pb, 
 						  button_w, button_h);
 	      */
-	      pxm_button = XCreatePixmap(theme->wm->dpy, theme->wm->root,
-					 button_w, button_h, 
-					 theme->wm->pb->depth);
+#ifdef USE_COMPOSITE
+	      if (c->is_argb32)
+		pxm_button = XCreatePixmap(theme->wm->dpy, theme->wm->root,
+					   button_w, button_h, 
+					   32);
+	      else
+#endif
+		pxm_button = XCreatePixmap(theme->wm->dpy, theme->wm->root,
+					   button_w, button_h, 
+					   theme->wm->pb->depth);
 
 	      dbg("%s() copying +%i+%i %ix%i cache %ix%i\n", __func__,
 		  button_x, button_y,
@@ -291,6 +298,17 @@ theme_frame_button_paint(MBTheme *theme,
 		}
 	      else
 		{
+#ifdef USE_COMPOSITE
+		  if (c->is_argb32)
+		    img_backing 
+		      = mb_pixbuf_img_new_from_x_drawable (theme->wm->argb_pb, 
+							   mb_drawable_pixmap(c->backing), 
+							   None,
+							   button_x, button_y,
+							   button_w, button_h,
+							   False);
+   else
+#endif
 		  img_backing 
 		    = mb_pixbuf_img_new_from_x_drawable (theme->wm->pb, 
 							 mb_drawable_pixmap(c->backing), 
@@ -298,6 +316,14 @@ theme_frame_button_paint(MBTheme *theme,
 							 button_x, button_y,
 							 button_w, button_h,
 							 False);
+		  
+		  if (img_backing == NULL)
+		    {
+		      img_backing = mb_pixbuf_img_rgba_new(theme->wm->pb,
+							   button_w, button_h);
+		      mb_pixbuf_img_fill (theme->wm->pb, img_backing, 
+					  0,0,0,0xff);
+		    }
 		}
 
 	      if (state == ACTIVE)
@@ -319,6 +345,7 @@ theme_frame_button_paint(MBTheme *theme,
 							  0, 0, 
 							  button->img_active_blend);
 
+
 		} else {
 
 		  if (button->img_inactive->width > button_w)
@@ -339,9 +366,16 @@ theme_frame_button_paint(MBTheme *theme,
 						     0, 0,
 						     button->img_inactive_blend);
 		}
-	      
-	      mb_pixbuf_img_render_to_drawable(theme->wm->pb, img_backing, 
-					       pxm_button, 0, 0);
+
+#ifdef USE_COMPOSITE
+	      if (c->is_argb32)
+		mb_pixbuf_img_render_to_drawable(theme->wm->argb_pb, 
+						 img_backing, 
+						 pxm_button, 0, 0);
+	      else
+#endif
+		mb_pixbuf_img_render_to_drawable(theme->wm->pb, img_backing, 
+						 pxm_button, 0, 0);
 	      
 	      dbg("%s painting button\n", __func__);
 	      
@@ -726,9 +760,16 @@ theme_frame_paint( MBTheme *theme,
 
   /* Finally paint to the pixmap. */
 
-  mb_pixbuf_img_render_to_drawable(theme->wm->pb, img, 
-				   mb_drawable_pixmap(c->backing), 
-				   dx, dy);
+#ifdef USE_COMPOSITE
+   if (c->is_argb32)
+     mb_pixbuf_img_render_to_drawable(theme->wm->argb_pb, img, 
+				      mb_drawable_pixmap(c->backing), 
+				      dx, dy);
+   else
+#endif
+     mb_pixbuf_img_render_to_drawable(theme->wm->pb, img, 
+				      mb_drawable_pixmap(c->backing), 
+				      dx, dy);
   
   if (c->backing_masks[MSK_NORTH] != None &&
       ( frame_type == FRAME_MAIN || frame_type == FRAME_DIALOG 
@@ -836,6 +877,9 @@ theme_frame_paint( MBTheme *theme,
 			     (unsigned char*) c->name,
 			     (c->name_is_utf8) ? MB_ENCODING_UTF8 : MB_ENCODING_LATIN,
 			     text_render_opts);
+      dbg("%s() rendered text\n", __func__);
+
+       XSync(c->wm->dpy, False);
     }
 
   return True;

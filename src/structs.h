@@ -298,6 +298,8 @@ typedef struct _client
   char	           *name;
 #endif
 
+  Bool              is_argb32; 	/* This is composite only, but saves on a few
+				   ifdefs keeping it here */
 #ifdef USE_COMPOSITE
 
   int		    damaged;
@@ -452,6 +454,8 @@ typedef struct _wm_config
   int           shadow_style;
   unsigned char shadow_color[4];
 
+
+
 #endif
    
   Time         dbl_click_time;
@@ -599,6 +603,9 @@ typedef struct _wm
   Picture           shadow_sw_pic;
 
   Picture           shadow_pic;
+
+  MBPixbuf         *argb_pb; 	/* special 32 bpp pixbuf ref */
+
 #endif
 
 #ifdef STANDALONE

@@ -1,3 +1,23 @@
+2004-05-28  Matthew Allum,,,  <mallum@handhelds.org>
+
+	* data/themes/blondie/theme.xml:
+	* src/client_common.c: (client_init_backing):
+	* src/composite-engine.c: (stack_last), (stack_prev), (stack_push),
+	(comp_engine_get_argb32_visual), (comp_engine_init),
+	(comp_engine_client_init), (_render_a_client),
+	(comp_engine_render):
+	* src/composite-engine.h:
+	* src/dialog_client.c: (dialog_client_new),
+	(dialog_client_reparent), (dialog_client_redraw):
+	* src/mbtheme.c: (theme_frame_button_paint), (theme_frame_paint):
+	* src/structs.h:
+	* src/wm.c: (wm_handle_configure_request), (wm_make_new_client):
+	Added initial support for ARGB Windows.
+	Changed blondie theme to use simple shadows.
+	Possible fix for allowing message wins to move themselves. 
+	
+2004-05-06  mb-wm 0.8.2 release RELEASE_0_8_2
+
 2004-05-06  Matthew Allum,,,  <mallum@handhelds.org>
 
 	* configure.ac:

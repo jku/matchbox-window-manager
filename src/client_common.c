@@ -214,7 +214,18 @@ client_init_backing(Client* c, int width, int height)
    if (c->backing != NULL) 
      mb_drawable_unref(c->backing);
 
-   c->backing = mb_drawable_new(c->wm->pb, width, height);
+#ifdef USE_COMPOSITE
+   if (c->is_argb32)
+     {
+       c->backing = mb_drawable_new(c->wm->argb_pb, width, height);
+       dbg("%s() XXXXX creating 32bit drawable ( %i, %ix%i ) XXXX\n", 
+	   __func__, c->wm->argb_pb->depth, width, height);
+
+
+     }
+   else
+#endif
+     c->backing = mb_drawable_new(c->wm->pb, width, height);
 
 #endif
    
