@@ -1,6 +1,10 @@
 #
 # This is an example keyboard config file for matchbox
 #
+# You can edit this file or change per user by copying to 
+#  ~/.matchbox/kbdconfig
+#
+# Se the matchbox manual for more info ( http://projects.o-hand.com/matchbox )
 
 ### Window operation short cuts 
 
@@ -30,14 +34,14 @@
 
 f11=fullscreen
 
-### super should be windows keys 
+### super should be a 'window' key, uncomment '#' if you have one.
 
-<super>d=desktop
-<super>r=!xterm
-<super>e=!!nautilus
+#<super>d=desktop
+#<super>r=!xterm
+#<super>e=!!nautilus
 
-### Special keys
+### Special keys, likely probably only available on extended keyboards. 
 
-App=!mbcontrol -mbmenu
-Menu=!mbcontrol -mbmenu
+#App=!mbcontrol -mbmenu
+#Menu=!mbcontrol -mbmenu
 

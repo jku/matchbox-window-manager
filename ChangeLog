@@ -1,5 +1,11 @@
 2005-01-10  mallum,,,  <mallum@openedhand.com>
 
+	* data/kbdconfig:
+	Add saner defaults to keyboard shortcut config.
+	Also add some more info to the file. 
+
+2005-01-10  mallum,,,  <mallum@openedhand.com>
+
 	* src/mbtheme.c: (theme_frame_button_paint):
 	Fix typo break composite builds.
 
