@@ -1,3 +1,8 @@
+2004-02-08  Matthew Allum,,,  <mallum@handhelds.org>
+
+	* src/wm.c: (wm_usage):
+	fix MB_USE_JPEG typo
+
 2004-02-07  Matthew Allum,,,  <mallum@handhelds.org>
 
 	* configure.ac:

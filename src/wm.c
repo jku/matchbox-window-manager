@@ -244,7 +244,7 @@ wm_usage(char *progname)
    printf("\tPNG support                      no\n");
 #endif
 
-#ifdef MB_HAVE_JPG
+#ifdef MB_HAVE_JPEG
    printf("\tJPG support                      yes\n");
 #else
    printf("\tJPG support                      no\n");
