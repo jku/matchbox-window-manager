@@ -442,7 +442,7 @@ ewmh_set_active(Wm *w)
 
   last_active = val[0]; 
 
-  dbg("%s() setting %li as active\n", __func__, w->main_client->window );
+  dbg("%s() setting %li as active\n", __func__, val[0] );
 
   XChangeProperty(w->dpy, w->root, w->atoms[_NET_ACTIVE_WINDOW] ,
 		  XA_WINDOW, 32, PropModeReplace,

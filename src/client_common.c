@@ -188,7 +188,12 @@ client_want_focus(Client *c)
 {
    /* TODO: check _WM protocols too ? */
    int ret = 1;
-   XWMHints *hints = XGetWMHints(c->wm->dpy, c->window);
+   XWMHints *hints;
+
+   if (c->flags & CLIENT_IS_MESSAGE_DIALOG)
+     return 0;
+
+   hints = XGetWMHints(c->wm->dpy, c->window);
    if (hints != NULL)
      if ((hints->flags & InputHint) && (hints->input == False)) ret = 0;
    XFree(hints);

@@ -1,5 +1,12 @@
 2004-08-18  mallum,,,  <mallum@handhelds.org>
 
+	* src/client_common.c: (client_want_focus):
+	Never give message windows input focus. 
+	* src/ewmh.c: (ewmh_set_active):
+	Remove silly debug crasher.
+
+2004-08-18  mallum,,,  <mallum@handhelds.org>
+
 	* src/wm.c: (wm_handle_configure_request):
 	Allow toolbars to resize height.
 
