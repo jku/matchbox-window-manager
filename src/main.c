@@ -35,6 +35,9 @@ main(int argc, char **argv)
 
    w = wm_new(argc, argv);
 
+   if (getenv("MB_SYNC")) 
+     XSynchronize (w->dpy, True);
+
    wm_init_existing(w);
 
    wm_event_loop(w);

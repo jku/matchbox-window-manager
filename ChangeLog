@@ -1,5 +1,15 @@
 2004-11-19  mallum,,,  <mallum@handhelds.org>
 
+	* src/wm.c: (wm_activate_client):
+	* src/desktop_client.c: (desktop_client_new):
+	Fixes for decorated desktop mode
+	* src/main.c: (main):
+	Add call to XSyncronize() is MB_SYNC env var set. 
+
+2004-11-19 0.9rc2 released. 
+
+2004-11-19  mallum,,,  <mallum@handhelds.org>
+
 	* configure.ac:
 	Bump versison to 0.9rc2
 

@@ -24,8 +24,8 @@ desktop_client_new(Wm *w, Window win)
    if (w->flags & DESKTOP_DECOR_FLAG)
      {
        c = main_client_new(w, win);
-       /* c->type = desktop; */
-       c->flags  |= CLIENT_IS_DESKTOP_FLAG; /* XXX Needed ? */
+       c->flags  |= CLIENT_IS_DESKTOP_FLAG;
+       w->client_desktop = c;
        return c;
      }
 

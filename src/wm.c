@@ -2050,7 +2050,9 @@ wm_activate_client(Client *c)
       stack_move_transients_to_top(w, NULL, CLIENT_HAS_URGENCY_FLAG);
 
       /* Deal with desktop flag etc */
-      if (c->type != MBCLIENT_TYPE_DESKTOP)
+      if (c->type != MBCLIENT_TYPE_DESKTOP
+	  && !(c->flags & CLIENT_IS_DESKTOP_FLAG) )
+	 /*    ^^^^^^^^^  hack for decprated desktop */
 	{
 	  w->flags &= ~DESKTOP_RAISED_FLAG;
 	  w->stack_top_app = c;      
