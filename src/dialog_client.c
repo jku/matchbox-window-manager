@@ -447,6 +447,12 @@ dialog_get_available_area(Client *c,
       *height = w->dpy_height - *y - wm_get_offsets_size(w, SOUTH, NULL, True);
       *x      = wm_get_offsets_size(w, WEST, NULL, True);
       *width  = w->dpy_width - *x - wm_get_offsets_size(w, EAST, NULL, True);
+
+
+      dbg("%s() (toolbar) offsets south is %i\n", 
+	  __func__, wm_get_offsets_size(w, SOUTH, NULL, True));
+
+
     }
 }
 
@@ -488,6 +494,9 @@ dialog_constrain_geometry(Client *c,
     return True;
 
   dialog_get_available_area(c,&avail_x, &avail_y, &avail_width, &avail_height);
+
+  dbg("%s() getting available area (toolbar +%i+%i %ix%i)\n", 
+      __func__, avail_x, avail_y, avail_width, avail_height);
 
   /* Figure out window border offsets */
   dialog_client_get_offsets(c, &bdr_east, &bdr_south, &bdr_west);

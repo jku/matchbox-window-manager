@@ -46,19 +46,26 @@ toolbar_client_new(Wm *w, Window win)
   c->destroy      = &toolbar_client_destroy;
 
   XGetTransientForHint(w->dpy, win, &trans_win);
+
+  dbg("%s() checking trans hint\n", __func__);
    
   if (trans_win && (trans_win != win))
     {
+      dbg("%s() got trans hint\n", __func__);
+
       trans_client = wm_find_client(w, trans_win, WINDOW);
 
       if (trans_client)
 	{
+
 	  if (trans_client->type == MBCLIENT_TYPE_DIALOG)
 	    {
 	      c->flags |= CLIENT_TB_ALT_TRANS_FOR_DIALOG;
+	      dbg("%s() is trans for dialog\n", __func__);
 	    }
 	  else if (trans_client->type & (MBCLIENT_TYPE_APP|MBCLIENT_TYPE_DESKTOP))
 	    {
+	      dbg("%s() is trans for app\n", __func__);
 	      c->flags |= CLIENT_TB_ALT_TRANS_FOR_APP;
 	    }
 	  else trans_client = NULL;
@@ -85,8 +92,12 @@ toolbar_client_configure(Client *c)
 {
   Wm *w = c->wm;
 
+  dbg("%s() called\n", __func__);
+
   if (c->flags & CLIENT_IS_MINIMIZED)
     return;
+
+  dbg("%s() client is not minimised\n", __func__);
 
   if (c->flags & CLIENT_TB_ALT_TRANS_FOR_APP)
     {
@@ -103,36 +114,54 @@ toolbar_client_configure(Client *c)
 	}
     }
 
-  if (c->flags & CLIENT_TB_ALT_TRANS_FOR_DIALOG)
-    {
-      Client *dialog_client = c->trans;
-      
-      if (dialog_client)
-	{
-	  /*
-	   *  Move transient dialog out of the way.  
-	   */
-	  int req_x = dialog_client->x, req_y = dialog_client->y, 
-	    req_w = dialog_client->width, req_h = dialog_client->height;
-	  
-	  if (!dialog_constrain_geometry(dialog_client, 
-					 &req_x, &req_y, 
-					 &req_w, &req_h))
-	    {
-	      dialog_client->x = req_x; dialog_client->y = req_y; 
-	      dialog_client->width = req_w; dialog_client->height = req_h;
-	      dialog_client->move_resize(dialog_client);
-	      client_deliver_config(dialog_client);
-	    }
-	  
-	}
-    }
-
   c->y = w->dpy_height - wm_get_offsets_size(w, SOUTH, c, True) - c->height;
   c->x = wm_get_offsets_size(w, WEST,  NULL, False);
   c->width = w->dpy_width
     - wm_get_offsets_size(w, WEST,  NULL, False)
     - wm_get_offsets_size(w, EAST,  NULL, False);
+
+  if (c->flags & CLIENT_TB_ALT_TRANS_FOR_DIALOG)
+    {
+      Client *dialog_client = c->trans;
+      
+      dbg("%s() client trans for dialog\n", __func__);
+
+      if (dialog_client)
+	{
+	  /*
+	   *  Move transient dialog out of the way.  
+	   */
+	  Bool tmp_mapped = c->mapped;
+
+	  int req_x = dialog_client->x, req_y = dialog_client->y, 
+	    req_w = dialog_client->width, req_h = dialog_client->height;
+	  
+	  c->mapped = True; 	/* Hack Hack */
+	  c->type = MBCLIENT_TYPE_TOOLBAR; 
+
+	  dbg("%s() checking for available geom\n", __func__);
+
+	  if (!dialog_constrain_geometry(dialog_client, 
+					 &req_x, &req_y, 
+					 &req_w, &req_h))
+	    {
+
+	      dbg("%s() constraining to %ix%i +%i+%i\n", 
+		  __func__,
+		  req_w, req_h, req_x, req_y);
+
+	      dialog_client->x = req_x; dialog_client->y = req_y; 
+	      dialog_client->width = req_w; dialog_client->height = req_h;
+	      dialog_client->move_resize(dialog_client);
+	      client_deliver_config(dialog_client);
+	    }
+
+	  c->type = MBCLIENT_TYPE_DIALOG; 
+	  c->mapped = tmp_mapped;
+	  
+	}
+    }
+
 }
 
 void

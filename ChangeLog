@@ -1,5 +1,14 @@
 2005-02-18  mallum,,,  <mallum@openedhand.com>
 
+	* src/dialog_client.c: (dialog_get_available_area),
+	(dialog_constrain_geometry):
+	* src/toolbar_client_alt.c: (toolbar_client_new),
+	(toolbar_win_offset), (toolbar_client_configure):
+	Fix alternative toolbar repositioning dialog. 
+	Also add some more debug statements. 
+
+2005-02-18  mallum,,,  <mallum@openedhand.com>
+
 	* src/dialog_client.c: (dialog_client_redraw),
 	(dialog_client_button_press):
 	Support 'custom' buttons on dialogs.
