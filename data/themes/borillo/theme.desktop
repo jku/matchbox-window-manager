@@ -1,6 +1,6 @@
 [Desktop Entry]
 Type=MBTheme
-Name=Blondie
+Name=Borillo
 Preview=XXX
 Comment=Blondie theme 
 ThemePath=@prefix@/themes/blondie
@@ -9,6 +9,6 @@ MenuBgColor=#e0e0e0
 MenuFgColor=#11111d
 MenuBdColor=#7297ce
 #MenuTransparency=240
-MenuHlColor=black
+MenuHlColor=#7297ce
 PanelFgColor=black
 DesktopBgSpec=col-solid:#e0e0e0

@@ -1,5 +1,10 @@
 2004-02-09  Matthew Allum,,,  <mallum@openedhand.com>
 
+	* data/themes/borillo/theme.desktop:
+	Fixed menu highlight color
+
+2004-02-09  Matthew Allum,,,  <mallum@openedhand.com>
+
 	* configure.ac:
 	Fix xsettings in summary
 	* data/themes/borillo/theme.xml:
