@@ -155,7 +155,15 @@ ewmh_handle_root_message(Wm *w, XClientMessageEvent *e)
      if ((c = wm_find_client(w, e->data.l[1], WINDOW)) != NULL)
        {
 	 dbg("%s() pong from %s\n", __func__, c->name);
-	 if (c->pings_pending > 0) c->pings_pending--;
+
+	 /* We got a response to a ping. stop pinging it now
+            until close button is pressed again. 
+          */
+	 if (c->pings_pending > 0) 
+	   {
+	     c->pings_pending = -1;
+	     c->wm->n_active_ping_clients--;
+	   }
        }
    } else if (e->message_type == w->atoms[WINDOW_STATE]) {
      if (e->data.l[1] == w->atoms[WINDOW_STATE_FULLSCREEN]
@@ -464,61 +472,6 @@ ewmh_hung_app_check(Wm *w)
 
 	  if (c->pings_pending >= PING_PENDING_MAX)
 	    {
-	      /*
-               * ifdef'd out as handled simpler now in client_obliterare
-	       *
-	       */
-#if 0
-	      char buf[257];
-	      int sig  = 9;
-
-	      if (c->pings_pending == PING_PENDING_MAX)
-		sig = SIGTERM;
-	      
-	      if (gethostname (buf, sizeof(buf)-1) == 0)
-		{
-		  if (!strcmp (buf, c->host_machine))
-		    {
-		      if (w->config->ping_handler != NULL)
-			{
-			  snprintf(buf, 256, "%s %i %li",
-				   w->config->ping_handler,
-				   c->pid, c->window);
-			  dbg("%s() forking '%s' to handle hung app\n",
-			      __func__, buf);
-			  
-
-			  // fork_exec(buf);
-
-			  switch (fork())
-			    {
-			    case 0:
-			      execlp ("/bin/sh", "sh", "-c", buf, NULL);
-			      fprintf (stderr, 
-				       "matchbox: Exec '%s' failed.\n", buf );
-			      kill (c->pid, 9); /* Kill anyway */
-			      exit (0);
-			      break;
-			    case -1:
-			      fprintf (stderr, "matchbox: Fork failed.\n");
-			      kill (c->pid, 9);
-			      break;
-			    }
-
-			  /* Fire and forget  */
-			  c->has_ping_protocol = False;
-			}
-		      else if (kill (c->pid, sig) < 0)
-			fprintf(stderr, "matchbox: kill %i on %s failed.\n",
-				sig, c->name);
-		    }
-		}
-	      else fprintf(stderr, "matchbox: gethostname failed\n");
-
-	      dbg("%s() Sending sig %i to  app %s as png timeout\n",
-		  __func__, sig, c->name);
-
-#endif
 	      client_obliterate(c);
 	    }
 	}

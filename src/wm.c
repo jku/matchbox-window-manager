@@ -199,7 +199,9 @@ wm_usage(char *progname)
 #endif
    printf("\t-use_dialog_mode  <free|const|const-horiz>\n");
    printf("\t-use_desktop_mode <decorated|plain>\n");
+   /*
    printf("\t-ping_handler     <string>\n");
+   */
 #ifdef STANDALONE
    printf("\t-titlebar_panel   <x11 geometry>\n");
 #endif
@@ -277,8 +279,14 @@ wm_usage(char *progname)
    printf("\tcomposite support                no\n");
 #endif
 
+#ifndef NO_PING
+   printf("\tping protocol support            yes\n");
+#else
+   printf("\tping protocol support            no\n");
+#endif
+
    printf("\nVisit http://matchbox.handhelds.org for more info.\n");
-   printf("(c) 2002 Matthew Allum\n");
+   printf("(c) 2004 Matthew Allum\n");
    exit(0);
 }
 
@@ -291,7 +299,7 @@ wm_load_config (Wm   *w,
    char *type;
    XrmValue value;
    
-   static int opTableEntries = 9;
+   static int opTableEntries = 8;
    static XrmOptionDescRec opTable[] = {
       {"-theme",       ".theme",           XrmoptionSepArg, (XPointer) NULL},
       {"-use_titlebar",".titlebar",        XrmoptionSepArg, (XPointer) NULL},
@@ -300,7 +308,9 @@ wm_load_config (Wm   *w,
       {"-use_lowlight",    ".lowlight",    XrmoptionSepArg, (XPointer) NULL},
       {"-use_dialog_mode", ".dialog",      XrmoptionSepArg, (XPointer) NULL},
       {"-use_desktop_mode",".desktop",     XrmoptionSepArg, (XPointer) NULL},
+      /*
       {"-ping_handler",    ".pinghandler",     XrmoptionSepArg, (XPointer) NULL},
+      */
       {"-titlebar_panel",  ".titlebarpanel", XrmoptionSepArg, (XPointer) NULL},
    };
    
@@ -433,6 +443,7 @@ wm_load_config (Wm   *w,
 	 }
      } 
 
+   /*
    if (XrmGetResource(rDB, "matchbox.pinghandler", "Matchbox.Pinghandler",
 		      &type, &value) == True)
    {
@@ -441,6 +452,7 @@ wm_load_config (Wm   *w,
      w->config->ping_handler[value.size] = '\0';
      dbg("%s() got ping handler :%s ", __func__, w->config->ping_handler);
    }
+   */
 
 #ifdef STANDALONE
    if (XrmGetResource(rDB, "matchbox.titlebarpanel", "Matchbox.Titlebarpanel",
@@ -653,7 +665,7 @@ wm_event_loop(Wm* w)
 	tvt.tv_sec = 1;
 #endif
 
-#ifndef NO_PNG
+#ifndef NO_PING
       if (w->n_active_ping_clients)
 	tvt.tv_sec = 1;
 #endif
@@ -731,8 +743,8 @@ wm_event_loop(Wm* w)
 #endif
 
 #ifndef NO_PING
-	/* check for hung apps every five seconds */
-	if (++hung_app_timer > 5 && w->n_active_ping_clients)
+	/* check for hung apps every two seconds - they dont last long.. */
+	if (++hung_app_timer > 2 && w->n_active_ping_clients)
 	  {
 	    hung_app_timer = 0;
 	    ewmh_hung_app_check(w);
