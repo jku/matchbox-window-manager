@@ -1,3 +1,11 @@
+2004-12-07  Ross Burton  <ross@openedhand.com>
+
+	* configure.ac:
+	Add an option to disable use of Xrm.
+	
+	* src/wm.c:
+	When Xrm is disabled, use a simple command line parser.
+	
 2004-12-01  mallum,,,  <mallum@handhelds.org>
 
 	* src/composite-engine.c: (comp_engine_client_get_trans_prop):

@@ -268,7 +268,133 @@ wm_usage(char *progname)
    exit(0);
 }
 
+#ifdef NO_XRM
+void
+wm_load_config (Wm   *w, 
+		int  *argc, 
+		char *argv[])
+{
+   int i;
+   /* Configure these now, and let the arguments override them */
 
+   w->config = malloc(sizeof(Wm_config));
+
+   /* config defaults */
+   w->config->use_title        = True;
+   w->config->display_name[0]  = '\0';
+   w->config->dbl_click_time   = 200;
+   w->config->use_icons        = 16;
+   w->config->no_cursor        = False;
+   w->config->dialog_shade     = False;   
+   w->config->dialog_stratergy = WM_DIALOGS_STRATERGY_CONSTRAINED;
+   w->config->ping_handler     = NULL;
+
+#ifdef USE_COMPOSITE
+   w->config->dialog_shade = True;
+#endif
+   w->config->lowlight_params[0] = 0;
+   w->config->lowlight_params[1] = 0;
+   w->config->lowlight_params[2] = 0;
+   w->config->lowlight_params[3] = 100;
+
+   if (getenv("DISPLAY") != NULL)
+      strcpy(w->config->display_name, (char *)getenv("DISPLAY"));
+   
+   for (i = 1; i < *argc; i++) {
+      if (!strcmp ("-theme", argv[i])) {
+         if (++i>=*argc) wm_usage (argv[0]);
+#ifdef STANDALONE
+         fprintf(stderr, 
+                 "matchbox: This matchbox build does not support themeing\n");
+#else
+         w->config->theme = argv[i];
+         dbg("%s() got theme :%s ", __func__, w->config->theme);
+#endif
+         continue;
+      }
+      if (!strcmp ("-use_titlebar", argv[i])) {
+         if (++i>=*argc) wm_usage (argv[0]);
+         if (strcmp(argv[i], "no") == 0) {
+            w->config->use_title = False;
+            dbg("%s() TURNING TITLE OFF\n", __func__);
+         }
+         continue;
+      }
+      if (!strcmp("-display", argv[i])) {
+         if (++i>=*argc) wm_usage (argv[0]);
+         strcpy (w->config->display_name, argv[i]);
+         continue;
+      }
+      if (!strcmp ("-use_cursor", argv[i])) {
+         if (++i>=*argc) wm_usage (argv[0]);
+         if (strcmp(argv[i], "no") == 0) {
+            w->config->no_cursor = True;
+            dbg("%s() TURNING CURSOR OFF\n", __func__);
+         }
+         continue;
+      }
+#ifndef USE_COMPOSITE
+      if (!strcmp ("-use_lowlight", argv[i])) {
+         if (++i>=*argc) wm_usage (argv[0]);
+         if (strcmp(argv[i], "yes") == 0) {
+            w->config->dialog_shade = True;   
+            dbg("%s() TURNING LOWLIGHT ON\n", __func__);
+         }
+         continue;
+      }
+#endif
+      if (!strcmp("-use_dialog_mode", argv[i])) {
+         if (++i>=*argc) wm_usage (argv[0]);
+         if (!strcmp("free", argv[i])) {
+            w->config->dialog_stratergy = WM_DIALOGS_STRATERGY_FREE;
+         } else if (!strcmp("const-horiz", argv[i])) {
+            w->config->dialog_stratergy = WM_DIALOGS_STRATERGY_CONSTRAINED_HORIZ;
+         } else if (!strcmp("static", argv[i])) {
+            w->config->dialog_stratergy = WM_DIALOGS_STRATERGY_STATIC;
+         } else {
+            wm_usage (argv[0]);
+         }
+         continue;
+      }
+      if (!strcmp("-use_desktop_mode", argv[i])) {
+         if (++i>=*argc) wm_usage (argv[0]);
+         if (!strcmp("decorated", argv[i])) {
+            w->flags |= DESKTOP_DECOR_FLAG;
+         }
+         continue;
+      }
+#ifdef STANDALONE
+      if (!strcmp("-titlebar_panel", argv[i])) {
+         int flags = 0;
+         if (++i>=*argc) wm_usage (argv[0]);
+
+         flags = XParseGeometry(argv[i], &w->toolbar_panel_x,
+                                &w->toolbar_panel_y,
+                                &w->toolbar_panel_w,
+                                &w->toolbar_panel_h) ;
+         
+         if ((flags & XValue) && (flags & YValue) && (flags & WidthValue) && (flags & HeightValue))
+            w->have_toolbar_panel = True;
+         else
+            fprintf(stderr, "matchbox: titlebar panel geometry string invalid\n");
+         continue;
+      }
+#endif
+      if (!strcmp ("-force_dialogs", argv[i])) {
+         if (++i>=*argc) wm_usage (argv[0]);
+         w->config->force_dialogs = argv[i];
+         dbg("%s() got force_dialogs :%s ", __func__, w->config->force_dialogs);
+         continue;
+      }
+      wm_usage (argv[0]);
+   }
+
+   if ((w->dpy = XOpenDisplay(w->config->display_name)) == NULL) {
+      fprintf(stderr, "matchbox: can't open display! check your DISPLAY variable.\n");
+      exit(1);
+   }
+}
+#else
 void
 wm_load_config (Wm   *w, 
 		int  *argc, 
@@ -358,7 +484,7 @@ wm_load_config (Wm   *w,
      w->config->force_dialogs = (char *)malloc(sizeof(char)*(value.size+1));
      strncpy(w->config->force_dialogs, value.addr, (int) value.size);
      w->config->force_dialogs[value.size] = '\0';
-     dbg("%s() got theme :%s ", __func__, w->config->force_dialogs);
+     dbg("%s() got force dialogs :%s ", __func__, w->config->force_dialogs);
    }
    
    if (XrmGetResource(rDB, "matchbox.titlebar", "Matchbox.Titlebar",
@@ -457,6 +583,7 @@ wm_load_config (Wm   *w,
    }
 #endif
 }
+#endif /* NO_XRM */
 
 
 void

@@ -71,6 +71,11 @@ AC_ARG_ENABLE(alt_input_wins,
   [  --enable-alt-input-wins enable alternate managing input windows (EXPERIMENTAL)],
   enable_alt_input_wins=$enableval, enable_alt_input_wins=no)
 
+AC_ARG_ENABLE(xrm,
+  [  --disable-xrm            disable Xrm support [default=no]],
+   		enable_xrm=$enableval, 
+		enable_xrm=yes)
+
 AC_ARG_ENABLE(debug,
   [  --enable-debug                enable debug ( verbose ) build],
      enable_debug=$enableval, enable_debug=no )
@@ -202,6 +207,13 @@ dnl ------ Input Wins----------------------------------------------------
 
 if test x$enable_alt_input_wins = xyes; then
       AC_DEFINE(USE_ALT_INPUT_WIN, [1], [use alternative input Windows])
+fi
+
+dnl ------ Xrm support ------------------------------------------------
+
+if test x$enable_xrm = xno; then
+      LIBMB_CFLAGS="$LIBMB_CFLAGS -DNO_XRM"
+      AC_MSG_RESULT([Disabling Xrm Support.])	
 fi
 
 dnl ------ Debug Build -----------------------------------------------------
@@ -454,6 +466,7 @@ echo "
         Building with Keyboard:             ${enable_keyboard}
         Building with wm ping protocol:     ${enable_ping_protocol}
         Building with Alt input Windows:    ${enable_alt_input_wins}
+        Building with Xrm:                  ${enable_xrm}
         Building with Expat:                ${enable_expat}
         Building with XSync:                ${enable_xsync}
         Building with XSettings:            ${mb_have_xsettings}
