@@ -1,3 +1,8 @@
+2004-02-25  Matthew Allum,,,  <mallum@openedhand.com>
+
+	* src/main_client.c: (main_client_toggle_fullscreen):
+	Fix titlebar panel for fullscreen toggling
+
 2004-02-24  Matthew Allum,,,  <mallum@openedhand.com>
 
 	* src/base_client.c: (base_client_destroy):

@@ -14,7 +14,7 @@
 */
 
 /*
-  $Id: main_client.c,v 1.2 2004/02/24 21:02:07 mallum Exp $
+  $Id: main_client.c,v 1.3 2004/02/25 13:10:48 mallum Exp $
 */
 
 #include "main_client.h"
@@ -223,6 +223,21 @@ main_client_toggle_fullscreen(Client *c)
   c->flags ^= CLIENT_FULLSCREEN_FLAG;
   main_client_configure(c);
   main_client_move_resize(c);
+
+  if (c->wm->have_titlebar_panel 
+      && mbtheme_has_titlebar_panel(c->wm->mbtheme))
+    {
+      if (c->flags & CLIENT_FULLSCREEN_FLAG)
+	{
+	  c->wm->have_titlebar_panel->ignore_unmap++;
+	  XUnmapWindow(c->wm->dpy, c->wm->have_titlebar_panel->frame);
+	}
+      else
+	{
+	  XMapRaised(c->wm->dpy, c->wm->have_titlebar_panel->frame);
+	}
+
+    }
 
   XUngrabServer(c->wm->dpy);
 }
