@@ -312,7 +312,7 @@ dialog_client_reparent(Client *c)
   attr.border_pixel      = 0;
   attr.event_mask        = ChildMask|ButtonPressMask|ExposureMask;
   
-  attr.colormap          = c->cmap; 
+  attr.colormap          = c->cmap; /* Not used - needed ? */
   
   dbg("%s() want lowlight : wm:%i , client:%i\n", __func__,
       c->wm->config->dialog_shade, (c->flags & CLIENT_IS_MODAL_FLAG));
@@ -345,7 +345,7 @@ dialog_client_reparent(Client *c)
 				     CopyFromParent,
 #endif
 				     CWOverrideRedirect|CWEventMask
-				     |CWBackPixel|CWBorderPixel|CWColormap, 
+				     |CWBackPixel|CWBorderPixel/*|CWColormap*/, 
 				     &attr);
      }
 
@@ -1068,9 +1068,7 @@ dialog_client_iconize(Client *c)
 void 
 dialog_client_destroy(Client *c)
 {
-  Wm     *w = c->wm; 
   Client *d = NULL;
-
 
   /* Focus the saved next or return a likely candidate if none found */
   d = dialog_client_set_focus_next(c);
@@ -1084,5 +1082,4 @@ dialog_client_destroy(Client *c)
    */
   if (d) 
       wm_activate_client(d);
-
 }
