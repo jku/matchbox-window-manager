@@ -279,6 +279,7 @@ typedef struct _mb_client_button
 #define CLIENT_DOCK_TITLEBAR   (1<<17)
 #define CLIENT_IS_MOVING       (1<<19) /* Used by comosite engine */
 #define CLIENT_DOCK_TITLEBAR_SHOW_ON_DESKTOP (1<<20)
+#define CLIENT_IS_MINIMIZED    (1<<23)
 
 /* Main Client structure */
 

@@ -1,3 +1,23 @@
+2004-08-06  mallum,,,  <mallum@handhelds.org>
+
+	* data/themes/blondie/theme.xml:
+	Fix min+max toolbars having different sizes.
+	Note, Matchbox probably should handle this.
+
+	* src/dialog_client.c: (dialog_client_new),
+	(dialog_get_available_area), (dialog_check_gemoetry):
+	* src/structs.h:
+	More dialog positioning/sizing improvements. 
+
+	* src/toolbar_client.c: (toolbar_client_new),
+	(toolbar_client_configure), (toolbar_client_move_resize),
+	(toolbar_client_show), (toolbar_client_hide),
+	(toolbar_client_destroy), (toolbar_client_get_coverage),
+	(toolbar_client_button_press), (toolbar_win_offset),
+	(toolbar_client_redraw):
+	Speed up toolbar handling removing the numerous get_state()
+	roundtrips and using a local flag instead. 
+
 2004-08-05  mallum,,,  <mallum@handhelds.org>
 
 	* src/dialog_client.c: (dialog_client_show),

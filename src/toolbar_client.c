@@ -43,8 +43,6 @@ toolbar_client_new(Wm *w, Window win)
    c->get_coverage = &toolbar_client_get_coverage;
    c->destroy      = &toolbar_client_destroy;
 
-
-
    client_set_state(c,WithdrawnState); 	/* set initially to signal show() */
    
    return c;
@@ -53,17 +51,16 @@ toolbar_client_new(Wm *w, Window win)
 void
 toolbar_client_configure(Client *c)
 {
-   if (client_get_state(c) == IconicState) {
-      ; 
-   } else {
-     c->y = c->wm->dpy_height - wm_get_offsets_size(c->wm, SOUTH, c, True)
-       - c->height;
-     c->x = toolbar_win_offset(c) 
-       + wm_get_offsets_size(c->wm, WEST,  NULL, False);
-     c->width = c->wm->dpy_width - toolbar_win_offset(c)
-       - wm_get_offsets_size(c->wm, WEST,  NULL, False)
-       - wm_get_offsets_size(c->wm, EAST,  NULL, False);
-   }
+  if (c->flags & CLIENT_IS_MINIMIZED)
+    return;
+
+  c->y = c->wm->dpy_height - wm_get_offsets_size(c->wm, SOUTH, c, True)
+    - c->height;
+  c->x = toolbar_win_offset(c) 
+    + wm_get_offsets_size(c->wm, WEST,  NULL, False);
+  c->width = c->wm->dpy_width - toolbar_win_offset(c)
+    - wm_get_offsets_size(c->wm, WEST,  NULL, False)
+    - wm_get_offsets_size(c->wm, EAST,  NULL, False);
 }
 
 void
@@ -77,7 +74,7 @@ toolbar_client_move_resize(Client *c)
 
    base_client_move_resize(c);
 
-   if (client_get_state(c) == NormalState)
+   if (!(c->flags & CLIENT_IS_MINIMIZED))
    {
      if (c->flags & CLIENT_TITLE_HIDDEN_FLAG) max_offset = 0;
 
@@ -134,57 +131,11 @@ toolbar_client_reparent(Client *c)
 		   toolbar_win_offset(c), 0);
 }
 
-void /* Try to stop any dialogs covering toolbar windows */
-_fix_dialogs_for_toolbars(Client *c)
-{
-#if 0
-  Client *t;
-  int     max_y = 0, diff = 0, bottom_frame_width = 0;
-
-  max_y = c->wm->dpy_height - wm_get_offsets_size (c->wm, SOUTH, NULL, True);
-
-  if (!(c->flags & CLIENT_TITLE_HIDDEN_FLAG))
-    bottom_frame_width =
-      theme_frame_defined_height_get(c->wm->mbtheme, FRAME_DIALOG)
-      + theme_frame_defined_height_get(c->wm->mbtheme, FRAME_DIALOG_SOUTH);
-
-  dbg("%s() called with max_y = %i\n", __func__, max_y );
-
-  START_CLIENT_LOOP(c->wm, t)
-    {
-      if (t->type == dialog
-	  && ( (t->trans == c || t->trans == NULL) && t->mapped) 
-	  && !(t->flags & CLIENT_TITLE_HIDDEN_FLAG)
-	  && !(t->flags & CLIENT_IS_MESSAGE_DIALOG)
-	  )
-	{
-	  /* Is the toolbar covered by this dialog */
-	  if ( (t->y + t->height + bottom_frame_width) > max_y ) 
-	    {
-	      /* Nudge it up a little */
-	      diff = (t->y + t->height + bottom_frame_width) - max_y - 8; 
-
-	      if ( (t->y - diff) < 0 )
-		{ /* cant move - offsreen, so resize */
-		  if ((t->height - diff) > 0) 
-		    t->height -= diff;
-		} else { /* space to move so move */
-		  if ((t->y - diff) > 0) 
-		    t->y -= diff;
-		}
-	      t->move_resize(t);
-	      client_deliver_config(t);
-	    }
-	}
-    }
-  END_CLIENT_LOOP(c->wm, t)
-#endif
-
-}
 
 void
 toolbar_client_show(Client *c)
 {
+  long win_state; 
 
 #ifdef STANDALONE
    XFreePixmap(c->wm->dpy, c->backing);
@@ -197,15 +148,23 @@ toolbar_client_show(Client *c)
 
    c->mapped = True;
 
-   if (client_get_state(c) == WithdrawnState)
+   win_state = client_get_state(c);
+
+   /* initially mapped */
+   if (win_state == WithdrawnState)
      {
        client_set_state(c,NormalState);
        wm_restack(c->wm, c, - c->height);
      } 
-   else if (client_get_state(c) == IconicState) 
+   else if (win_state == IconicState) /* minimised, set maximised */
      {
        client_set_state(c,NormalState);
+
+       /* Make sure desktop flag is unset */
+       c->flags &= ~CLIENT_IS_MINIMIZED;
+
        wm_restack(c->wm, c, -(c->height - toolbar_win_offset(c)));
+
        c->y = c->y - ( c->height - toolbar_win_offset(c));
        if (c->flags & CLIENT_TITLE_HIDDEN_FLAG)
 	 c->x = wm_get_offsets_size(c->wm, WEST,  NULL, False);
@@ -218,8 +177,6 @@ toolbar_client_show(Client *c)
 
    /* destroy any eisting buttons */
    client_buttons_delete_all(c);   
-
-   client_set_state(c,NormalState);
 
    toolbar_client_move_resize(c);
    
@@ -240,20 +197,17 @@ toolbar_client_show(Client *c)
    /* make sure any dialog clients are raised above */
    /* move / resize any dialogs */
    if (c->wm->main_client) 
-     {
-       base_client_show(c->wm->main_client);
-       _fix_dialogs_for_toolbars(c->wm->main_client);
-     } else if (c->wm->head_client) {
-       _fix_dialogs_for_toolbars(c->wm->head_client);
-     }
+     base_client_show(c->wm->main_client);
 }
 
 void
 toolbar_client_hide(Client *c)
 {
-   if (client_get_state(c) == IconicState) return;
+   if (c->flags & CLIENT_IS_MINIMIZED || client_get_state(c) == IconicState) 
+     return;
    
    client_set_state(c,IconicState);
+   c->flags |= CLIENT_IS_MINIMIZED; 
 
    c->ignore_unmap++;
    XUnmapWindow(c->wm->dpy, c->window);
@@ -285,7 +239,6 @@ toolbar_client_hide(Client *c)
 void
 toolbar_client_destroy(Client *c)
 {
-  int change_amount = 0;
   Wm *w = c->wm;
 
   dbg("%s() called\n", __func__);
@@ -298,13 +251,12 @@ toolbar_client_destroy(Client *c)
 					    FRAME_UTILITY_MAX )
       || (c->flags & CLIENT_TITLE_HIDDEN_FLAG) )
     {
-      change_amount = c->height;
-
-      wm_restack(w, c, change_amount);
-    } else {
-      change_amount = theme_frame_defined_height_get(c->wm->mbtheme,
-						     FRAME_UTILITY_MIN);
-      wm_restack(w, c, change_amount);
+      wm_restack(w, c, c->height);
+    } 
+  else 
+    {
+      wm_restack(w, c, theme_frame_defined_height_get(c->wm->mbtheme,
+						      FRAME_UTILITY_MIN));
     }
   
   base_client_destroy(c);     
@@ -316,7 +268,7 @@ toolbar_client_get_coverage(Client *c, int *x, int *y, int *w, int *h)
    *x = c->x; *y = c->y;
    *w = c->width + toolbar_win_offset(c);
 
-   if (client_get_state(c) == NormalState)
+   if (!(c->flags & CLIENT_IS_MINIMIZED))
    {
       *x = c->x - toolbar_win_offset(c);
       *h = c->height;
@@ -334,7 +286,7 @@ toolbar_client_button_press(Client *c, XButtonEvent *e)
    int min_offset = theme_frame_defined_height_get(c->wm->mbtheme, 
 						    FRAME_UTILITY_MIN);
 
-   if (client_get_state(c) == NormalState)
+   if (!(c->flags & CLIENT_IS_MINIMIZED))
      {
        frame_id = FRAME_UTILITY_MAX;
        cw = max_offset;
@@ -369,7 +321,7 @@ toolbar_client_button_press(Client *c, XButtonEvent *e)
 int
 toolbar_win_offset(Client *c)
 {
-   if (client_get_state(c) == IconicState)
+   if (c->flags & CLIENT_IS_MINIMIZED)
    {
       return theme_frame_defined_height_get(c->wm->mbtheme, 
 					    FRAME_UTILITY_MIN);
@@ -393,7 +345,7 @@ toolbar_client_redraw(Client *c, Bool use_cache)
 
    client_buttons_delete_all(c);
 
-   if (client_get_state(c) == IconicState)
+   if (c->flags & CLIENT_IS_MINIMIZED)
    {
      if (!min_offset) return;
 

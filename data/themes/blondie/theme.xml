@@ -307,7 +307,7 @@
 
 </frame>
 
-<frame id="utility-min" height="13">
+<frame id="utility-min" height="12">
 
   <layer x="0" y="0" w="100%"  h="100%" 
    type="plain" color="lightside" />

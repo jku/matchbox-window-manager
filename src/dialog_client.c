@@ -64,7 +64,17 @@ dialog_client_new(Wm *w, Window win, Client *trans)
    c->show         = &dialog_client_show;
    c->destroy      = &dialog_client_destroy;
    c->get_coverage = &dialog_client_get_coverage;
-   c->trans = trans;
+
+   if (trans)
+     {
+       /* 
+        * Dont let dialogs be transient for other dialogs.
+        */
+       if (trans->type != mainwin)
+	 c->trans = trans->trans;
+       else
+	 c->trans = trans;	 
+     }
 
    dialog_client_check_for_state_hints(c);
 
@@ -387,8 +397,6 @@ dialog_get_available_area(Client *c,
 {
   Wm *w = c->wm;
 
-
-
 #if 0
   if (c->trans)
     {
@@ -417,7 +425,8 @@ dialog_get_available_area(Client *c,
 
       START_CLIENT_LOOP(w, p)
       {
-	if (p->type == toolbar && p->mapped)
+	if (p->type == toolbar && p->mapped 
+	    && !(p->flags & CLIENT_IS_MINIMIZED))
 	  { have_toolbar = True; break; }
       }
       END_CLIENT_LOOP(w, p);
@@ -435,8 +444,16 @@ dialog_get_available_area(Client *c,
 }
 
 /* 
+   dialog_check_gemoetry()
+
+   called mainly by wm_restack to suggest better positions for dialogs
+   in relation to panels and toolbar/input wins. 
+
    req params are reparented window geometry *without* borders
 
+   returns True if geometry supplied fits - is good. 
+   retruns False if geometry supplyied bad,  supplied geometry is updated
+   to fit. 
  */
 Bool
 dialog_check_gemoetry(Client *c,
@@ -449,6 +466,18 @@ dialog_check_gemoetry(Client *c,
   int avail_x, avail_y, avail_width, avail_height;
   int actual_x, actual_y, actual_width, actual_height;
   int bdr_south = 0, bdr_west = 0, bdr_east = 0, bdr_north = 0;
+
+  Bool res = True;
+
+  if (w->config->dialog_stratergy == WM_DIALOGS_STRATERGY_FREE)
+    return True;
+
+  /* Allow decorationless dialogs to position themselves anywhere */
+  if (c->flags & CLIENT_TITLE_HIDDEN_FLAG)
+    return True;
+
+  if (c->flags & CLIENT_IS_MESSAGE_DIALOG)
+    return True;
 
   dialog_get_available_area(c,&avail_x, &avail_y, &avail_width, &avail_height);
 
@@ -467,17 +496,6 @@ dialog_check_gemoetry(Client *c,
   actual_width = *req_width + bdr_east + bdr_west + (2*DIALOG_PADDING);
   actual_height = *req_height + bdr_north + bdr_south + (2*DIALOG_PADDING);
 
-  if (actual_x > avail_x 
-      && (actual_x + actual_width) < (avail_x + avail_width) 
-      && actual_y > avail_y
-      && (actual_y + actual_height) < (avail_y + avail_height) )
-    {
-      /* 
-	 if remem size && rememsize > this_size
-	   try and grow.    
-      */
-    }
-
   if (c->init_width && c->init_height 
       && (c->init_width > *req_width || c->init_height > *req_height) )
     {
@@ -486,26 +504,45 @@ dialog_check_gemoetry(Client *c,
     }
 
   if (actual_width > avail_width)  /* set width to fit  */
-    *req_width = avail_width - ( bdr_east + bdr_west + (2*DIALOG_PADDING));
+    {
+      *req_width = avail_width - ( bdr_east + bdr_west + (2*DIALOG_PADDING));
+      actual_width = avail_width;
+      res = False;
+    }
 
   if (actual_height > avail_height)  /* and height  */
-    *req_height = avail_height - ( bdr_south + bdr_north + (2*DIALOG_PADDING));
+    {
+      *req_height = avail_height -(bdr_south + bdr_north + (2*DIALOG_PADDING));
+      actual_height = avail_height;
+      res = False;
+    }
 
   if (actual_x < avail_x) 
-    *req_x = avail_x + bdr_west + DIALOG_PADDING; /* move dialog right */
+    {
+      *req_x = avail_x + bdr_west + DIALOG_PADDING; /* move dialog right */
+      res = False;
+    }
 
   if (actual_y < avail_y) 
-    *req_y = avail_y + bdr_north + DIALOG_PADDING; /* move dialog up */
+    {
+      *req_y = avail_y + bdr_north + DIALOG_PADDING; /* move dialog up */
+      res = False;
+    }
 
   if (actual_x > avail_x 
       && (actual_x + actual_width) > (avail_x + avail_width) )
-    *req_x = avail_x + bdr_west + DIALOG_PADDING; /* move dialog right */
+    {
+      *req_x = avail_x + bdr_west + DIALOG_PADDING; /* move dialog right */
+      res = False;
+    }
 
-   if (actual_y > avail_y
-       && (actual_y + actual_height) > (avail_y + avail_height) )
-    *req_y = avail_y + bdr_north + DIALOG_PADDING; /* move dialog up */
+   if ( (actual_y + actual_height) > (avail_y + avail_height) )
+     {
+       *req_y = (avail_y + avail_height) - actual_height + bdr_north + DIALOG_PADDING;
+       res = False;
+     }
 
-  return False;
+  return res;
 }
 		
 void
