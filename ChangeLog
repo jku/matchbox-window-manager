@@ -1,5 +1,10 @@
 2005-01-31  mallum,,,  <mallum@openedhand.com>
 
+	* src/wm.c: (wm_load_config):
+	Added missing memset to wm config struct.
+
+2005-01-31  mallum,,,  <mallum@openedhand.com>
+
 	* src/dialog_client.c: (dialog_client_iconize):
 	Fix for focus_next type causing segv
 

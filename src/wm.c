@@ -285,6 +285,7 @@ wm_load_config (Wm   *w,
    /* Configure these now, and let the arguments override them */
 
    w->config = malloc(sizeof(Wm_config));
+   memset(w->config, 0, sizeof(Wm_config));
 
    /* config defaults */
    w->config->use_title        = True;
@@ -444,6 +445,7 @@ wm_load_config (Wm   *w,
    XrmCombineDatabase(cmdlnDB, &rDB, True);
 
    w->config = malloc(sizeof(Wm_config));
+   memset(w->config, 0, sizeof(Wm_config));
 
    /* config defaults */
    w->config->use_title        = True;
