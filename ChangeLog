@@ -1,3 +1,8 @@
+2004-02-18  Matthew Allum,,,  <mallum@handhelds.org>
+
+	* src/composite-engine.c: (comp_engine_client_hide):
+	Uncomment and improve previous fix clearing lowlights.
+
 2004-02-16  Matthew Allum,,,  <mallum@handhelds.org>
 
 	* data/themes/bluebox/theme.xml:

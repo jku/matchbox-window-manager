@@ -892,15 +892,25 @@ comp_engine_client_show(Wm *w, Client *client)
 void
 comp_engine_client_hide(Wm *w, Client *client)
 {
+  Client *t = NULL;
+
   if (!w->have_comp_engine) return;
 
   dbg("%s() called\n", __func__);
 
-  /* Make sure any lowlighting gets cleared - does opposite
   if (client->flags & CLIENT_IS_MODAL_FLAG
       && ((t = wm_get_visible_main_client(w)) != NULL))
-    comp_engine_client_repair (w, t);
-  */
+    {
+      /* We need to make sure the any lowlighting on a 'parent' 
+       * modal for app gets cleared. This is kind of a sledgehammer	 
+       * approach to it, but more suttle attempts oddly fail at times.
+       *
+       * FIXME: keep an eye on this for future revisions of composite
+       *        - there may be a better way.
+       */
+      comp_engine_client_repair (w, t); 
+      comp_engine_add_damage (w, t->extents); 
+    }
 
   if (client->damage != None)
     {
