@@ -1967,9 +1967,9 @@ parse_lowlight_tag (MBTheme *theme,
 
   /* matchbox not running with lowlight switch */
 #ifndef USE_COMPOSITE
+  dbg("LOWLIGHT IS %i\n", theme->wm->config->dialog_shade);
   if (!theme->wm->config->dialog_shade) return 1; 
 #endif
-
   if ( color_attr == NULL ) return ERROR_MISSING_PARAMS;
 
   color = (MBColor*)list_find_by_name(theme->colors, color_attr);
