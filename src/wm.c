@@ -63,10 +63,6 @@ wm_new(int argc, char **argv)
    w->root           = RootWindow(w->dpy, w->screen);
    w->dpy_width      = DisplayWidth(w->dpy, w->screen);
    w->dpy_height     = DisplayHeight(w->dpy, w->screen);
-   w->head_client    = NULL; /* A 'general' pointer for circular list */ 
-   w->focused_client = NULL; /* Points to the currently focused client */
-   w->main_client    = NULL; /* Points to the current 'main' client
-				- eg the 'BIG' window - */
 
    w->n_active_ping_clients    = 0;
    w->next_click_is_not_double = True;
@@ -523,7 +519,8 @@ Client*
 wm_find_client(Wm *w, Window win, int mode)
 {
     Client *c = NULL;
-    if (w->head_client == NULL) return NULL;
+
+    if (stack_empty(w)) return NULL;
 
     if (mode == FRAME) 
       {
@@ -801,6 +798,13 @@ wm_handle_button_event(Wm *w, XButtonEvent *e)
 	 {
 	   /* raise the dialog up, handle focus etc */
 	   wm_activate_client(c);
+	 }
+       else
+	 {
+	   client_set_focus(c);
+
+	   if (c->type & (MBCLIENT_TYPE_DESKTOP|MBCLIENT_TYPE_APP))
+	     c->next_focused_client = NULL;
 	 }
 
        XAllowEvents(w->dpy, ReplayPointer, CurrentTime);
@@ -1696,7 +1700,7 @@ wm_make_new_client(Wm *w, Window win)
 	 Client *p;
 	 if ((wmhints = XGetWMHints(w->dpy, win)) != NULL)
 	 {
-	    if (wmhints->window_group && w->head_client != NULL)
+	    if (wmhints->window_group && !stack_empty(w))
 	    {
 	       stack_enumerate(w, p)
 		 if (wmhints->window_group == p->window)
@@ -1836,7 +1840,7 @@ wm_update_layout(Wm         *w,
  Client *p;
  XGrabServer(w->dpy);
 
- for (p=client_changed->next; p != client_changed; p=p->next) 
+ stack_enumerate(w,p)
    {
      if (p == client_changed)
        continue;
@@ -2048,7 +2052,8 @@ wm_update_layout(Wm         *w,
 void 
 wm_activate_client(Client *c)
 {
-  Wm *w;
+  Wm     *w;
+  Client *client_to_focus = c;
 
   if (c == NULL) return;
 
@@ -2057,17 +2062,6 @@ wm_activate_client(Client *c)
   dbg("%s() called for %s\n", __func__, c->name);
 
   /* old code */
-
-#if 0
-  /* Current main client is full screen, make sure it really hidden  */
-  if (c->wm->main_client 
-      && (c->wm->main_client->flags & CLIENT_FULLSCREEN_FLAG))
-    main_client_hide(c->wm->main_client);
-
-  /* Hide any lingering dialogs  */
-  if (c->type == mainwin) 
-    base_client_hide_transients(c->wm->main_client);
-#endif
 
   XGrabServer(w->dpy);
 
@@ -2078,13 +2072,30 @@ wm_activate_client(Client *c)
 
   if (c->type == MBCLIENT_TYPE_APP || c->type == MBCLIENT_TYPE_DESKTOP) 
     {
-      /* Manage other affected wins by the activation
-       *
-       *
+      /* As matchbox works around 'main' windows ( apps/main and desktop wins).
+	 We need to sync extra stuff up when displaying a new one.
        */
 
-      Client *p = NULL;
       MBList *transient_list = NULL, *list_item = NULL;
+
+      /* save focus state for transient dialogs of prev showing main win */
+
+      if (w->stack_top_app != c && w->stack_top_app)
+	w->stack_top_app->hide(w->stack_top_app); 
+
+      /* If this client has a saved dialog focus state, load it */
+
+      if (c->next_focused_client 
+	  && c->next_focused_client->type == MBCLIENT_TYPE_DIALOG)
+	client_to_focus = c->next_focused_client;
+
+      /* If transient for root dialog currently has focus then keep it
+         that way.                                                      */
+
+      if (w->focused_client 
+	  && w->focused_client->type == MBCLIENT_TYPE_DIALOG
+	  && w->focused_client->trans == NULL)
+	client_to_focus = w->focused_client;
 
       /* Raise panel + toolbars just above app but below app dialogs */
 
@@ -2104,13 +2115,6 @@ wm_activate_client(Client *c)
 
       list_destroy(&transient_list);
 
-      // stack_move_transients_to_top(w, c);
-
-      /*
-      stack_enumerate_transients(w,p,c)
-	p->show(p);
-      */
-
       /* Move transient for root dialogs to very top */
 
       stack_move_transients_to_top(w, NULL);
@@ -2123,10 +2127,11 @@ wm_activate_client(Client *c)
 	}
       else
 	{
+	  /* Desktop being activated */
+
 	  w->flags |= DESKTOP_RAISED_FLAG;
 
-	  /* Make sure embedded titlebar panels arn't visible for desktop 
-	   */
+	  /* Make sure embedded titlebar panels arn't visible for desktop */
 	  if (w->have_titlebar_panel 
 	      && mbtheme_has_titlebar_panel(w->mbtheme)
 	      && !(w->have_titlebar_panel->flags & CLIENT_DOCK_TITLEBAR_SHOW_ON_DESKTOP))
@@ -2134,6 +2139,12 @@ wm_activate_client(Client *c)
 	      stack_move_below_client(w->have_titlebar_panel, c);
 	    }
 	}
+
+      /* We only set active for main clients - this could be wrong, 
+         what about transient for root 'apps' - maybe it should just
+         follow focused client ? */
+      ewmh_set_active(w);
+
     }
   else if (c->type == MBCLIENT_TYPE_DIALOG)
     {
@@ -2141,10 +2152,20 @@ wm_activate_client(Client *c)
        * panels and toolbars. May be a cleaner way than this.
        */
 
-      /* XXX below breaks when desktop is showing */
       if (!w->flags & DESKTOP_RAISED_FLAG)
-	stack_move_type_below_client(MBCLIENT_TYPE_TOOLBAR|MBCLIENT_TYPE_PANEL, 
-				     c->trans ? c->trans : wm_get_visible_main_client(w) ? wm_get_visible_main_client(w) : c);
+	{
+	  Client *client_above;
+
+	  if (c->trans)
+	    client_above = c->trans;
+	  else if (wm_get_visible_main_client(w))
+	    client_above = wm_get_visible_main_client(w);
+	  else
+	    client_above = c; 
+
+	  stack_move_type_below_client(MBCLIENT_TYPE_TOOLBAR
+				       |MBCLIENT_TYPE_PANEL, client_above);
+	}
     }
   else if (c->type == MBCLIENT_TYPE_PANEL)
     {
@@ -2154,19 +2175,19 @@ wm_activate_client(Client *c)
 	  && w->flags & DESKTOP_RAISED_FLAG
 	  && mbtheme_has_titlebar_panel(w->mbtheme)
 	  && !(w->have_titlebar_panel->flags & CLIENT_DOCK_TITLEBAR_SHOW_ON_DESKTOP))
-	    {
-	      stack_move_below_client(c, w->client_desktop);
-	    }
+	{
+	  stack_move_below_client(c, w->client_desktop);
+	}
     }
-
+    
   ewmh_update(c->wm);
-  ewmh_set_active(c->wm);
+
+  client_set_focus(client_to_focus); /* set focus if needed and ewmh active */
 
   stack_sync_to_display(w);
 
   XSync(w->dpy, False);	    
   XUngrabServer(w->dpy);
-
 }
 
 
@@ -2202,7 +2223,7 @@ wm_get_offsets_size(Wm*     w,
   int result = 0;
   int x,y,ww,h;
 
-  if (!w->head_client) return 0;
+  if (stack_empty(w)) return 0;
 
   dbg("%s() called\n", __func__);
 

@@ -54,6 +54,9 @@ client_deliver_delete (Client *c);
 int 
 client_want_focus (Client *c);
 
+Bool
+client_set_focus(Client *c);
+
 void
 client_get_transient_list(MBList **list, Client *c);
 

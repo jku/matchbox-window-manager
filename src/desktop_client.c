@@ -37,6 +37,8 @@ desktop_client_new(Wm *w, Window win)
    c->show         = &desktop_client_show;
    c->destroy      = &desktop_client_destroy;
 
+   c->hide         = &main_client_hide;
+
    if (w->stack_top_app && (w->flags & SINGLE_FLAG))
      main_client_redraw(w->stack_top_app, False);
 
@@ -72,7 +74,6 @@ void
 desktop_client_show(Client *c)
 {
   Wm *w = c->wm;
-  Client *cur;
 
   // base_client_show(c);
   // wm_toggle_desktop(c->wm);

@@ -2214,12 +2214,12 @@ mbtheme_switch (Wm   *w,
 
   XGrabServer(w->dpy);
 
-  orig = c = p = w->head_client; 
+  orig = c = p = w->stack_top_app; 
 
-  if (w->main_client)
+  if (w->stack_top_app)
     {
-      win_active = w->main_client->window;
-      if (w->main_client->flags & CLIENT_NEW_FOR_DESKTOP)
+      win_active = w->stack_top_app->window;
+      if (w->stack_top_app->flags & CLIENT_NEW_FOR_DESKTOP)
 	reset_new_for_desktop_flag = True;
     }
 
@@ -2227,7 +2227,6 @@ mbtheme_switch (Wm   *w,
       && (orig = wm_get_desktop(w)))
     {
       win_active = orig->window;
-
     }
 
   /* now the fun part */
@@ -2253,47 +2252,45 @@ mbtheme_switch (Wm   *w,
 	}
     }
 
-  if (w->head_client)
+  stack_enumerate(c->wm, p)
     {
-      stack_enumerate(c->wm, p)
-      {
-	client_buttons_delete_all(p);
-
-	if (p->type == MBCLIENT_TYPE_DIALOG)
-	  {
-	    XRectangle rect;
-	    Region     xregion;
-
-	    /*  Old theme may have been shaped and this one not. 
-             *  Therefore we 'clear' any possible shapes set on 
-             *  the window frames.  
-             *  Im not sure if this is the best way to do this but
-             *  SHAPE docs serverely lacking :(
-	     */
-
-	    xregion = XCreateRegion ();
-
-	    rect.x      = 0;
-	    rect.y      = 0;
-	    rect.width  = p->width  + 100;
-	    rect.height = p->height + 100;
-
-	    XUnionRectWithRegion (&rect, xregion, xregion);
-
-	    XShapeCombineRegion (w->dpy, p->title_frame, ShapeBounding, 0, 0, 
-				 xregion, ShapeSet);
-
-	    XShapeCombineRegion (w->dpy, p->frame,ShapeBounding, 0, 0, 
-				 xregion, ShapeSet);
-
-	    XDestroyRegion (xregion);
-	  }
-
-	p->configure(p);
-	p->move_resize(p);
-	p->redraw(p, False);
-      }
+      client_buttons_delete_all(p);
+      
+      if (p->type == MBCLIENT_TYPE_DIALOG)
+	{
+	  XRectangle rect;
+	  Region     xregion;
+	  
+	  /*  Old theme may have been shaped and this one not. 
+	   *  Therefore we 'clear' any possible shapes set on 
+	   *  the window frames.  
+	   *  Im not sure if this is the best way to do this but
+	   *  SHAPE docs serverely lacking :(
+	   */
+	  
+	  xregion = XCreateRegion ();
+	  
+	  rect.x      = 0;
+	  rect.y      = 0;
+	  rect.width  = p->width  + 100;
+	  rect.height = p->height + 100;
+	  
+	  XUnionRectWithRegion (&rect, xregion, xregion);
+	  
+	  XShapeCombineRegion (w->dpy, p->title_frame, ShapeBounding, 0, 0, 
+			       xregion, ShapeSet);
+	  
+	  XShapeCombineRegion (w->dpy, p->frame,ShapeBounding, 0, 0, 
+			       xregion, ShapeSet);
+	  
+	  XDestroyRegion (xregion);
+	}
+      
+      p->configure(p);
+      p->move_resize(p);
+      p->redraw(p, False);
     }
+    
 
   /* fix if desktop is shown */
   if (win_active)

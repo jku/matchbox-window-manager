@@ -69,6 +69,10 @@ main_client_title_height(Client *c);
 void 
 main_client_get_coverage(Client *c, int *x, int *y, int *w, int *h);
 
+void
+main_client_unmap(Client *c);
+
+
 void 
 main_client_hide(Client *c);
 

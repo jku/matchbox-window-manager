@@ -154,9 +154,11 @@ toolbar_client_show(Client *c)
 
    c->mapped = True;
 
+#if 0
   if (w->main_client  		/* XXX NEEDED ANYMORE ? */
       && (w->main_client->flags & CLIENT_FULLSCREEN_FLAG))
     main_client_manage_toolbars_for_fullscreen(c, True);
+#endif
 
    win_state = client_get_state(c);
 

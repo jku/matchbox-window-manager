@@ -14,7 +14,7 @@
 */
 
 /*
-  $Id: main_client.c,v 1.13 2004/10/29 09:46:09 mallum Exp $
+  $Id: main_client.c,v 1.14 2004/11/01 20:22:08 mallum Exp $
 */
 
 #include "main_client.h"
@@ -70,7 +70,8 @@ main_client_check_for_single(Client *c)
     {
       /* There was only main client till this came along */
       w->flags ^= SINGLE_FLAG; /* turn off single flag */
-      main_client_redraw(w->stack_top_app, False); /* update menu button */
+      if (w->stack_top_app)
+	main_client_redraw(w->stack_top_app, False); /* update menu button */
     } else if (!w->stack_top_app) /* This must be the only client*/
       c->wm->flags |= SINGLE_FLAG; /* so turn on single flag */      
 }
@@ -613,20 +614,24 @@ main_client_toggle_title_bar(Client *c)
 }
 
 
+/* This is called when a main client is not visible anymore - 
+   i.e. another one is activated */
 void
 main_client_hide(Client *c)
 {
   Wm *w = c->wm;
 
-  dbg("%s() called\n", __func__);
-
-  base_client_hide(c);
-  
-  if ( c->flags & CLIENT_FULLSCREEN_FLAG )
-    main_client_manage_toolbars_for_fullscreen(c, False);
-  
-   /* lower window to bottom of stack */
-   XLowerWindow(w->dpy, c->frame);
+  /* If we dont have focus atm, and one of our dialogs likely does,
+     then remember it for next time we come active
+  */
+  if (w->focused_client != c 
+      && w->focused_client       
+      && w->focused_client->type == MBCLIENT_TYPE_DIALOG
+      && w->focused_client->trans != NULL)
+    {
+      c->next_focused_client = w->focused_client;
+    }
+  else c->next_focused_client = NULL;
 }
 
 
@@ -656,7 +661,6 @@ void
 main_client_show(Client *c)
 {
   Wm     *w = c->wm;
-  Client *cur = NULL;
 
    dbg("%s() called on %s\n", __func__, c->name);
    
@@ -696,17 +700,6 @@ main_client_show(Client *c)
      }
 
    c->mapped = True;
-
-   /* check input focus */
-   if (client_want_focus(c))
-   {
-      XSetInputFocus(w->dpy, c->window,
-		     RevertToPointerRoot, CurrentTime);
-      w->focused_client = c;
-   }
-
-
-
 
 
 #if 0

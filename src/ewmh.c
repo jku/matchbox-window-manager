@@ -471,7 +471,7 @@ ewmh_hung_app_check(Wm *w)
 
   Client *c = NULL;
 
-  if (!w->head_client) return;
+  if (stack_empty(w)) return;
 
   dbg("%s() called\n", __func__ );
 

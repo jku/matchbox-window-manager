@@ -1,3 +1,33 @@
+2004-11-01  mallum,,,  <mallum@handhelds.org>
+
+	* src/base_client.c: (base_client_new), (base_client_process_name),
+	(base_client_move_resize), (base_client_hide), (base_client_show),
+	(base_client_destroy):
+	* src/client_common.c: (client_want_focus), (client_set_focus),
+	(client_get_transient_list):
+	* src/client_common.h:
+	* src/composite-engine.c: (comp_engine_deinit),
+	(comp_engine_reinit), (comp_engine_client_init),
+	(comp_engine_client_show), (comp_engine_client_destroy),
+	(comp_engine_client_configure):
+	* src/desktop_client.c: (desktop_client_new),
+	(desktop_client_show):
+	* src/dialog_client.c: (dialog_client_new), (dialog_client_show),
+	(dialog_client_destroy):
+	* src/ewmh.c: (ewmh_hung_app_check):
+	* src/main_client.c: (main_client_check_for_single),
+	(main_client_hide), (main_client_show):
+	* src/main_client.h:
+	* src/mbtheme.c: (mbtheme_switch):
+	* src/structs.h:
+	* src/toolbar_client.c: (toolbar_client_show):
+	* src/wm.c: (wm_new), (wm_find_client), (wm_handle_button_event),
+	(wm_make_new_client), (wm_update_layout), (wm_activate_client),
+	(wm_get_offsets_size):
+	More misc cleanups
+	Dialog stacking fixes
+	Implement new intelligent focus model.
+
 2004-10-29  mallum <mallum@handhelds.org>
 
 	* src/desktop_client.c: (desktop_client_show):

@@ -14,7 +14,7 @@
 */
 
 /*
-  $Id: base_client.c,v 1.8 2004/10/28 17:13:28 mallum Exp $
+  $Id: base_client.c,v 1.9 2004/11/01 20:22:08 mallum Exp $
 */
 
 
@@ -39,33 +39,38 @@ base_client_new(Wm *w, Window win)
 
    c = malloc(sizeof(Client));
    memset(c, 0, sizeof(Client));
+
+   /* Stardard bits */
    
    c->type    = MBCLIENT_TYPE_APP; /* start off with common case */
-   c->buttons = NULL;
-   c->name    = NULL;
+   c->window  = win;
+   c->wm      = w;
 
-   XGetWindowAttributes(w->dpy, win, &attr);
-  
-   c->window = win;
-   c->frame       = None;
-   c->title_frame = None;
-   c->have_set_bg = False;
+   /* Set up the 'methods' - expect to be overidden */
+   base_client_set_funcs(c);
 
-   c->wm = w;
-   c->ignore_unmap = 0;
-   
+   stack_prepend_bottom(c); 
+
+   for (i=0; i<MSK_COUNT; i++)
+     c->backing_masks[i] = None;
+
+
+   /* Window Name */
+
    if ((c->name = ewmh_get_utf8_prop(w, win, w->atoms[_NET_WM_NAME])) != NULL)
      c->name_is_utf8 = True;
 
    c->subname = ewmh_get_utf8_prop(w, win, w->atoms[MB_WIN_SUB_NAME]);
 
    base_client_process_name(c);
-   
-   c->x = attr.x;
-   c->y = attr.y;
 
-   c->have_cache = False;
+
+   /* Basic attributes */
+
+   XGetWindowAttributes(w->dpy, win, &attr);
    
+   c->x      = attr.x;
+   c->y      = attr.y;
    c->cmap   = attr.colormap;
    c->visual = attr.visual;
 
@@ -81,13 +86,16 @@ base_client_new(Wm *w, Window win)
 				&set_attrs);
      }
 
-   /* Get size hints */
-   c->size = XAllocSizeHints();
-
-   c->width = attr.width;
+   c->width  = attr.width;
    c->height = attr.height;
 
+   if (c->x < 0) c->x = (w->dpy_width + c->x - c->width);
+   if (c->y < 0) c->y = (w->dpy_height + c->y - c->height);
+
 #if 0
+
+   /* Get size hints */
+   c->size = XAllocSizeHints();
 
    /* 
     * Dont bother with WMNOrmalHints anymore, reasoning;
@@ -120,9 +128,8 @@ base_client_new(Wm *w, Window win)
    }
 #endif
 
-   if (c->x < 0) c->x = (w->dpy_width + c->x - c->width);
-       
-   if (c->y < 0) c->y = (w->dpy_height + c->y - c->height);
+
+   /* WM Hints */
 
    if ((wmhints = XGetWMHints(w->dpy, c->window)) != NULL)
    {
@@ -130,8 +137,17 @@ base_client_new(Wm *w, Window win)
 	 c->win_group = wmhints->window_group;
       else
 	 c->win_group = 0;
+
+      if (wmhints->flags & XUrgencyHint)
+	c->flags |= CLIENT_HAS_URGENCY_FLAG;
    }
+
    dbg("%s() window group %li\n", __func__, c->win_group);
+
+   if (wmhints) XFree(wmhints);
+
+
+#ifdef USE_LIBSN
 
    c->startup_id = ewmh_get_utf8_prop(w, win, w->atoms[_NET_STARTUP_ID]);
 
@@ -139,12 +155,11 @@ base_client_new(Wm *w, Window win)
      c->startup_id = ewmh_get_utf8_prop(w, c->win_group, 
 					w->atoms[_NET_STARTUP_ID]);
 
-   c->bin_name = NULL;
+#endif
      
-   XFree(wmhints);
 
-   /* Set up the 'methods' - expect to be overidden */
-   base_client_set_funcs(c);
+#if 0
+
 
    /* Add the client to the circular list */
    if (w->head_client == NULL)
@@ -167,32 +182,10 @@ base_client_new(Wm *w, Window win)
       c->next->prev = c;
    }
 
-   stack_prepend_bottom(c);
-   stack_dump(w);
-
-#ifdef STANDALONE
-   c->backing      = None;
-#else
-   c->backing      = NULL;
 #endif
 
-   for (i=0; i<MSK_COUNT; i++)
-     c->backing_masks[i] = None;
+   /* Where is client running ? */
 
-#if defined (USE_XFT)
-   c->xftdraw = NULL;
-#endif
-
-   c->flags     = 0;
-   c->icon      = None;
-   c->icon_mask = None;
-
-
-#ifndef REDUCE_BLOAT
-  c->icon_rgba_data = NULL;
-#endif
-
-  c->host_machine = NULL;
   if (XGetWMClientMachine(c->wm->dpy, c->window, &text_prop))
   {
     c->host_machine = strdup((char *) text_prop.value);
@@ -200,7 +193,8 @@ base_client_new(Wm *w, Window win)
     dbg("%s() got host machine for ewmh : %s\n", __func__, c->host_machine);
   }
   
-  c->pid = 0;
+  /* EWMH PID */
+
   if (XGetWindowProperty (w->dpy, win, 
 			  w->atoms[_NET_WM_PID],
 			  0, 2L,
@@ -217,9 +211,10 @@ base_client_new(Wm *w, Window win)
       dbg("%s() got ewmh pid : FAILED\n", __func__ );
     }
 
-  if (data) XFree(data);
-
   c->has_ping_protocol = False;
+  c->pings_pending     = -1;
+
+  if (data) XFree(data);
 
   /* We detect any errors here to check the window hasn't dissapeared half
    * way through. A bit hacky ...
@@ -227,6 +222,7 @@ base_client_new(Wm *w, Window win)
    misc_trap_xerrors();
 
    /* Check for 'special' extra button/ping protocols */
+
    if (XGetWMProtocols(c->wm->dpy, c->window, &protocols, &n)) 
      {
        for (i=0; i<n; i++)
@@ -258,8 +254,6 @@ base_client_new(Wm *w, Window win)
        XFree(protocols);
     }
 
-   c->pings_pending = -1;
-
    client_set_state(c, WithdrawnState);
 
    if (misc_untrap_xerrors()) 	/* An X error occured */
@@ -276,30 +270,39 @@ void
 base_client_process_name(Client *c)
 {
   Wm *w = c->wm;
-  XTextProperty text_prop;
-  Client *p = NULL; int i, max = 0; char *tmp_name = NULL;
 
-   dbg("%s() called, name is %s\n", __func__, c->name);
+  XTextProperty  text_prop;
+  Client        *p = NULL; 
+  int            i, max = 0; 
+  char          *tmp_name = NULL;
 
+  dbg("%s() called, name is %s\n", __func__, c->name);
+   
   if (c->name == NULL)
     {
       c->name_is_utf8 = False;
+      
       if (XGetWMName(w->dpy, c->window, &text_prop) != 0)
 	{
 	  dbg("%s() name is from XGetWMName\n", __func__ );
+
 	  c->name = strdup((char *) text_prop.value);
 	  XFree((char *) text_prop.value);
+
 	}
       else
 	{
 	  XFetchName(w->dpy, c->window, (char **)&c->name);
+
 	  if (c->name == NULL) 
 	    {
 	      XStoreName(w->dpy, c->window, "<unnamed>");
 	      XFetchName(w->dpy, c->window, (char **) &c->name);
+
 	      if (c->name == NULL) 
 		{
 		  /* something is seriously wrong if we get here */
+		  
 		  dbg("%s() WARNING, name is still null after store/fetch\n",
 		      __func__ );
 		  return;
@@ -309,7 +312,7 @@ base_client_process_name(Client *c)
     }
   
   /* If window name already exists, rename, adding <%i> to it */
-  if (w->head_client)
+  if (!stack_empty(w))
     {
       stack_enumerate(w, p)
 	{
@@ -369,14 +372,12 @@ base_client_reparent(Client *c)
    ;
 }
 
-
 /* redraw the clients frame */
 void
 base_client_redraw(Client *c, Bool use_cache)
 {
    ;
 }
-
 
 /* button press on frame */
 void
@@ -392,12 +393,13 @@ base_client_iconize(Client *c)
   c->hide(c);
 }
 
-
 /* move and resize the window */
 void
 base_client_move_resize(Client *c)
 {
   int i;
+
+  /* Just free up clients various decoration 'backbuffers' */
 
 #ifdef STANDALONE
    if (c->backing != None)
@@ -431,32 +433,21 @@ base_client_get_coverage(Client *c, int *x, int *y, int *w, int *h)
   *x = c->x; *y = c->y;*w = c->width;*h = c->height;   
 }
 
-void
-base_client_hide_transients(Client *c)
-{
-   Client *t;
-   if (c == NULL) return;
-
-   for(t = c->prev; t != c; t = t->prev)
-     if (t->type == MBCLIENT_TYPE_DIALOG && t->trans == c && t->mapped)
-       t->hide(t);
-
-   comp_engine_client_hide(c->wm, c);
-}
-
-
-void
+void 				/* XXX  Method not needed any more ? */
 base_client_hide(Client *c)
 {
+  /*
   base_client_hide_transients(c);
 
   comp_engine_client_hide(c->wm, c);
+  */
 }
 
 void
 base_client_show(Client *c)
 {
 
+#if 0
    Client *t, *client_msg = NULL;
 
    for(t = c->prev; t != c; t = t->prev)
@@ -504,20 +495,31 @@ base_client_show(Client *c)
      }
 
    ewmh_set_active(c->wm);
+
+#endif
+
 }
 
 void /* cb for this needed, or let wm handle it */
 base_client_destroy(Client *c)
 {
-
+  Wm *w = c->wm;
   int i = 0;
+  Client *p = NULL;
    /* Free its memory + remove from list */
 
-   Client *t = NULL, *prev_client = NULL;
    dbg("%s() called\n", __func__);
 
-   if (c == c->wm->prev_main_client)
-     c->wm->prev_main_client = NULL;
+   stack_enumerate(w, p)
+     {
+       if (p->next_focused_client == c)
+	 p->next_focused_client = c->next_focused_client;
+     }
+
+#if 0
+
+   if (c == w->prev_main_client)
+     w->prev_main_client = NULL;
 
    /* destroy any transients */
    for(t = c->prev; t != c; t = prev_client)
@@ -526,25 +528,30 @@ base_client_destroy(Client *c)
        if (t->type == MBCLIENT_TYPE_DIALOG && t->trans == c)
 	 t->destroy(t);
      }
+#endif
 
 #ifdef USE_LIBSN
-   wm_sn_cycle_remove(c->wm, c->window);
+   wm_sn_cycle_remove(w, c->window);
 #endif       
 
    if (c->has_ping_protocol && c->pings_pending != -1) 
-     c->wm->n_active_ping_clients--;
+     w->n_active_ping_clients--;
+
+#if 0
 
    /* remove from circular list */
    if (c->prev != c)
      {
-       if (c->wm->head_client == c) 
-	 c->wm->head_client = c->next;
+       if (w->head_client == c) 
+	 w->head_client = c->next;
        if (c->prev != NULL) c->prev->next = c->next;
        if (c->next != NULL) c->next->prev = c->prev;
     } else {
-      c->wm->head_client = NULL;
-      if (c->type == MBCLIENT_TYPE_APP) c->wm->main_client = NULL;
+      w->head_client = NULL;
+      if (c->type == MBCLIENT_TYPE_APP) w->main_client = NULL;
     }
+
+#endif
 
    stack_remove(c);
 
@@ -552,22 +559,22 @@ base_client_destroy(Client *c)
      {
        client_buttons_delete_all(c);
        
-       ewmh_update(c->wm);
+       ewmh_update(w);
    
 #if defined (USE_XFT)
        if (c->xftdraw != NULL) XftDrawDestroy(c->xftdraw);
 #endif
 
        if (c->frame && c->frame != c->window) 
-	 XDestroyWindow(c->wm->dpy, c->frame);
+	 XDestroyWindow(w->dpy, c->frame);
        if (c->title_frame != c->window 
 	   && c->title_frame != c->frame
 	   && c->title_frame != None) 
-	 XDestroyWindow(c->wm->dpy, c->title_frame);
+	 XDestroyWindow(w->dpy, c->title_frame);
 
 #ifdef STANDALONE
        if (c->backing != None)
-	   XFreePixmap(c->wm->dpy, c->backing);
+	   XFreePixmap(w->dpy, c->backing);
 #else
        if (c->backing != NULL)
 	   mb_drawable_unref(c->backing);
@@ -575,16 +582,14 @@ base_client_destroy(Client *c)
 
        for (i=0; i<MSK_COUNT; i++)
 	 if (c->backing_masks[i] != None)
-	   XFreePixmap(c->wm->dpy, c->backing_masks[i]);
+	   XFreePixmap(w->dpy, c->backing_masks[i]);
        
-       if (c->icon != None && c->icon != c->wm->generic_icon)
-	 XFreePixmap(c->wm->dpy, c->icon);
-       if (c->icon_mask != None && c->icon_mask != c->wm->generic_icon_mask)
-	 XFreePixmap(c->wm->dpy, c->icon_mask);
+       if (c->icon != None && c->icon != w->generic_icon)
+	 XFreePixmap(w->dpy, c->icon);
+       if (c->icon_mask != None && c->icon_mask != w->generic_icon_mask)
+	 XFreePixmap(w->dpy, c->icon_mask);
        
-#ifndef REDUCE_BLOAT
        if (c->icon_rgba_data) XFree(c->icon_rgba_data);
-#endif
      }    
 
     if (c->name) XFree(c->name);
@@ -592,9 +597,8 @@ base_client_destroy(Client *c)
     if (c->size) XFree(c->size);
     if (c->host_machine) free(c->host_machine);
 
-    comp_engine_client_hide(c->wm, c);
-    comp_engine_client_destroy(c->wm, c);
-
+    comp_engine_client_hide(w, c);
+    comp_engine_client_destroy(w, c);
 
     free(c);
 }

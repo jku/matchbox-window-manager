@@ -193,24 +193,56 @@ client_want_focus(Client *c)
   int       ret = 1;
   XWMHints *hints;
 
-  /* TODO: check _WM protocols too ? */
+  hints = XGetWMHints(w->dpy, c->window);
+  
+  if (hints != NULL)
+    {
+      if ((hints->flags & InputHint) && (hints->input == False)) 
+	ret = 0;
+      
+      XFree(hints);
+    }
+  
+  return ret;
+}
 
-  if (c->flags & CLIENT_IS_MESSAGE_DIALOG)
-    return 0;
+Bool
+client_set_focus(Client *c)
+{
+  Wm *w;
 
-   hints = XGetWMHints(w->dpy, c->window);
+  if (!c) return False;
 
-   if (hints != NULL)
-     {
-       if ((hints->flags & InputHint) && (hints->input == False)) 
-	 ret = 0;
+  w = c->wm;
 
-       XFree(hints);
-     }
+  dbg("%s() called, checking if %s wants focus\n", __func__, c->name);
 
-   if (ret) ewmh_set_active(c->wm);
+  if (client_want_focus(c))
+    {
+      if (w->focused_client == c)
+	return True; 
 
-   return ret;
+      XSetInputFocus(w->dpy, c->window, RevertToPointerRoot, CurrentTime);
+
+      /* Save what to focus next when this client closes.  
+       *
+       * Main clients save this slightly differently, see there hide() method.
+       * In there case its used to store what dialog to focus when 'reshown'.  
+      */
+      if (!(c->type & (MBCLIENT_TYPE_DESKTOP|MBCLIENT_TYPE_APP)))
+	c->next_focused_client = w->focused_client;
+
+      w->focused_client = c;
+
+      dbg("%s() called, setting focus to %s\n", 
+	  __func__, c->name);
+
+
+
+      return True;
+    }
+  
+  return False;
 }
 
 void
@@ -221,12 +253,29 @@ client_get_transient_list(MBList **list, Client *c)
 
   stack_enumerate(w,p)
     {
+      if (p != c && p->trans)
+	{
+	  /* Follow transients 'down', for a match. */
+	  Client *trans = p->trans;
+	  while (trans != NULL && trans != c)
+	    trans = trans->trans;
+
+	  if (trans == c)
+	    list_add(list, NULL, 0, p);
+	}
+    }
+
+
+#if 0
+  stack_enumerate(w,p)
+    {
       if (p != c && p->trans && p->trans == c)
 	{
 	  list_add(list, NULL, 0, p);
 	  client_get_transient_list(list, p);  
 	}
     }
+#endif
 }
 
 Client*

@@ -35,6 +35,8 @@ static StackItem *comp_stack;
 
 /* List for stack rendering of dialogs etc */
 
+#if 0
+
 #define stack_enumerate(c) for((c) = comp_stack; (c); (c) = (c)->next)
 
 #define stack_enumerate_backwards(c) for((c) = stack_last(); (c); (c) = stack_prev((c)->client))
@@ -140,6 +142,7 @@ stack_top(Client *client)
     }
 }
 
+#endif
 
 /* Shadow Generation */
 
@@ -791,11 +794,8 @@ comp_engine_deinit(Wm *w)
 
   /* Free up any client composite resources */
 
-  START_CLIENT_LOOP(w, c) 
-    {
-      comp_engine_client_destroy(w, c);
-    } 
-  END_CLIENT_LOOP(w, c);
+  stack_enumerate(w, c) 
+    comp_engine_client_destroy(w, c);
 
   /* XXX should free up any client picture data ? */
 
@@ -813,9 +813,9 @@ comp_engine_reinit(Wm *w)
 
   XSync(w->dpy, False);
 
-  if (w->head_client)
+  if (!stack_empty(w))
     {
-      START_CLIENT_LOOP(w, c) 
+      stack_enumerate(w, c) 
 	{
 
 	  dbg("%s() calling init for '%s'\n", __func__, c->name);
@@ -824,7 +824,6 @@ comp_engine_reinit(Wm *w)
 	  comp_engine_client_show(w, c);
 
 	} 
-      END_CLIENT_LOOP(w, c);
 
       comp_engine_render(w, None);  
     }
@@ -943,7 +942,6 @@ comp_engine_client_init(Wm *w, Client *client)
 
   comp_engine_client_get_trans_prop(w, client);
 
-  stack_push(client);
 }
 
 int
@@ -1003,7 +1001,6 @@ comp_engine_client_show(Wm *w, Client *client)
   region = client_win_extents (w, client);
   comp_engine_add_damage (w, region);
 
-  stack_top(client);
 }
 
 void
@@ -1063,7 +1060,6 @@ comp_engine_client_destroy(Wm *w, Client *client)
   if (client->border_clip != None)
     XFixesDestroyRegion (w->dpy, client->border_clip);
 
-  stack_remove(client);
 }
 
 static void
@@ -1125,7 +1121,6 @@ comp_engine_client_configure(Wm *w, Client *client)
 
   comp_engine_add_damage (w, damage);
 
-  stack_top(client);
 }
 
 

@@ -67,18 +67,6 @@ dialog_client_new(Wm *w, Window win, Client *trans)
    c->destroy      = &dialog_client_destroy;
    c->get_coverage = &dialog_client_get_coverage;
 
-   if (trans)
-     {
-       /* 
-        * Dont let dialogs be transient for other dialogs.
-        */
-       if (trans->type != MBCLIENT_TYPE_APP)
-	 c->trans = trans->trans;
-       else
-	 c->trans = trans;	 
-     }
-   else c->flags |= CLIENT_IS_TRANSIENT_FOR_ROOT;
-
    dialog_client_check_for_state_hints(c);
 
    return c;
@@ -237,8 +225,7 @@ dialog_client_title_height(Client *c)
 void
 dialog_client_show(Client *c)
 {
-  Wm     *w = c->wm;
-  Client *highest_client = NULL, *p = NULL;
+  Client *highest_client = NULL;
   MBList *transient_list = NULL, *list_item = NULL;
 
   dbg("%s() called for %s\n", __func__, c->name);
@@ -1138,12 +1125,21 @@ void dialog_client_destroy(Client *c)
 		 && !(c->flags & CLIENT_IS_MESSAGE_DIALOG_LO));
 #endif 
 
+
+  if (c->next_focused_client)
+    client_set_focus(c->next_focused_client);
+  else
+    client_set_focus(wm_get_visible_main_client(w));
+
   base_client_destroy(c);
 
+
+#if 0
   /* We could be a dialog over a desktop, in which case we
      need to give it back keyboard focus - this is a bit
      ugly. XXX Improve XXX
   */
+
 
   if ((d = wm_get_visible_main_client(w)) != NULL)
     {
@@ -1157,6 +1153,7 @@ void dialog_client_destroy(Client *c)
       if (w->flags & DESKTOP_RAISED_FLAG)
 	comp_engine_client_show (w, d); 
     }
+#endif
 
 #ifdef USE_MSG_WIN
 

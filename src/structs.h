@@ -98,12 +98,6 @@
 
 /* Simple Macros  */
 
-/*
-#define START_CLIENT_LOOP(w,c) (c) = (w)->head_client; do {
-#define END_CLIENT_LOOP(w,c)   } while (((c) = (c)->next) \
-				        && ((c) != (w)->head_client) );
-*/
-
 #define MBMAX(x,y) ((x>y)?(x):(y))
 
 #ifdef DEBUG
@@ -288,6 +282,7 @@ typedef struct _mb_client_button
 #define CLIENT_IS_MINIMIZED    (1<<23) /* used by toolbars */
 #define CLIENT_TOOLBARS_MOVED_FOR_FULLSCREEN (1<<24)
 #define CLIENT_IS_TRANSIENT_FOR_ROOT (1<<25)
+#define CLIENT_HAS_URGENCY_FLAG (1<<26)
 
 /* Main Client structure */
 
@@ -384,11 +379,11 @@ typedef struct _client
   /* References */
    
   struct _wm       *wm;
-  struct _client   *prev, *next;
 
   /* New */
 
   struct _client   *above, *below;
+  struct _client   *next_focused_client;
 
   /* Client methods */
   
@@ -553,10 +548,7 @@ typedef struct _wm
   /* State stuff */
 
   int               flags;
-  Client*           head_client;    /* For ptr to beginning of list   */
   Client*           focused_client; /* currently focused client       */
-  Client*           main_client;    /* currently viewable main client */
-  Client*           prev_main_client; /* used for decorated desktop */
 
   /* New stack stuff */
 
