@@ -183,6 +183,7 @@ wm_usage(char *progname)
 #endif
    printf("\t-use_dialog_mode  <free|const|const-horiz>\n");
    printf("\t-use_desktop_mode <decorated|plain>\n");
+   printf("\t-force_dialogs    <comma seperated list of window titles>\n");
    /*
    printf("\t-ping_handler     <string>\n");
    */
@@ -284,7 +285,7 @@ wm_load_config (Wm   *w,
    char              *type;
    XrmValue          value;
    
-   static int opTableEntries = 8;
+   static int opTableEntries = 9;
    static XrmOptionDescRec opTable[] = {
       {"-theme",       ".theme",           XrmoptionSepArg, (XPointer) NULL},
       {"-use_titlebar",".titlebar",        XrmoptionSepArg, (XPointer) NULL},
@@ -294,6 +295,7 @@ wm_load_config (Wm   *w,
       {"-use_dialog_mode", ".dialog",      XrmoptionSepArg, (XPointer) NULL},
       {"-use_desktop_mode",".desktop",     XrmoptionSepArg, (XPointer) NULL},
       {"-titlebar_panel",  ".titlebarpanel", XrmoptionSepArg, (XPointer) NULL},
+      {"-force_dialogs",  ".forcedialogs", XrmoptionSepArg, (XPointer) NULL},
    };
 
    XrmInitialize();
@@ -361,6 +363,16 @@ wm_load_config (Wm   *w,
 #endif
    } else {
      w->config->theme = NULL;
+   }
+
+   if (XrmGetResource(rDB, "matchbox.forcedialogs",
+		      "Matchbox.ForceDialogs",
+		      &type, &value) == True)
+   {
+     w->config->force_dialogs = (char *)malloc(sizeof(char)*(value.size+1));
+     strncpy(w->config->force_dialogs, value.addr, (int) value.size);
+     w->config->force_dialogs[value.size] = '\0';
+     dbg("%s() got theme :%s ", __func__, w->config->force_dialogs);
    }
    
    if (XrmGetResource(rDB, "matchbox.titlebar", "Matchbox.Titlebar",
@@ -1100,7 +1112,8 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 
    if (!c ) 
      {
-       dbg("%s() could find source client\n", __func__ );
+       dbg("%s() could find source client %ix%i\n", __func__,
+	   e->width, e->height);
        xwc.x = e->x;
        xwc.y = e->y;
        xwc.width = e->width;
@@ -1250,6 +1263,7 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 
        XConfigureWindow(w->dpy, e->window, e->value_mask, &xwc);
 
+       client_deliver_config(c);
      }
 
    /* XXX Only raise a client if it size is constant and above is set 
@@ -1505,6 +1519,23 @@ wm_handle_property_change(Wm *w, XPropertyEvent *e)
   if (update_titlebar)  c->redraw(c, False);
 }
 
+Bool
+wm_win_force_dialog(Wm *w, Window win)
+{
+  char *win_title = NULL;
+  Bool  result    = False;
+
+  if (!w->config->force_dialogs)
+    return result;
+
+  if (XFetchName(w->dpy, win, (char **)&win_title))
+    if (strstr(w->config->force_dialogs, win_title)) /* XXX Improve search */
+      result = True;
+
+  if (win_title) XFree(win_title);
+
+  return result;
+}
 
 Client*
 wm_make_new_client(Wm *w, Window win)
@@ -1523,96 +1554,111 @@ wm_make_new_client(Wm *w, Window win)
 
    dbg("%s() initiated\n", __func__);
 
-   status = XGetWindowProperty(w->dpy, win, w->atoms[WINDOW_TYPE], 
-			       0L, 1000000L, 0, XA_ATOM, &realType, &format,
-			       &n, &extra, (unsigned char **) &value);
-
-   if (status == Success)
+   if (wm_win_force_dialog(w, win))
      {
-       if (realType == XA_ATOM && format == 32)
+       /* Hackiness to allow app wins to be forced into dialogs   
+        * ( see -froce_dialogs switch ). 
+        * Much better to fix the app.
+        */
+       c = dialog_client_new(w, win, NULL);
+       if (c == NULL) goto end;
+     }
+   else
+     {
+       status = XGetWindowProperty(w->dpy, win, w->atoms[WINDOW_TYPE], 
+				   0L, 1000000L, 0, XA_ATOM, 
+				   &realType, &format,
+				   &n, &extra, (unsigned char **) &value);
+       if (status == Success)
 	 {
-	   dbg("%s() got type atom\n", __func__);
-	   if (value[0] == w->atoms[WINDOW_TYPE_DOCK])
+	   if (realType == XA_ATOM && format == 32)
 	     {
-	       dbg("%s() got dock atom\n", __func__ );
-	       c = dockbar_client_new(w, win);
-	       if (c == NULL) goto end;
-	     }
-	   else if (value[0] == w->atoms[WINDOW_TYPE_TOOLBAR]
-		    || value[0] == w->atoms[WINDOW_TYPE_INPUT])
-	     {
-	       dbg("%s() got toolbar atom\n", __func__ );
-	       c = toolbar_client_new(w, win);
-	       if (c == NULL) goto end;
-	     }
-	   else if (value[0] == w->atoms[WINDOW_TYPE_DESKTOP])
-	     {
-	       dbg("%s() got desktop atom\n", __func__ );
-	       c = desktop_client_new(w, win);
-	       if (c == NULL) goto end;
-	     }
-
-	   else if (value[0] == w->atoms[WINDOW_TYPE_SPLASH])
-	     {
-	       dbg("%s() got splash atom\n", __func__ );
-	       c = dialog_client_new(w, win, NULL);
-	       if (c == NULL) goto end;
-	       c->flags ^= CLIENT_TITLE_HIDDEN_FLAG;
-	     }
-	   else if (value[0] == w->atoms[WINDOW_TYPE_DIALOG])
-	     {
-	       dbg("%s() got type dialog atom\n", __func__ );
-	       c = dialog_client_new(w, win, NULL);
-	       if (c == NULL) goto end;
-	     }
-#ifdef USE_MSG_WIN
-	   else if (value[0] == w->atoms[WINDOW_TYPE_MESSAGE])
-	     {
-
-	       dbg("%s() got type message atom\n", __func__ );
-	       if (w->msg_win_queue_head == NULL)
+	       dbg("%s() got type atom\n", __func__);
+	       if (value[0] == w->atoms[WINDOW_TYPE_DOCK])
 		 {
-		   dbg("%s() queue empty add win to queue\n", __func__ );
-		   wm_msg_win_queue_add(w, win);
+		   dbg("%s() got dock atom\n", __func__ );
+		   c = dockbar_client_new(w, win);
+		   if (c == NULL) goto end;
+		 }
+	       else if (value[0] == w->atoms[WINDOW_TYPE_TOOLBAR]
+			|| value[0] == w->atoms[WINDOW_TYPE_INPUT])
+		 {
+		   dbg("%s() got toolbar atom\n", __func__ );
+		   c = toolbar_client_new(w, win);
+		   if (c == NULL) goto end;
+		 }
+	       else if (value[0] == w->atoms[WINDOW_TYPE_DESKTOP])
+		 {
+		   dbg("%s() got desktop atom\n", __func__ );
+		   c = desktop_client_new(w, win);
+		   if (c == NULL) goto end;
 		 }
 	       
-	       if (win == w->msg_win_queue_head->win)
+	       else if (value[0] == w->atoms[WINDOW_TYPE_SPLASH])
 		 {
-		   dbg("%s() win is queue head, making client\n", __func__ );
+		   dbg("%s() got splash atom\n", __func__ );
 		   c = dialog_client_new(w, win, NULL);
 		   if (c == NULL) goto end;
-		   c->flags ^= CLIENT_IS_MESSAGE_DIALOG; 
+		   c->flags ^= CLIENT_TITLE_HIDDEN_FLAG;
 		 }
-	       else
+	       else if (value[0] == w->atoms[WINDOW_TYPE_DIALOG])
 		 {
-		   dbg("%s() win is not queue head adding to queue\n", __func__ );
-		   wm_msg_win_queue_add(w, win);
-		   
-		   dbg("%s() returning from add\n", __func__);
-		   XUngrabServer(w->dpy);
-		   if (value) XFree(value);
-		   return NULL;
+		   dbg("%s() got type dialog atom\n", __func__ );
+		   c = dialog_client_new(w, win, NULL);
+		   if (c == NULL) goto end;
 		 }
-
-	     }
-	   else if (value[0] == w->atoms[WINDOW_TYPE_MESSAGE_STATIC_0])
-	     {
+#ifdef USE_MSG_WIN
+	       else if (value[0] == w->atoms[WINDOW_TYPE_MESSAGE])
+		 {
+		   
+		   dbg("%s() got type message atom\n", __func__ );
+		   if (w->msg_win_queue_head == NULL)
+		     {
+		       dbg("%s() queue empty add win to queue\n", __func__ );
+		       wm_msg_win_queue_add(w, win);
+		     }
+		   
+		   if (win == w->msg_win_queue_head->win)
+		     {
+		       dbg("%s() win is queue head, making client\n", 
+			   __func__ );
+		       c = dialog_client_new(w, win, NULL);
+		       if (c == NULL) goto end;
+		       c->flags ^= CLIENT_IS_MESSAGE_DIALOG; 
+		     }
+		   else
+		     {
+		       dbg("%s() win is not queue head adding to queue\n", 
+			   __func__ );
+		       wm_msg_win_queue_add(w, win);
+		   
+		       dbg("%s() returning from add\n", __func__);
+		       XUngrabServer(w->dpy);
+		       if (value) XFree(value);
+		       return NULL;
+		     }
+		   
+		 }
+	       else if (value[0] == w->atoms[WINDOW_TYPE_MESSAGE_STATIC_0])
+		 {
 		   c = dialog_client_new(w, win, NULL);
 		   if (c == NULL) goto end;
 		   c->flags ^= CLIENT_IS_MESSAGE_DIALOG|CLIENT_IS_MESSAGE_DIALOG_HI; 
-	     }
-	   else if (value[0] == w->atoms[WINDOW_TYPE_MESSAGE_STATIC_1])
-	     {
+		 }
+	       else if (value[0] == w->atoms[WINDOW_TYPE_MESSAGE_STATIC_1])
+		 {
 		   c = dialog_client_new(w, win, NULL);
 		   if (c == NULL) goto end;
 		   c->flags ^= CLIENT_IS_MESSAGE_DIALOG|CLIENT_IS_MESSAGE_DIALOG_LO; 
-	     }
+		 }
 #endif
-	   
-	 } 
-     }
+	       
+	     } 
+	 }
+       
+       if (value) XFree(value);
 
-   if (value) XFree(value);
+     }
 
    if ((mwm_flags = mwm_get_decoration_flags(w, win)))
      { /* for now, treat just like a splash  */

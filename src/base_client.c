@@ -14,7 +14,7 @@
 */
 
 /*
-  $Id: base_client.c,v 1.6 2004/07/30 12:12:32 mallum Exp $
+  $Id: base_client.c,v 1.7 2004/09/24 11:05:16 mallum Exp $
 */
 
 
@@ -25,7 +25,6 @@ base_client_new(Wm *w, Window win)
 {
    XWindowAttributes attr;
 
-   long icccm_mask;
    Client *c = NULL;
    int i = 0, n = 0, format;
    XWMHints *wmhints = NULL;
@@ -38,8 +37,6 @@ base_client_new(Wm *w, Window win)
 
    dbg("%s() called  \n", __func__);
 
-
-    
    c = malloc(sizeof(Client));
    memset(c, 0, sizeof(Client));
    
@@ -87,6 +84,21 @@ base_client_new(Wm *w, Window win)
    /* Get size hints */
    c->size = XAllocSizeHints();
 
+   c->width = attr.width;
+   c->height = attr.height;
+
+#if 0
+
+   /* 
+    * Dont bother with WMNOrmalHints anymore, reasoning;
+    * 
+    * - mb forces app window sizes anyway ( and static )
+    * - We dont let users resize dialogs 
+    *   ( so base_height, width_inc etc not that useful. but *could*
+    *     be used if xterms were dialogs and therefore likely to get 
+    *     resized.                                                   )
+    */
+
    if ( !XGetWMNormalHints(w->dpy, c->window, c->size, &icccm_mask) )
    {
       c->width = attr.width;
@@ -104,8 +116,9 @@ base_client_new(Wm *w, Window win)
       } else {
 	 c->width = attr.width;
 	 c->height = attr.height;
-      }
+	 }
    }
+#endif
 
    if (c->x < 0) c->x = (w->dpy_width + c->x - c->width);
        

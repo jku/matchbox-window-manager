@@ -476,6 +476,7 @@ typedef struct _wm_config
   MBConfigKbd *kb;
 
   Bool         awt_workaround;
+  char        *force_dialogs;
 } Wm_config;
 
 

@@ -35,7 +35,7 @@
 #define DIALOG_DRAG_RESTRAIN_BDR 16
 
 /* Hide the dialog ( just show border ) when dragging  */
-#define DIALOG_WANT_HIDDEN_DRAG  1
+#define DIALOG_WANT_HIDDEN_DRAG  0
 
 
 /********************************************/
@@ -822,10 +822,13 @@ dialog_client_drag(Client *c) /* drag box */
     
   int frm_size     = dialog_client_title_height(c);
   int offset_south = 0, offset_west = 0, offset_east = 0;
+  int have_grab = 0;
 
 #ifdef USE_MSG_WIN
   Client *t = NULL;
 #endif 
+
+  dbg("%s called\n", __func__);
 
   dialog_client_get_offsets(c, &offset_east, &offset_south, &offset_west);
 
@@ -839,6 +842,8 @@ dialog_client_drag(Client *c) /* drag box */
   /* Let the comp know theres gonna be damage in out old position.
    * XXX Must be a better way need to figure it out.    
    */
+
+
 
 #if (DIALOG_WANT_HIDDEN_DRAG) 	/* hide the dialog on drag */
 
@@ -857,10 +862,7 @@ dialog_client_drag(Client *c) /* drag box */
 
   _get_mouse_position(c->wm, &x1, &y1);
 
-  _draw_outline(c, c->x - offset_west, c->y - frm_size,
-		c->width + offset_west + offset_east,
-		c->height + frm_size + offset_south);
-
+ 
 #if (DIALOG_WANT_HIDDEN_DRAG) 	/* hide the dialog on drag */
 
 #ifndef USE_COMPOSITE 		/* .. for lowlighted dialogs */
@@ -871,17 +873,31 @@ dialog_client_drag(Client *c) /* drag box */
     }
   else 
 #endif
-    XUnmapWindow(c->wm->dpy, c->frame);
+    {
+      XUnmapWindow(c->wm->dpy, c->frame);
+    }
 
   c->ignore_unmap++;
 #endif  /* DIALOG_WANT_HIDDEN_DRAG */
 
-  XSync(c->wm->dpy, False);
-    
+  XFlush(c->wm->dpy);
+
+
+  
   for (;;) 
     {
-      int wanted_x = 0, wanted_y = 0, have_grab = 0;
-      
+      int wanted_x = 0, wanted_y = 0;
+
+      if (!have_grab) 
+	{
+	  _draw_outline(c, c->x - offset_west, c->y - frm_size,
+			c->width + offset_west + offset_east,
+			c->height + frm_size + offset_south);
+	  XGrabServer(c->wm->dpy); 
+	  have_grab = 1; 
+	}
+
+
       XMaskEvent(c->wm->dpy, 
 		 ButtonPressMask|ButtonReleaseMask|PointerMotionMask,
 		 &ev);
@@ -889,8 +905,6 @@ dialog_client_drag(Client *c) /* drag box */
     switch (ev.type) 
       {
       case MotionNotify:
-	if (!have_grab) 
-	  { XGrabServer(c->wm->dpy); have_grab = 1; }
 	  
 	_draw_outline(c, 
 		      c->x - offset_west, 
@@ -999,6 +1013,8 @@ dialog_client_drag(Client *c) /* drag box */
       }
     }
 
+  XUngrabPointer(c->wm->dpy, CurrentTime);
+  XUngrabServer(c->wm->dpy);
   client_deliver_config(c);
 }
 
@@ -1017,8 +1033,11 @@ _get_mouse_position(Wm *w, int *x, int *y)
 static void
 _draw_outline(Client *c, int x, int y, int width, int height)
 {
+  dbg("%s called +%i,+%i %ix%i\n", __func__,x,y,width,height);
+
   XDrawRectangle(c->wm->dpy, c->wm->root, c->wm->mbtheme->band_gc, 
 		 x-1, y-1, width+2, height+2);
+
 }
  
 void dialog_client_destroy(Client *c)
