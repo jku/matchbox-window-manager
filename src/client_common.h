@@ -35,6 +35,14 @@ client_deliver_config (Client *c);
 void 
 client_deliver_wm_protocol (Client *c, Atom delivery);
 
+void
+client_deliver_message(Client       *c, 
+		       Atom          delivery,
+		       unsigned long data1,
+		       unsigned long data2,
+		       unsigned long data3,
+		       unsigned long data4);
+
 Bool
 client_obliterate(Client *c);
 

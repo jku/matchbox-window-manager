@@ -1431,7 +1431,7 @@ mbtheme_button_new (MBTheme *theme,
 	    button->wants_dbl_click = True;
 	}
 
-      if (strstr(options, "press_activates"))
+      if (strstr(options, "pressonly"))
 	{
 	  button->press_activates = True;
 	}

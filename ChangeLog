@@ -1,3 +1,13 @@
+2004-08-03  mallum,,,  <mallum@handhelds.org>
+
+	* src/client_common.c: (client_deliver_wm_protocol),
+	(client_deliver_message), (client_button_do_ops):
+	* src/client_common.h:
+	* src/ewmh.c: (ewmh_init):
+	* src/mbtheme.c: (mbtheme_button_new):
+	* src/structs.h:
+	More subname work and grab message functionality added. 
+
 2004-07-30  mallum,,,  <mallum@handhelds.org>
 
 	* data/schemas/Makefile.am:

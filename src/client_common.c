@@ -83,6 +83,7 @@ client_deliver_config(Client *c)
 void
 client_deliver_wm_protocol(Client *c, Atom delivery)
 {
+  /* TODO: should call client_deliver_message() */
     XEvent e;
     e.type = ClientMessage;
     e.xclient.window = c->window;
@@ -92,6 +93,33 @@ client_deliver_wm_protocol(Client *c, Atom delivery)
     e.xclient.data.l[1] = CurrentTime;
     XSendEvent(c->wm->dpy, c->window, False, 0, &e);
 }
+
+void
+client_deliver_message(Client       *c, 
+		       Atom          delivery_atom,
+		       unsigned long data1,
+		       unsigned long data2,
+		       unsigned long data3,
+		       unsigned long data4)
+{
+  XEvent ev;
+  Wm *w = c->wm;
+
+  memset(&ev, 0, sizeof(ev));
+
+  ev.xclient.type = ClientMessage;
+  ev.xclient.window = c->window;
+  ev.xclient.message_type = delivery_atom;
+  ev.xclient.format = 32;
+  ev.xclient.data.l[0] = CurrentTime;
+  ev.xclient.data.l[1] = data1;
+  ev.xclient.data.l[2] = data2;
+  ev.xclient.data.l[3] = data3;
+  ev.xclient.data.l[4] = data4;
+  XSendEvent(w->dpy, c->window, False, NoEventMask, &ev);
+  XSync(w->dpy, False);
+}
+
 
 /* 'Really' kill an app if it gives us enough info */
 Bool
@@ -414,6 +442,8 @@ client_button_do_ops(Client *c, XButtonEvent *e, int frame_type, int w, int h)
        if (mbtheme_button_press_activates(button_item->data))
 	 {
 	   XUngrabPointer(c->wm->dpy, CurrentTime); 
+	   client_deliver_message(c, c->wm->atoms[MB_GRAB_TRANSFER],
+				  e->subwindow, 0, 0, 0);
 	   return button_item->id;
 	 }
 

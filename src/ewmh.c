@@ -107,6 +107,7 @@ ewmh_init(Wm *w)
     "CM_TRANSLUCENCY",
     "_MB_DOCK_TITLEBAR_SHOW_ON_DESKTOP",
     "_MB_WIN_SUB_NAME",
+    "_MB_GRAB_TRANSFER",
     "INTEGER" 			/* XXX Needed ? */
   };
 
