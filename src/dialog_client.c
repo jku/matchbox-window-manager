@@ -1071,30 +1071,11 @@ dialog_client_destroy(Client *c)
   Wm     *w = c->wm; 
   Client *d = NULL;
 
-#ifdef MSG_Q
-  int was_msg = 0;
-
-  if (c->flags & CLIENT_IS_MESSAGE_DIALOG)
-    {
-      if (w->msg_win_queue_head 
-	  && w->msg_win_queue_head->win == c->window);
-      was_msg = 1;
-    }
-#endif
-
 
   /* Focus the saved next or return a likely candidate if none found */
   d = dialog_client_set_focus_next(c);
 
   base_client_destroy(c);
-
-#ifdef MSG_Q
-if (was_msg)
-  {
-    dbg("%s() was message poping queue\n", __func__);
-    wm_msg_win_queue_pop(w);
-  }
-#endif
 
   /* 
    *  We call activate_client mainly to figure out what to focus next.

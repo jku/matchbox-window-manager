@@ -144,17 +144,6 @@ Client
 void wm_sn_cycle_remove(Wm *w, Window xid);
 #endif
 
-#ifdef MSG_Q
-void
-wm_msg_win_queue_add(Wm *w, Window win);
-
-void
-wm_msg_win_queue_pop(Wm *w);
-
-void
-wm_msg_win_queue_process(Wm *w);
-#endif
-
 #ifdef USE_GCONF
 void
 gconf_key_changed_callback (GConfClient *client,

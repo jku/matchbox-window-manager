@@ -770,11 +770,6 @@ wm_event_loop(Wm* w)
 	tvt.tv_sec = 1;
 #endif      
 
-#if MSG_Q
-      if (w->msg_win_queue_head)
-	tvt.tv_sec = 1;
-#endif
-
 #ifdef USE_GCONF
       if (w->gconf_client != NULL)
 	tvt.tv_sec = 1;
@@ -857,13 +852,6 @@ wm_event_loop(Wm* w)
 #ifdef USE_GCONF
 	if (w->gconf_client != NULL)
 	  g_main_context_iteration (w->gconf_context, FALSE);
-#endif
-
-#if MSG_Q
-	if (w->msg_win_queue_head)
-	  {
-	    wm_msg_win_queue_process (w);
-	  }
 #endif
 
 
@@ -1725,40 +1713,7 @@ wm_make_new_client(Wm *w, Window win)
 		   dbg("%s() got desktop atom\n", __func__ );
 		   c = desktop_client_new(w, win);
 		   if (c == NULL) goto end;
-		 }
-#if MSG_Q
-	       else if (value[0] == w->atoms[WINDOW_TYPE_MESSAGE])
-		 {
-		   dbg("%s() got type message atom\n", __func__ );
-		   if (w->msg_win_queue_head == NULL)
-		     {
-		       dbg("%s() queue empty add win to queue\n", __func__ );
-		       wm_msg_win_queue_add(w, win);
-		     }
-		   
-		   if (win == w->msg_win_queue_head->win)
-		     {
-		       dbg("%s() win is queue head, making client\n", 
-			   __func__ );
-		       c = dialog_client_new(w, win, NULL);
-		       if (c == NULL) goto end;
-		       c->flags |= (CLIENT_IS_MESSAGE_DIALOG|CLIENT_HAS_URGENCY_FLAG); 
-		     }
-		   else
-		     {
-		       dbg("%s() win is not queue head adding to queue\n", 
-			   __func__ );
-		       wm_msg_win_queue_add(w, win);
-		   
-		       dbg("%s() returning from add\n", __func__);
-		       XUngrabServer(w->dpy);
-		       if (value) XFree(value);
-		       return NULL;
-		     }
-		   
-		 }
-#endif
-	       
+		 }	       
 	       else if (value[0] == w->atoms[WINDOW_TYPE_SPLASH])
 		 {
 		   dbg("%s() got splash atom\n", __func__ );
@@ -3005,110 +2960,4 @@ gconf_key_changed_callback (GConfClient *client,
 
 #endif
 
-#if MSG_Q
-
-void
-wm_msg_win_queue_add(Wm *w, Window win)
-{
-  MsgWinQueue *tmp = w->msg_win_queue_head;
-  int timeout;
-
-  Atom type;
-  int format;
-  long bytes_after;
-  int *data = NULL;
-  long n_items;
-  int result;
-
-  result =  XGetWindowProperty (w->dpy, win, 
-				w->atoms[WINDOW_TYPE_MESSAGE_TIMEOUT],
-				0, 1L,
-				False, XA_CARDINAL,
-				&type, &format, &n_items,
-				&bytes_after, (unsigned char **)&data);
-
-  if (result != Success || data == NULL)
-    {
-      timeout = -1; 		/* No timeout */
-    }
-  else timeout = data[0];
-    
-  if (data) XFree (data);
-
-  dbg("%s() timeout is %i\n", __func__, timeout);
-
-  if (w->msg_win_queue_head == NULL)
-    {
-      dbg("%s() message queue is empty, adding new head\n", __func__);
-      w->msg_win_queue_head = malloc(sizeof(MsgWinQueue));
-      memset(w->msg_win_queue_head, 0, sizeof(MsgWinQueue));
-
-      w->msg_win_queue_head->win = win;
-      w->msg_win_queue_head->timeout = timeout;
-      return;
-    }
-  
-  dbg("%s() queue has items, adding to back \n", __func__);
-
-  while (tmp->next != NULL) tmp = tmp->next;
-
-  tmp->next = malloc(sizeof(MsgWinQueue));
-  memset(tmp->next, 0, sizeof(MsgWinQueue));
-  tmp->next->win = win;
-  tmp->next->timeout = timeout;
-}
-
-
-void
-wm_msg_win_queue_pop(Wm *w)
-{
-  MsgWinQueue *tmp;
-
-  dbg("%s() called\n", __func__);
-
-  if (w->msg_win_queue_head == NULL) return;
-
-  tmp = w->msg_win_queue_head;
-
-  w->msg_win_queue_head = w->msg_win_queue_head->next;
-
-  free(tmp);
-
-  if (w->msg_win_queue_head)
-    {
-      XWindowAttributes doh_attr;
-      if (XGetWindowAttributes(w->dpy, w->msg_win_queue_head->win, &doh_attr))
-	{
-	  wm_make_new_client(w, w->msg_win_queue_head->win);
-	}
-      else /* Eek window no longer exists  */
-	{
-	  wm_msg_win_queue_pop(w); /* so pop again */
-	}
-    }
-}
-
-
-void
-wm_msg_win_queue_process(Wm *w)
-{
-  Client      *client_msg = NULL;
-  if (w->msg_win_queue_head == NULL) return;
-
-  /*
-  dbg("%s() queue head has timeout %i\n", 
-      __func__, w->msg_win_queue_head->timeout );
-  */
-
-  if (w->msg_win_queue_head->timeout > 0) w->msg_win_queue_head->timeout--;
-
-  if (w->msg_win_queue_head->timeout == 0) 
-    if ((client_msg = wm_find_client(w, w->msg_win_queue_head->win, 
-				     WINDOW)) != NULL)
-      {
-	wm_remove_client(w, client_msg);
-      }
-}
-
-#endif
 

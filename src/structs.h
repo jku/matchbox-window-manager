@@ -73,8 +73,6 @@
 #include <X11/extensions/sync.h>
 #endif
 
-#define MSG_Q 1  		/* TO go for 0.9 FULL */
-
 #define GENERIC_ICON        PKGDATADIR "/mbnoapp.xpm"
 
 #ifdef MB_HAVE_PNG
@@ -507,17 +505,6 @@ typedef struct _sn_execmapping_item
 } SnExecMappingItem;
 #endif
 
-#ifdef MSG_Q
-typedef struct MsgWinQueue
-{
-  Window              win;
-  int                 timeout;
-  struct MsgWinQueue *next;
-
-} MsgWinQueue;
-#endif
-
-
 /* WM Struct state flags XXX enum ? */
 
 #define MENU_FLAG           (1<<1)
@@ -599,10 +586,6 @@ typedef struct _wm
 #ifdef USE_XSETTINGS
   XSettingsClient  *xsettings_client;
 #endif 
-
-#ifdef MSG_Q
-  MsgWinQueue      *msg_win_queue_head;
-#endif
 
 #ifdef USE_GCONF
   GConfClient      *gconf_client;
