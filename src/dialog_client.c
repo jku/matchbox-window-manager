@@ -102,8 +102,6 @@ dialog_client_check_for_state_hints(Client *c)
 {
   if (ewmh_state_check(c, c->wm->atoms[WINDOW_STATE_MODAL]))
     {
-      Client *damaged;
-
       dbg("%s() got modal hint, setting flag\n", __func__);
 
       c->flags ^= CLIENT_IS_MODAL_FLAG;
@@ -803,6 +801,52 @@ dialog_client_button_press(Client *c, XButtonEvent *e)
   int offset_south = 0, offset_west = 0, offset_east = 0;
 
   dialog_client_get_offsets(c, &offset_east, &offset_south, &offset_west);
+
+  if (w->config->dialog_stratergy == WM_DIALOGS_STRATERGY_STATIC)
+    {
+      /* For static undraggble/stack fixed dialog we simply  
+       * hide the dialog when titlebar is clicked on. 
+       *
+       * TODO: Ideally this code should go in drag loop. but
+       *       it seems the servergrab() stops underlying app
+       *       from repainting itself. Need to look more into 
+       *       this.
+       *       Is it safe to simply remove the server grab ?
+       *
+       */
+      if (XGrabPointer(w->dpy, w->root, False,
+		       ButtonPressMask|ButtonReleaseMask,
+		       GrabModeAsync,
+		       GrabModeAsync, 
+		       None, w->curs, CurrentTime) == GrabSuccess)
+	{
+	  XUnmapWindow(w->dpy, c->frame);
+	  _draw_outline(c, c->x - offset_west, c->y - offset_north,
+			c->width + offset_west + offset_east,
+			c->height + offset_north + offset_south);
+	  
+	  XFlush(w->dpy);
+	  
+	  for (;;) 
+	    {
+	      XEvent xev;
+	      XMaskEvent(w->dpy,ButtonReleaseMask|ButtonPressMask, &xev);
+	      if (xev.type == ButtonRelease)
+		{
+		  _draw_outline(c, c->x - offset_west, c->y - offset_north,
+				c->width + offset_west + offset_east,
+				c->height + offset_north + offset_south);
+		  
+		  XMapWindow(w->dpy, c->frame);
+		  break;
+		}
+	    }
+	  
+	  XUngrabPointer(w->dpy, CurrentTime); 
+	  XSync(w->dpy, False);
+	}
+      return;
+    }
 
   switch (client_button_do_ops(c, e, FRAME_DIALOG, 
 			       c->width + offset_east + offset_west, 

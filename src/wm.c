@@ -734,7 +734,7 @@ wm_handle_button_event(Wm *w, XButtonEvent *e)
    Client *p = NULL;
    Client *c = wm_find_client(w, e->window, WINDOW);
 
-   dbg("%s() called", __func__);
+   dbg("%s() called\n", __func__);
 
    /* Raise dialogs, set focus if needed  */
 

@@ -1,3 +1,11 @@
+2004-11-11  mallum,,,  <mallum@handhelds.org>
+
+	* src/dialog_client.c: (dialog_client_check_for_state_hints),
+	(dialog_client_button_press):
+	* src/wm.c: (wm_handle_button_event):
+	Make -use_dialog_mode static windows breaifly hide when
+        titlebar is clicked on. So 'see through' kind of.
+
 2004-11-10  mallum,,,  <mallum@handhelds.org>
 
 
