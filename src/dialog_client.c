@@ -16,7 +16,28 @@
 
 #include "dialog_client.h"
 
-#define DIALOG_WANT_HIDDEN_DRAG 1
+/********************************************
+ *
+ * Experimental dialog dragging modifications
+ */
+
+/* different dragging restraints */
+#define DIALOG_DRAG_NONE         1
+#define DIALOG_DRAG_RESTRAIN     2
+#define DIALOG_DRAG_FREE         3
+
+/* Selected restraint */
+#define DIALOG_DRAG_MODE         DIALOG_DRAG_FREE
+
+/* Border size for DIALOG_DRAG_RESTRAIN */
+#define DIALOG_DRAG_RESTRAIN_BDR 16
+
+/* Hide the dialog ( just show border ) when dragging ? */
+#define DIALOG_WANT_HIDDEN_DRAG  1
+
+
+/********************************************/
+
 
 static void dialog_client_check_for_state_hints(Client *c);
 static void dialog_client_drag(Client *c);
@@ -672,12 +693,26 @@ dialog_client_drag(Client *c) /* drag box */
 		c->width + offset_west + offset_east,
 		c->height + frm_size + offset_south);
 
-#if (DIALOG_WANT_HIDDEN_DRAG)
-  dialog_client_hide(c);
+#if (DIALOG_WANT_HIDDEN_DRAG) 	/* hide the dialog on drag */
+
+#ifndef USE_COMPOSITE 		/* .. for lowlighted dialogs - ewe */
+  if (c->flags & CLIENT_IS_MODAL_FLAG && c->wm->config->dialog_shade)
+    {
+      XUnmapWindow(c->wm->dpy, c->window);
+      XUnmapWindow(c->wm->dpy, c->title_frame);
+    }
+  else 
+#endif
+    XUnmapWindow(c->wm->dpy, c->frame);
+
+  XFlush(c->wm->dpy);
+
+  c->ignore_unmap++;
 #endif
     
   for (;;) 
     {
+      int wanted_x = 0, wanted_y = 0;
 
     XMaskEvent(c->wm->dpy, ButtonPressMask|ButtonReleaseMask|PointerMotionMask,
 	       &ev);
@@ -685,23 +720,55 @@ dialog_client_drag(Client *c) /* drag box */
     switch (ev.type) 
       {
       case MotionNotify:
-	_draw_outline(c, c->x - offset_west, c->y - frm_size,
+	_draw_outline(c, 
+		      c->x - offset_west, 
+		      c->y - frm_size,
 		      c->width + offset_west + offset_east,
 		      c->height + frm_size + offset_south);
+
+#if (DIALOG_DRAG_MODE)
+
+	wanted_x = (old_cx + (ev.xmotion.x - x1));
+	wanted_y = (old_cy + (ev.xmotion.y - y1));
+
+	switch (DIALOG_DRAG_MODE) 
+	  {
+	  case DIALOG_DRAG_NONE:
+	    /* No modifications to postion */
+	    break;
+	  case DIALOG_DRAG_RESTRAIN:
+
+	    if ( (wanted_x - offset_west) < 0 - DIALOG_DRAG_RESTRAIN_BDR)
+	      c->x = 0 - DIALOG_DRAG_RESTRAIN_BDR + offset_west;
+	    else if ( (wanted_x + c->width + offset_east) > c->wm->dpy_width + DIALOG_DRAG_RESTRAIN_BDR)
+	      c->x = c->wm->dpy_width + DIALOG_DRAG_RESTRAIN_BDR - (c->width + offset_east);
+	    else c->x = wanted_x;
+	    
+	    if ( (wanted_y - frm_size) < 0 - DIALOG_DRAG_RESTRAIN_BDR)
+	      c->y = 0 - DIALOG_DRAG_RESTRAIN_BDR + frm_size;
+	    else if ( (wanted_y + c->height + offset_south) > c->wm->dpy_height + DIALOG_DRAG_RESTRAIN_BDR)
+	      c->y = c->wm->dpy_height + DIALOG_DRAG_RESTRAIN_BDR - (c->height + offset_south);
+	    else c->y = wanted_y;
+
+	    break;
+          case DIALOG_DRAG_FREE:
+	    c->x = wanted_x;
+	    c->y = wanted_y;
+	    break;
+	  default:
+	    break;
+	  }
+
+
+
+
+#else  /* Dialog drag mode disabled below */
 
 	if (c->wm->config->dialog_stratergy != WM_DIALOGS_STRATERGY_CONSTRAINED_HORIZ)
 	  c->x = old_cx + (ev.xmotion.x - x1);
 
-#if 0
-	if ( (old_cx + (ev.xmotion.x - x1)) <= 0
-	     || (old_cx + (ev.xmotion.x - x1) + c->width + offset_east) > c->wm->dpy_width
-	     || (old_cy + (ev.xmotion.y - y1)) <= 0
-	     || (old_cy + (ev.xmotion.y - y1) + c->height + offset_south) > c->wm->dpy_height )
-	  break;
-
-#endif 
-
 	c->y = old_cy + (ev.xmotion.y - y1);
+#endif
 
 	_draw_outline(c, c->x - offset_west, c->y - frm_size,
 		      c->width + offset_west + offset_east,
