@@ -190,7 +190,14 @@ main_client_configure(Client *c)
 	 - wm_get_offsets_size(c->wm, EAST,  NULL, False)
 	 - wm_get_offsets_size(c->wm, WEST,  NULL, False);
 
-       c->height = c->wm->dpy_height - c->y - h - offset_south- main_client_manage_toolbars_for_fullscreen(c, False);
+#ifdef USE_ALT_INPUT_WIN
+       c->height = c->wm->dpy_height - c->y - h - offset_south - main_client_manage_toolbars_for_fullscreen(c, False);
+#else
+       c->height = c->wm->dpy_height - c->y - h - offset_south;
+       main_client_manage_toolbars_for_fullscreen(c, False);
+#endif
+
+
      }
 
    dbg("%s() configured as %i*%i+%i+%i, frame size is %i\n", 

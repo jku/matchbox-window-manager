@@ -1,5 +1,10 @@
 2005-02-23  mallum,,,  <mallum@openedhand.com>
 
+	* src/main_client.c: (main_client_configure):
+	Refix fullscreen toggling for non alt input windows
+
+2005-02-23  mallum,,,  <mallum@openedhand.com>
+
 	* src/structs.h:
 	* src/keys.c: (keys_add_entry), (keys_load_config):
 	Initial work on supporting 'held' keys - config can now be parsed.
