@@ -728,6 +728,8 @@ main_client_iconize(Client *c)
   stack_enumerate(w, p)
     if (p->trans == c)
       p->iconize(p);
+
+  main_client_unmap(c);
 }
 
 void
