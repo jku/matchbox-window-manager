@@ -14,7 +14,7 @@
 */
 
 /*
-  $Id: base_client.c,v 1.14 2004/11/17 19:34:08 mallum Exp $
+  $Id: base_client.c,v 1.15 2004/11/18 13:29:14 mallum Exp $
 */
 
 
@@ -143,6 +143,9 @@ base_client_new(Wm *w, Window win)
       if (wmhints->flags & XUrgencyHint)
 	c->flags |= CLIENT_HAS_URGENCY_FLAG;
 
+      c->icon = None;
+      c->icon_mask = None;
+
       if (w->config->use_icons && c->icon_rgba_data == NULL)
 	{
 	  if (wmhints->flags & IconPixmapHint)
@@ -153,9 +156,6 @@ base_client_new(Wm *w, Window win)
 		{
 		  c->icon_mask = wmhints->icon_mask;
 		}
-	    } else {
-	      c->icon = None;
-	      c->icon_mask = None;
 	    }
 	}
    }
@@ -270,6 +270,8 @@ base_client_new(Wm *w, Window win)
        return NULL;
      }
 
+   list_add(&w->client_age_list, NULL, 0, (void*)c);
+
    return c;
 }
 
@@ -312,7 +314,10 @@ base_client_process_name(Client *c)
 
 	      if (c->name == NULL) 
 		{
-		  /* something is seriously wrong if we get here */
+		  /* Something is seriously wrong if we get here 
+                   * Its likely the client window has dissapered. 
+		   */
+		  c->name = strdup("unknown"); /* something to free */
 		  
 		  dbg("%s() WARNING, name is still null after store/fetch\n",
 		      __func__ );
@@ -491,12 +496,15 @@ base_client_destroy(Client *c)
 
    comp_engine_client_destroy(w, c);
 
+   list_remove(&w->client_age_list, (void*)c);
+
    stack_remove(c);
 
    /* Now free up various resources */
 
    if (c->type != MBCLIENT_TYPE_OVERRIDE)
      {
+
        client_buttons_delete_all(c);
        
        ewmh_update(w);
@@ -504,12 +512,17 @@ base_client_destroy(Client *c)
 #if defined (USE_XFT)
        if (c->xftdraw != NULL) XftDrawDestroy(c->xftdraw);
 #endif
-       if (c->frame && c->frame != c->window) 
-	 XDestroyWindow(w->dpy, c->frame);
+
        if (c->title_frame != c->window 
 	   && c->title_frame != c->frame
 	   && c->title_frame != None) 
 	 XDestroyWindow(w->dpy, c->title_frame);
+
+       /* Destroy top parent frame last */
+
+       if (c->frame && c->frame != c->window) 
+	 XDestroyWindow(w->dpy, c->frame);
+
 #ifdef STANDALONE
        if (c->backing != None)
 	   XFreePixmap(w->dpy, c->backing);
@@ -517,16 +530,15 @@ base_client_destroy(Client *c)
        if (c->backing != NULL)
 	   mb_drawable_unref(c->backing);
 #endif
+
        for (i=0; i<MSK_COUNT; i++)
 	 if (c->backing_masks[i] != None)
 	   XFreePixmap(w->dpy, c->backing_masks[i]);
 
-       if (c->icon != None && c->icon != w->generic_icon)
-	 XFreePixmap(w->dpy, c->icon);
-       if (c->icon_mask != None && c->icon_mask != w->generic_icon_mask)
-	 XFreePixmap(w->dpy, c->icon_mask);
+       /* No need to free up pixmap icon data client resource  */
 
        if (c->icon_rgba_data) XFree(c->icon_rgba_data);
+
      }    
 
     if (c->name)         XFree(c->name);
@@ -534,8 +546,8 @@ base_client_destroy(Client *c)
     if (c->size)         XFree(c->size);
     if (c->host_machine) free(c->host_machine);
 
-   if (c == w->focused_client)
-     w->focused_client = NULL;
+    if (c == w->focused_client)
+      w->focused_client = NULL;
 
     free(c);
 }

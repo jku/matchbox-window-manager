@@ -1,3 +1,21 @@
+2004-11-18  mallum,,,  <mallum@handhelds.org>
+
+	* src/base_client.c: (base_client_new), (base_client_process_name),
+	(base_client_destroy):
+	* src/desktop_client.c: (desktop_client_unmap):
+	Reduce some bogus X Errors. 
+
+	* src/ewmh.c: (ewmh_update_lists):
+	* src/list.c: (list_add), (list_find_by_id), (list_find_by_name),
+	(list_remove):
+	* src/list.h:
+	* src/mbtheme-standalone.c: (theme_frame_menu_paint):
+	* src/mbtheme.c: (theme_frame_menu_paint):
+	* src/structs.h:
+	* src/wm.c: (wm_handle_unmap_event):
+	Add a new sperate 'age' based client list for non stack ordered
+	propertys. May not keep this code, not sure if needed. 
+
 2004-11-17  mallum,,,  <mallum@handhelds.org>
 
 	* configure.ac:

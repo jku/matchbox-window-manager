@@ -47,15 +47,6 @@
 #include <langinfo.h>
 #endif
 
-#ifdef USE_PANGO
-#include <pango/pango.h>
-#include <pango/pangoxft.h>
-#endif
-
-#ifdef USE_XSETTINGS
-#include <xsettings-client.h>
-#endif 
-
 #ifdef USE_LIBSN
 #define SN_API_NOT_YET_FROZEN 1
 #define MB_SN_APP_TIMEOUT 30 	/* 30 second timeout for app startup */
@@ -541,6 +532,8 @@ typedef struct MsgWinQueue
 #define DEBUG_COMPOSITE_VISIBLE_FLAG (1<<9)
 #endif
 
+typedef struct list_item MBList; 
+
 /* Main WM struct  */
 
 typedef struct _wm
@@ -559,12 +552,14 @@ typedef struct _wm
   int               flags;
   Client*           focused_client; /* currently focused client       */
 
-  /* New stack stuff */
+  /* Stack stuff */
 
   Client           *stack_top, *stack_bottom;
   int               stack_n_items;     
   Client           *stack_top_app; 
   Client           *client_desktop;
+
+  MBList           *client_age_list; /* List of clients ordered by age */
 
   /*******************/
 

@@ -95,8 +95,6 @@ desktop_client_unmap(Client *c)
 
    dbg("%s called for %s\n", __func__, c->name);
 
-   XUnmapWindow(w->dpy, c->frame); 
-
    c->mapped = False;
 
    if (w->stack_top_app)

@@ -1319,9 +1319,6 @@ wm_handle_unmap_event(Wm *w, XUnmapEvent *e)
 
        XGrabServer(w->dpy);
 
-       XUnmapWindow(w->dpy, c->frame);
-       XSync(w->dpy, False);
-
        if (XCheckTypedWindowEvent(c->wm->dpy, c->frame, DestroyNotify, &ev)) 
 	 {
 	   dbg("%s() destroy on its way....\n", __func__ );
@@ -1332,11 +1329,16 @@ wm_handle_unmap_event(Wm *w, XUnmapEvent *e)
 	   dbg("%s() calling client destroy\n", __func__);
 	   Window win_old;
 
+	   /* If there is no DestroyNotify seen by us in the queue  
+	    * but there *is* one. Its likely the below will fire a    
+            * couple of X errors.
+	    *
+	    */
+
 	   client_set_state(c, WithdrawnState);
 	   win_old = c->window;
 	   c->destroy(c);
 	   XReparentWindow(w->dpy, win_old, w->root, 0, 0); 
-
 	 }
 
        XUngrabServer(w->dpy);

@@ -1057,6 +1057,7 @@ theme_frame_menu_paint(MBTheme* theme, Client *c)
   MBFont         *font ;
   MBColor        *color;
   MBClientButton *button = NULL;
+  MBList         *item;
   int             item_h, item_x, item_current_y, item_text_w, icon_offset = 0;
 
   frame = (MBThemeFrame *)list_find_by_id(theme->frames, FRAME_MENU);
@@ -1081,19 +1082,25 @@ theme_frame_menu_paint(MBTheme* theme, Client *c)
   /* render icons */
   item_current_y = frame->border_n;
 
-  stack_enumerate(c->wm, p)
-    if (p->type == MBCLIENT_TYPE_APP 
-	&& p->name && !(p->flags & CLIENT_IS_DESKTOP_FLAG)
-	&& p->mapped /* client_get_state(p) == NormalState */
-	&& p != wm_get_visible_main_client(w))
-      {
-	theme_frame_icon_paint(theme, p, img, 
-			       frame->border_w + MENU_ENTRY_PADDING/2, 
-			       item_current_y  + icon_offset);
-	item_current_y += item_h;
-      }
+  list_enumerate(w->client_age_list, item)
+    {
+      p = (Client*)item->data;
+      if (p->type == MBCLIENT_TYPE_APP 
+	  && p->name && !(p->flags & CLIENT_IS_DESKTOP_FLAG)
+	  && p->mapped /* client_get_state(p) == NormalState */
+	  && p != wm_get_visible_main_client(w))
+	{
+	  theme_frame_icon_paint(theme, p, img, 
+				 frame->border_w + MENU_ENTRY_PADDING/2, 
+				 item_current_y  + icon_offset);
+	  item_current_y += item_h;
+	}
+    }
 
-  stack_enumerate(c->wm, p)
+  list_enumerate(w->client_age_list, item)
+    {
+      p = (Client*)item->data;
+
       if (p->type == MBCLIENT_TYPE_APP 
 	  && p->name && !(p->flags & CLIENT_IS_DESKTOP_FLAG)
 	  && !p->mapped /* client_get_state(p) == IconicState */
@@ -1104,6 +1111,7 @@ theme_frame_menu_paint(MBTheme* theme, Client *c)
 			       item_current_y + icon_offset); 
 	item_current_y += item_h;
       }
+    }
 
    if ((p = wm_get_desktop(c->wm)) != NULL) 
      {
@@ -1133,45 +1141,53 @@ theme_frame_menu_paint(MBTheme* theme, Client *c)
   item_x = MENU_ENTRY_PADDING + c->wm->config->use_icons + frame->border_w;
   item_text_w = c->width - (frame->border_e + frame->border_w);
 
-  stack_enumerate(c->wm, p)
-    if (p->type == MBCLIENT_TYPE_APP 
-	&& p->name && !(p->flags & CLIENT_IS_DESKTOP_FLAG)
-	&& p->mapped /* client_get_state(p) == NormalState */
-	&& p != wm_get_visible_main_client(w))
-      {
-	_theme_frame_menu_paint_text_entry(theme, font, color, 
-					   c, p, item_x, item_current_y);
+  list_enumerate(w->client_age_list, item)
+    {
+      p = (Client*)item->data;
 
-	button = client_button_new(c, c->frame, frame->border_w, 
-				   item_current_y, 
-				   item_text_w, 
-				   item_h,
-				   True, (void* )p );
-	
-	list_add(&c->buttons, NULL, 0, (void *)button);
-
-	item_current_y += item_h;
-      }
+      if (p->type == MBCLIENT_TYPE_APP 
+	  && p->name && !(p->flags & CLIENT_IS_DESKTOP_FLAG)
+	  && p->mapped /* client_get_state(p) == NormalState */
+	  && p != wm_get_visible_main_client(w))
+	{
+	  _theme_frame_menu_paint_text_entry(theme, font, color, 
+					     c, p, item_x, item_current_y);
+	  
+	  button = client_button_new(c, c->frame, frame->border_w, 
+				     item_current_y, 
+				     item_text_w, 
+				     item_h,
+				     True, (void* )p );
+	  
+	  list_add(&c->buttons, NULL, 0, (void *)button);
+	  
+	  item_current_y += item_h;
+	}
+    }
     
-  stack_enumerate(c->wm, p)
-    if (p->type == MBCLIENT_TYPE_APP 
-	&& p->name && !(p->flags & CLIENT_IS_DESKTOP_FLAG)
-	&& !p->mapped /* client_get_state(p) == IconicState */
-	&& p != wm_get_visible_main_client(w))
-      {
-	_theme_frame_menu_paint_text_entry(theme, font, color, 
-					   c, p, item_x, item_current_y);
+  list_enumerate(w->client_age_list, item)
+    {
+      p = (Client*)item->data;
 
-	button = client_button_new(c, c->frame, frame->border_w, 
-				   item_current_y, 
-				   item_text_w, 
-				   item_h,
+      if (p->type == MBCLIENT_TYPE_APP 
+	  && p->name && !(p->flags & CLIENT_IS_DESKTOP_FLAG)
+	  && !p->mapped /* client_get_state(p) == IconicState */
+	  && p != wm_get_visible_main_client(w))
+	{
+	  _theme_frame_menu_paint_text_entry(theme, font, color, 
+					     c, p, item_x, item_current_y);
+	  
+	  button = client_button_new(c, c->frame, frame->border_w, 
+				     item_current_y, 
+				     item_text_w, 
+				     item_h,
 				   True, (void* )p );
-	
-	list_add(&c->buttons, NULL, 0, (void *)button);
-
-	item_current_y += item_h;
-      }
+	  
+	  list_add(&c->buttons, NULL, 0, (void *)button);
+	  
+	  item_current_y += item_h;
+	}
+    }
   
   if ((p = wm_get_desktop(c->wm)) != NULL) 
     {

@@ -18,7 +18,7 @@
 
 #include "structs.h"
 
-typedef struct list_item MBList; 
+
 
 struct list_item
 {
@@ -39,6 +39,8 @@ void* list_add(struct list_item** head, char *name, int id, void *data);
 void* list_find_by_id(struct list_item* head, int needed_id);
 
 void* list_find_by_name(struct list_item* head, char *name);
+
+void list_remove(struct list_item** head, void *data);
 
 void list_destroy(struct list_item** head);
 

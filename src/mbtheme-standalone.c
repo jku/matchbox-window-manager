@@ -611,7 +611,7 @@ void
 theme_frame_menu_paint(MBTheme* theme, Client *c)
 {
   Client *p;
-
+  MBList *item;
   int item_h = 0, item_current_y = 0;
 
   item_h = theme->font->ascent + theme->font->descent + MENU_ENTRY_PADDING;
@@ -621,21 +621,29 @@ theme_frame_menu_paint(MBTheme* theme, Client *c)
 
    theme_frame_paint( theme, c, FRAME_MENU, 0, 0, c->width, c->height);
 
-   stack_enumerate(c->wm,p)
+  list_enumerate(w->client_age_list, item)
+    {
+      p = (Client*)item->data;
+
       if (p->type == MBCLIENT_TYPE_APP && p->name
 	  && client_get_state(p) == NormalState )
       {
 	_theme_frame_menu_paint_text_entry(theme, c, p, item_current_y);
 	item_current_y += item_h;
       }
+    }
 
-   stack_enumerate(c->wm,p)
+  list_enumerate(w->client_age_list, item)
+    {
+      p = (Client*)item->data;
+
       if (p->type == MBCLIENT_TYPE_APP && p->name
 	  && client_get_state(p) == IconicState )
       {
 	_theme_frame_menu_paint_text_entry(theme, c, p, item_current_y);
 	item_current_y += item_h;
       }
+    }
 
    if ((p = wm_get_desktop(c->wm)) != NULL) 
      {
