@@ -1,5 +1,11 @@
 2005-02-22  mallum,,,  <mallum@openedhand.com>
 
+	* src/dialog_client.c: (dialog_client_reparent),
+	(dialog_client_redraw), (dialog_client_drag):
+	More composite lowlighting related tweaks
+
+2005-02-22  mallum,,,  <mallum@openedhand.com>
+
 	* src/composite-engine.c: (_render_a_client):
 	Force composite lowlighting *off* for now. Needs fixing. 
 

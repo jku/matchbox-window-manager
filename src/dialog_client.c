@@ -382,7 +382,12 @@ dialog_client_reparent(Client *c)
 					    CopyFromParent,
 					    CWOverrideRedirect|CWEventMask,
 					    &attr);
+#ifndef USE_COMPOSITE
+       /* This is breaking dialog dragging in composite
+	*  XXX need to figure better fix.
+       */
        XMapWindow(w->dpy, c->win_modal_blocker);
+#endif
        w->stack_n_items++;
      }
 
@@ -786,6 +791,8 @@ dialog_client_redraw(Client *c, Bool use_cache)
 				0, 0, rects, 1, ShapeSet, 0 );
 
 #ifndef USE_COMPOSITE
+
+#if 0
       if (c->wm->config->dialog_shade && (c->flags & CLIENT_IS_MODAL_FLAG)) 
 	{
 	  /* client->frame is our lowlighted window, so we only shape
@@ -811,6 +818,8 @@ dialog_client_redraw(Client *c, Bool use_cache)
 			     c->backing_masks[MSK_EAST], ShapeSet);
 	}
       else
+#endif
+
 #endif
 	{
 
@@ -966,7 +975,7 @@ dialog_client_drag(Client *c) /* drag box */
       != GrabSuccess)
     return;
 
- comp_engine_client_show(c->wm, c); 
+  comp_engine_client_show(c->wm, c); 
 
   c->flags |= CLIENT_IS_MOVING;
 
@@ -1042,6 +1051,8 @@ dialog_client_drag(Client *c) /* drag box */
 		      c->height + frm_size + offset_south);
 
 #ifndef USE_COMPOSITE	
+
+#if 0
 	if (c->wm->config->dialog_shade && (c->flags & CLIENT_IS_MODAL_FLAG))
 	  {
 	    XMoveResizeWindow(c->wm->dpy, 
@@ -1052,6 +1063,8 @@ dialog_client_drag(Client *c) /* drag box */
 			      c->height);
 	  } 
 	else
+#endif
+
 #endif /* USE_COMPOSITE */
 	  {
 	    XMoveWindow(c->wm->dpy, c->frame, c->x - offset_west,
