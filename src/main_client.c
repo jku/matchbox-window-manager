@@ -14,7 +14,7 @@
 */
 
 /*
-  $Id: main_client.c,v 1.10 2004/08/30 19:32:36 mallum Exp $
+  $Id: main_client.c,v 1.11 2004/09/21 12:01:14 mallum Exp $
 */
 
 #include "main_client.h"
@@ -318,6 +318,10 @@ main_client_toggle_fullscreen(Client *c)
 	}
 
     }
+
+  ewmh_state_set(c); /* Let win know it fullscreen state has changed, it
+		        could be waiting on this to adjust ui */
+
   XUngrabServer(c->wm->dpy);
 }
 
@@ -327,16 +331,8 @@ void
 main_client_redraw(Client *c, Bool use_cache)
 {
   Bool is_shaped = False;
-  int w = 0, h = 0;
-  int offset_south = theme_frame_defined_height_get(c->wm->mbtheme, 
-						      FRAME_MAIN_SOUTH);
-  int offset_east  = theme_frame_defined_width_get(c->wm->mbtheme, 
-						   FRAME_MAIN_EAST );
-  int offset_west  = theme_frame_defined_width_get(c->wm->mbtheme, 
-						   FRAME_MAIN_WEST );
- 
-  w = c->width + offset_east + offset_west;
-  h = theme_frame_defined_height_get(c->wm->mbtheme, FRAME_MAIN);
+  int  w = 0, h = 0;
+  int  offset_south, offset_east, offset_west;
 
   dbg("%s() called on %s\n", __func__, c->name);
 
@@ -349,6 +345,16 @@ main_client_redraw(Client *c, Bool use_cache)
    }
 
    if (use_cache && c->have_set_bg)  return ;
+
+   offset_south = theme_frame_defined_height_get(c->wm->mbtheme, 
+						 FRAME_MAIN_SOUTH);
+   offset_east  = theme_frame_defined_width_get(c->wm->mbtheme, 
+						FRAME_MAIN_EAST );
+   offset_west  = theme_frame_defined_width_get(c->wm->mbtheme, 
+						FRAME_MAIN_WEST );
+ 
+   w = c->width + offset_east + offset_west;
+   h = theme_frame_defined_height_get(c->wm->mbtheme, FRAME_MAIN);
    
    is_shaped = theme_frame_wants_shaped_window( c->wm->mbtheme, FRAME_MAIN);
 

@@ -1,3 +1,15 @@
+2004-09-21  mallum  <mallum@handhelds.org>
+
+	* src/ewmh.c: (ewmh_state_set):
+	* src/ewmh.h:
+	* src/main_client.c: (main_client_toggle_fullscreen),
+	(main_client_redraw):
+	Add support for setting _NET_WM_STATE correctly so apps
+	like Gnumeric which depend on this work right in switching fullscreen
+	* src/wm.c: (wm_load_config), (wm_find_client),
+	(wm_make_new_client):
+	Minor optimisations to reduce freq of some uneeded calls
+	
 2004-09-07  mallum  <mallum@handhelds.org>
 
 	* src/mbtheme.c: (mbtheme_switch):

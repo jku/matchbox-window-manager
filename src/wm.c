@@ -295,7 +295,7 @@ wm_load_config (Wm   *w,
       {"-use_desktop_mode",".desktop",     XrmoptionSepArg, (XPointer) NULL},
       {"-titlebar_panel",  ".titlebarpanel", XrmoptionSepArg, (XPointer) NULL},
    };
-   
+
    XrmInitialize();
    rDB = XrmGetFileDatabase(CONFDEFAULTS);   
 
@@ -303,7 +303,7 @@ wm_load_config (Wm   *w,
    if (*argc != 1) wm_usage(argv[0]);
 
    XrmCombineDatabase(cmdlnDB, &rDB, True);
-   
+
    if ( (w->config = malloc(sizeof(Wm_config))) == NULL)
       err("err out of memory");
 
@@ -316,6 +316,12 @@ wm_load_config (Wm   *w,
    w->config->dialog_shade     = False;   
    w->config->dialog_stratergy = WM_DIALOGS_STRATERGY_CONSTRAINED;
    w->config->ping_handler     = NULL;
+
+#if 0
+   w->config->theme            = "test-theme"; /* XXX remove this  */
+   strcpy(w->config->display_name, (char *)getenv("DISPLAY"));
+   w->dpy = XOpenDisplay(w->config->display_name);
+#endif
 
    if (XrmGetResource(rDB, "matchbox.display",
 		      "Matchbox.Display",
@@ -449,6 +455,7 @@ wm_load_config (Wm   *w,
    }
 #endif
 
+
    if (getenv("MB_AWT_WORKAROUND"))
      w->config->awt_workaround = True;
    else
@@ -488,10 +495,24 @@ wm_find_client(Wm *w, Window win, int mode)
     if (w->head_client == NULL) return NULL;
 
     if (mode == FRAME) {
+
+      /* This func gets called alot!
+       * Its likely the events landed on main_client 
+       * so we check that first to possibly save a few cycles.
+      */
+      if (w->main_client 
+	  && (w->main_client->frame == win 
+	      || w->main_client->title_frame == win)) 
+	  return w->main_client;
+
        START_CLIENT_LOOP(w,c);
        if (c->frame == win || c->title_frame == win) return c;
        END_CLIENT_LOOP(w,c);
     } else {
+
+      if (w->main_client && w->main_client->window == win)
+	return w->main_client;
+
        START_CLIENT_LOOP(w,c);
        if (c->window == win) return c;
        END_CLIENT_LOOP(w,c);
@@ -1708,6 +1729,7 @@ wm_make_new_client(Wm *w, Window win)
    XGrabButton(c->wm->dpy, Button1, 0, c->window, True, ButtonPressMask,
 	       GrabModeSync, GrabModeSync, None, None);
 
+   ewmh_state_set(c);
    ewmh_update(c->wm);
    ewmh_set_active(c->wm);
 

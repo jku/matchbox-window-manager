@@ -365,6 +365,29 @@ ewmh_update_rects(Wm *w)
 		  XA_CARDINAL, 32, PropModeReplace, (unsigned char *)val, 4);
 }
 
+void 
+ewmh_state_set(Client *c)
+{
+  Wm   *w = c->wm;
+
+  Atom atom_states[2];
+  int  n_atom_states = 0;
+
+  /* We need to set ewmh state as some apps need to know when they 
+   * return from fullscreen
+   */
+
+  if (c->flags & CLIENT_FULLSCREEN_FLAG)
+    atom_states[n_atom_states++] = w->atoms[WINDOW_STATE_FULLSCREEN];
+
+  if  (c->flags & CLIENT_IS_MODAL_FLAG)
+    atom_states[n_atom_states++] = w->atoms[WINDOW_STATE_MODAL];
+
+  XChangeProperty(w->dpy, c->window, w->atoms[WINDOW_STATE],
+		  XA_ATOM, 32, PropModeReplace, 
+		  (unsigned char *)atom_states, n_atom_states);
+}
+
 Bool 
 ewmh_state_check(Client *c, Atom atom_state_wanted)
 {

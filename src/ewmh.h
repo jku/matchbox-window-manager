@@ -33,6 +33,9 @@ ewmh_handle_root_message (Wm *w, XClientMessageEvent *e);
 unsigned char *
 ewmh_get_utf8_prop (Wm *w, Window win, Atom req_atom);
 
+void 
+ewmh_state_set(Client *c);
+
 Bool 
 ewmh_state_check (Client *c, Atom atom_state_wanted);
 
