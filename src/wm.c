@@ -1036,6 +1036,11 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
    Bool            no_configure     = False;
    unsigned long   value_mask       = 0;
 
+   /* TODO: Really need to check ICCCM on this code. 
+    *       Should be able to make it more compact too 
+    *       ( maybe configure_request() methods for each client type ? )
+    */
+
    if (!c ) 
      {
        dbg("%s() could find source client %ix%i\n", __func__,
@@ -1055,8 +1060,9 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
        __func__, c->name, c->height, e->height, c->width, 
        e->width, c->x, e->x, c->y, e->y );
 
-   /* Defualts, main clients will likely end up with this */
-
+   /* Defualts, main clients will likely end up with this 
+    * MB is a pretty restrictive WM, so much stuff allowed to change. 
+    */
    xwc.width        = c->width;
    xwc.height       = c->height;
    xwc.x            = c->x;
@@ -1075,7 +1081,6 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
         * e->detail is stack_mode 
 	*/
 #ifdef DEBUG
-
        Client *sibling = wm_find_client(w, e->window, WINDOW);
 
        if (sibling)
@@ -1100,7 +1105,6 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 
 	     }
 	 }
-
 #endif       
        /* Just clear the flags now to be safe */
        value_mask &= ~(CWSibling|CWStackMode);
@@ -1180,7 +1184,7 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
        if (req_x != c->x || req_y != c->y 
 	   || req_w != c->width || req_h != c->height)
 	 {
-	   dialog_check_geometry(c, &req_x, &req_y, &req_w, &req_h);
+	   dialog_constrain_geometry(c, &req_x, &req_y, &req_w, &req_h);
 
 	   /* make sure buttons get repositioned */
 	   if (c->width != req_w)
@@ -1320,10 +1324,14 @@ wm_handle_expose_event(Wm *w, XExposeEvent *e)
 
      dbg("%s() for %s\n", __func__, c->name);    
 
-     c->redraw(c, True); /* redraw title from cache - prolly a no-op */
+     /* redraw title from cache - prolly a no-op 
+      *
+      * All image paints happen via win backgrounds  (server handles exposes)
+      * We probably dont even need func at all. 
+      */
+     c->redraw(c, True);
    }
 }
-
 
 void
 wm_handle_destroy_event(Wm *w, XDestroyWindowEvent *e)
@@ -1335,7 +1343,6 @@ wm_handle_destroy_event(Wm *w, XDestroyWindowEvent *e)
 
     wm_remove_client(w, c);
 }
-
 
 void
 wm_handle_client_message(Wm *w, XClientMessageEvent *e)
@@ -1913,7 +1920,7 @@ wm_update_layout(Wm         *w,
        {
 	 int req_x = p->x, req_y = p->y, req_w = p->width, req_h = p->height;
 
-	 if (!dialog_check_geometry(p, &req_x, &req_y, &req_w, &req_h))
+	 if (!dialog_constrain_geometry(p, &req_x, &req_y, &req_w, &req_h))
 	   {
 	     p->x = req_x; p->y = req_y; p->width = req_w; p->height = req_h;
 	     p->move_resize(p);

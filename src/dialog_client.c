@@ -438,7 +438,7 @@ dialog_get_available_area(Client *c,
 }
 
 /* 
- * dialog_check_gemoetry()
+ * dialog_constrain_gemoetry()
  *
  * called mainly by wm_restack to suggest better positions for dialogs
  * in relation to panels and toolbar/input wins. 
@@ -450,11 +450,11 @@ dialog_get_available_area(Client *c,
  *  to fit. 
  */
 Bool
-dialog_check_geometry(Client *c,
-		      int    *req_x,
-		      int    *req_y,
-		      int    *req_width,
-		      int    *req_height)
+dialog_constrain_geometry(Client *c,
+			  int    *req_x,
+			  int    *req_y,
+			  int    *req_width,
+			  int    *req_height)
 {
   Wm  *w = c->wm;
   int avail_x, avail_y, avail_width, avail_height;

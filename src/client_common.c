@@ -224,6 +224,10 @@ client_set_focus(Client *c)
 
       XSetInputFocus(w->dpy, c->window, RevertToPointerRoot, CurrentTime);
 
+      /* TODO: - Should we handle WM_TAKE_FOCUS ? 
+       *       - Handle focs in/out message on root ?
+       */
+
       /* Rememeber what was focused last */
       if (w->focused_client)
 	{
