@@ -1,3 +1,9 @@
+2005-01-05  Ross Burton  <ross@burtonini.com>
+
+	* src/wm.c:
+	Change the direction the default cursor points in, do avoid
+	driving Ross insane.
+
 2005-01-04  mallum,,,  <mallum@openedhand.com>
 
 	* configure.ac:

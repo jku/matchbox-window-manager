@@ -2455,7 +2455,7 @@ wm_set_cursor_visibility(Wm *w, Bool visible)
   if (visible)
     {
       w->config->no_cursor = False;
-      w->curs = XCreateFontCursor(w->dpy, XC_right_ptr);
+      w->curs = XCreateFontCursor(w->dpy, XC_left_ptr);
     }
   else
     {
