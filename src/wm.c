@@ -1147,6 +1147,10 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 	   if (c->width != req_w)
 	     client_buttons_delete_all(c);
 
+	   comp_engine_client_hide(c->wm, c);
+
+	   XSync(w->dpy, False);
+
 	   xwc.width  = c->width  = req_w;
 	   xwc.height = c->height = req_h;
 	   xwc.x      = c->x      = req_x;
@@ -1195,6 +1199,8 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
        dialog_client_move_resize(c);
 
        /* Make sure we get the damage before the move.. */
+
+       XFlush(w->dpy);
 
        need_comp_update = True;
        
@@ -1257,7 +1263,10 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 
    /* make sure composite does any needed updates */
    if (need_comp_update == True)
-     comp_engine_client_show(c->wm, c); 
+     {
+       comp_engine_client_configure(w, c);
+       comp_engine_client_show(w, c);
+     }
 }
 
 

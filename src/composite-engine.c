@@ -1111,7 +1111,21 @@ comp_engine_client_repair (Wm *w, Client *client)
 void
 comp_engine_client_configure(Wm *w, Client *client)
 {
-  /* XXX not sure what to do here, if we even need anything */
+  XserverRegion   damage = None;
+
+  XserverRegion   extents = client_win_extents(w, client);
+
+  damage = XFixesCreateRegion (w->dpy, 0, 0);
+  if (client->extents != None)
+    XFixesCopyRegion (w->dpy, damage, client->extents);
+
+
+  XFixesUnionRegion (w->dpy, damage, damage, extents);
+  XFixesDestroyRegion (w->dpy, extents);
+
+  comp_engine_add_damage (w, damage);
+
+  stack_top(client);
 }
 
 

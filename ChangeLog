@@ -1,5 +1,11 @@
 2004-08-12  mallum,,,  <mallum@handhelds.org>
 
+	* src/composite-engine.c: (comp_engine_client_configure):
+	* src/wm.c: (wm_handle_configure_request):
+	Attempted shadow fix for self resizing dialogs 
+
+2004-08-12  mallum,,,  <mallum@handhelds.org>
+
 	* src/dialog_client.c: (dialog_init_geometry):
 	Eek, fix typo. 
 
