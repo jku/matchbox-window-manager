@@ -1,5 +1,12 @@
 2004-12-23  mallum,,,  <mallum@openedhand.com>
 
+	* src/client_common.c: (client_set_focus),
+	(client_decor_frames_move_resize), (client_decor_frames_init):
+	* src/dialog_client.c: (dialog_client_reparent):
+	Clean up some X Errors - woohoo.
+
+2004-12-23  mallum,,,  <mallum@openedhand.com>
+
 	* src/main_client.c: (main_client_show):
 	Make sure closed app goes back to desktop correctly even after app
 	has opened. 

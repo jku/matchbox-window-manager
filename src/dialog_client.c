@@ -365,7 +365,7 @@ dialog_client_reparent(Client *c)
    XAddToSaveSet(w->dpy, c->window);
 
    XSelectInput(w->dpy, c->window,
-		ButtonPressMask|ColormapChangeMask|PropertyChangeMask);
+		ColormapChangeMask|PropertyChangeMask);
 
    if (c->frame != c->window)
      XReparentWindow(w->dpy, c->window, c->frame, 

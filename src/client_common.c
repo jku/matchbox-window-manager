@@ -238,6 +238,8 @@ client_set_focus(Client *c)
       if (w->focused_client == c)
 	return True; 
 
+      misc_trap_xerrors(); 
+
       XSetInputFocus(w->dpy, c->window, RevertToPointerRoot, CurrentTime);
 
       /* TODO: - Should we handle WM_TAKE_FOCUS ? 
@@ -261,7 +263,12 @@ client_set_focus(Client *c)
 	    c->next_focused_client = w->focused_client;
 	}
 
-      w->focused_client = c;
+      if (misc_untrap_xerrors())
+	{
+	  w->focused_client = NULL;
+	}
+      else
+	w->focused_client = c;
 
       dbg("%s() called, setting focus to %s\n", 
 	  __func__, c->name);
@@ -349,7 +356,7 @@ client_decor_frames_move_resize(Client *c,
 {
   Wm *w = c->wm;
 
-  if (c->frames_decor[NORTH])
+  if (c->frames_decor[NORTH] && height_north > 0)
       XMoveResizeWindow(w->dpy, c->frames_decor[NORTH], 
 			0, 0, 
 			c->width + width_east + width_west, height_north);
@@ -386,48 +393,55 @@ client_decor_frames_init(Client *c,
 
   for(i=0; i<N_DECOR_FRAMES; i++)
     if (c->frames_decor[i] != None)
-      XDestroyWindow(w->dpy, c->frames_decor[i]);
+      {
+	XDestroyWindow(w->dpy, c->frames_decor[i]);
+	c->frames_decor[i] = None;
+      }
 
   attr.override_redirect = True;
   attr.background_pixel  = w->grey_col.pixel;  
   attr.event_mask = ButtonMask;
 
-  c->frames_decor[NORTH] =
-    XCreateWindow(w->dpy, 
-		  c->frame, 0, 0, 
-		  c->width + width_east + width_west, 
-		  height_north, 0,
-		  CopyFromParent, 
-		  CopyFromParent, CopyFromParent,
-		  CWBackPixel|CWEventMask, 
-		  &attr);
+  if (height_north > 0)
+    c->frames_decor[NORTH] =
+      XCreateWindow(w->dpy, 
+		    c->frame, 0, 0, 
+		    c->width + width_east + width_west, 
+		    height_north, 0,
+		    CopyFromParent, 
+		    CopyFromParent, CopyFromParent,
+		    CWBackPixel|CWEventMask, 
+		    &attr);
 
-  c->frames_decor[EAST] = 
-    XCreateWindow(w->dpy, c->frame,
-		  c->width + width_west, 
-		  height_north, 
-		  width_east, 
-		  c->height, 
-		  0, CopyFromParent, CopyFromParent, CopyFromParent,
-		  CWBackPixel, &attr);
+  if (width_east > 0)
+    c->frames_decor[EAST] = 
+      XCreateWindow(w->dpy, c->frame,
+		    c->width + width_west, 
+		    height_north, 
+		    width_east, 
+		    c->height, 
+		    0, CopyFromParent, CopyFromParent, CopyFromParent,
+		    CWBackPixel, &attr);
 
-  c->frames_decor[WEST] = 
-    XCreateWindow(w->dpy, c->frame,
-		  0, 
-		  height_north, 
-		  width_west, 
-		  c->height, 
-		  0, CopyFromParent, CopyFromParent, CopyFromParent,
-		  CWBackPixel, &attr);
-
-  c->frames_decor[SOUTH] = 
-    XCreateWindow(w->dpy, c->frame,
-		  0, 
-		  c->height + height_north, 
-		  c->width + width_east + width_west, 
-		  height_south, 
-		  0, CopyFromParent, CopyFromParent, CopyFromParent,
-		  CWBackPixel, &attr);
+  if (width_west > 0)
+    c->frames_decor[WEST] = 
+      XCreateWindow(w->dpy, c->frame,
+		    0, 
+		    height_north, 
+		    width_west, 
+		    c->height, 
+		    0, CopyFromParent, CopyFromParent, CopyFromParent,
+		    CWBackPixel, &attr);
+  
+  if (height_south > 0)
+    c->frames_decor[SOUTH] = 
+      XCreateWindow(w->dpy, c->frame,
+		    0, 
+		    c->height + height_north, 
+		    c->width + width_east + width_west, 
+		    height_south, 
+		    0, CopyFromParent, CopyFromParent, CopyFromParent,
+		    CWBackPixel, &attr);
 
 }
 
