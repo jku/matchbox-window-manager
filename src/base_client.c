@@ -136,13 +136,18 @@ base_client_new(Wm *w, Window win)
 
    if ((wmhints = XGetWMHints(w->dpy, c->window)) != NULL)
    {
+     dbg("%s() checking WMHints\n", __func__);
+
       if (wmhints->window_group)
 	 c->win_group = wmhints->window_group;
       else
 	 c->win_group = 0;
 
       if (wmhints->flags & XUrgencyHint)
-	c->flags |= CLIENT_HAS_URGENCY_FLAG;
+	{
+	  dbg("%s() WMHints, has urgency hint\n", __func__);
+	  c->flags |= CLIENT_HAS_URGENCY_FLAG;
+	}
 
       c->icon = None;
       c->icon_mask = None;

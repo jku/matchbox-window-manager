@@ -1,3 +1,13 @@
+2005-01-14  mallum,,,  <mallum@openedhand.com>
+
+	* data/themes/MBOpus/Makefile.am:
+	* data/themes/MBOpus/theme.desktop:
+	* data/themes/MBOpus/theme.xml:
+	Update MBOpus theme. Also add png bg for panel.
+
+	* src/base_client.c: (base_client_new):
+	Add some extra debug info for XUrgencyFlag checking
+
 2005-01-13  mallum,,,  <mallum@openedhand.com>
 
 	* src/mbtheme.c: (theme_frame_button_paint),

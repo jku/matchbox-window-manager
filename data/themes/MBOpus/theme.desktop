@@ -1,6 +1,6 @@
 [Desktop Entry]
 Type=MBTheme
-Name=Human
+Name=MBOpus
 Preview=XXX
 Comment=Blondie theme 
 ThemePath=@prefix@/themes/blondie
@@ -10,9 +10,10 @@ MenuFgColor=#222222
 MenuBdColor=#8f9489
 MenuHlColor=#ccd2c6
 
-PanelFgColor=#22264a
-PanelBgColor=#cacfc4
-DesktopBgSpec=col-solid:#d1d6cb
+PanelFgColor=#111111
+#PanelBgColor=#e0e5d9
+PanelBgPixmap=panelbg.png
+DesktopBgSpec=col-solid:#aeb4b4
 
 PanelMsgBgCol=#e1e6da 
 PanelMsgBgUrgentCol=#e1e6da 

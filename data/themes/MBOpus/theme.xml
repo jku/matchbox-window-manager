@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<theme name="Human" author="Matthew Allum - mallum@handhelds.org"
+<theme name="MBOpus" author="Matthew Allum - mallum@handhelds.org"
        desc="" version="1.0" engine_version="1" >
 
 <!--
@@ -249,7 +249,7 @@
   <layer x="0" y="0" w="100%"  h="100%" 
    type="plain" color="menuborder" />
 
-  <layer x="1" y="1" w="100%-2"  h="100%-2" 
+  <layer x="1" y="0" w="100%-2"  h="100%-1" 
    type="plain" color="menubg" />
 </frame>
 

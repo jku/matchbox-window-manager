@@ -1,4 +1,4 @@
-pngs = closebutton.png
+pngs = closebutton.png panelbg.png
 
 themesdir = $(datadir)/themes/MBOpus/matchbox
 themes_DATA = theme.xml $(pngs) theme.desktop
