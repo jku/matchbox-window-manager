@@ -18,7 +18,7 @@
 static int trapped_error_code = 0;
 static int (*old_error_handler) (Display *d, XErrorEvent *e);
 
-#ifndef HAVE_STRSEP
+#ifndef HAVE_STRSEP 	 
 char *
 strsep(char **stringp, char *delim)
 {
@@ -41,21 +41,8 @@ strsep(char **stringp, char *delim)
 }
 #endif
 
-void err(const char *fmt, ...)
-{
-#ifdef DEBUG
-    va_list argp;
-    fprintf(stderr, "X-error: ");
-    va_start(argp, fmt);
-    vfprintf(stderr, fmt, argp);
-    va_end(argp);
-    fprintf(stderr, "\n");
-#endif
-}
-
-
-
-void fork_exec(char *cmd)
+void 
+fork_exec(char *cmd)
 {
   switch (fork())
     {
@@ -70,7 +57,8 @@ void fork_exec(char *cmd)
     }
 }
 
-void sig_handler(int signal)
+void 
+sig_handler(int signal)
 {
     switch (signal) {
         case SIGINT:
@@ -82,22 +70,29 @@ void sig_handler(int signal)
     }
 }
 
-int handle_xerror(Display *dpy, XErrorEvent *e)
+int 
+handle_xerror(Display *dpy, XErrorEvent *e)
 {
     if (e->error_code == BadAccess &&
-	e->resourceid == RootWindow(dpy, DefaultScreen(dpy)) ) {
-        fprintf(stderr, "root window unavailible (maybe another wm is running?)\n");
+	e->resourceid == RootWindow(dpy, DefaultScreen(dpy)) ) 
+      {
+        fprintf(stderr, 
+		"root window unavailible (maybe another wm is running?)\n");
         exit(1);
-    } else {
+      } 
+    else 
+      {
         char msg[255];
         XGetErrorText(dpy, e->error_code, msg, sizeof msg);
         err("X error (%#lx): %s (opcode: %i)",
 	    e->resourceid, msg, e->request_code);
-    }
+      }
+
     return 0;
 }
 
-int ignore_xerror(Display *dpy, XErrorEvent *e)
+int 
+ignore_xerror(Display *dpy, XErrorEvent *e)
 {
    return 0;
 }
@@ -125,7 +120,8 @@ misc_untrap_xerrors(void)
 }
 
 
-int  /* check for ageing mwm hints  */
+ /* check for ageing mwm hints, it probably shouldn't be in misc.c ..  */
+int 
 mwm_get_decoration_flags(Wm *w, Window win)
 {
 
@@ -193,6 +189,7 @@ mwm_get_decoration_flags(Wm *w, Window win)
   }
 
   dbg("%s() MWM, nothing of interest here. \n", __func__);
+
   if (hints) XFree(hints);
 
   return 0;

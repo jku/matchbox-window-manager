@@ -48,9 +48,7 @@ wm_new(int argc, char **argv)
    Wm *w = NULL;
    XColor dummy_col;
 
-   if ( (w = malloc(sizeof(Wm))) == NULL) 
-     err("err out of memory");
-
+   w = malloc(sizeof(Wm));
    memset(w, 0, sizeof(Wm));
 
    w->flags = STARTUP_FLAG;
@@ -311,8 +309,7 @@ wm_load_config (Wm   *w,
 
    XrmCombineDatabase(cmdlnDB, &rDB, True);
 
-   if ( (w->config = malloc(sizeof(Wm_config))) == NULL)
-      err("err out of memory");
+   w->config = malloc(sizeof(Wm_config));
 
    /* config defaults */
    w->config->use_title        = True;

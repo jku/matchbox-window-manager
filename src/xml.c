@@ -1,3 +1,26 @@
+/* Matchbox - a lightweight window manager
+
+   Copyright 2004 Matthew Allum
+
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2, or (at your option)
+   any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+*/
+
+/*
+ *  xml.c provides a very simple DOM for an xml file.  
+ *  It can use expat or slightly limited ( no cdata, utf8 ) 
+ *  internal parser.
+ *
+ *  This isn't used by a standalone matchbox. 
+ */
+
 #include "xml.h"
 
 #ifdef USE_EXPAT
@@ -62,14 +85,17 @@ Nlist *list_add_node(XMLNode *dest, XMLNode *new)
    Nlist *tmp;
 
    if (dest->kids == NULL)
-   {
-      dest->kids = (Nlist *)malloc(sizeof(Nlist));
-      tmp = dest->kids;
-   } else {
-      for(tmp = dest->kids; tmp->next != NULL; tmp = tmp->next);
-      tmp->next = (Nlist *)malloc(sizeof(Nlist));
-      tmp = tmp->next;
-   }
+     {
+       dest->kids = (Nlist *)malloc(sizeof(Nlist));
+       tmp = dest->kids;
+     } 
+   else 
+     {
+       for(tmp = dest->kids; tmp->next != NULL; tmp = tmp->next);
+       tmp->next = (Nlist *)malloc(sizeof(Nlist));
+       tmp = tmp->next;
+     }
+
    tmp->next = NULL;
    tmp->data = new;
    return tmp;
@@ -78,18 +104,15 @@ Nlist *list_add_node(XMLNode *dest, XMLNode *new)
 XMLNode *xml_node_new(const char *name, Params *attr)
 {
    XMLNode *n = (XMLNode *)malloc(sizeof(XMLNode));
+   memset(n, 0, sizeof(XMLNode));
 
    n->tag    = strdup(name);
    n->attr   = _params_clone(attr);
-   n->parent = NULL;
-   n->cdata  = NULL;
-   n->kids   = NULL;
 
    return n;
 }
 
 #ifdef USE_EXPAT
-
 static void 
 node_start_cb(void *data, const char *tag, const char **expat_attr)
 {
@@ -97,26 +120,25 @@ node_start_cb(void *data, const char *tag, const char **expat_attr)
   Params *attr = attr_to_params(expat_attr);
 
 #else
-
 static void 
 node_start_cb( XMLParser *parser, const char *tag, Params *attr)
 {
-
 #endif
-
-   if (parser->root_node == NULL)
-   {
+  if (parser->root_node == NULL)
+    {
       parser->root_node = xml_node_new(tag, attr);
       parser->_current_node = parser->root_node;
-   } else {
+    } 
+  else 
+    {
       Nlist *tmp;
       tmp = list_add_node(parser->_current_node, xml_node_new(tag, attr));
       tmp->data->parent = parser->_current_node;
       parser->_current_node = tmp->data; 
-   }
+    }
 
 #ifdef USE_EXPAT
-   _params_free(attr);
+  _params_free(attr);
 #endif 
 }
 
@@ -125,12 +147,9 @@ static void
 node_end_cb(void *data, const char *tag)
 {
   XMLParser *parser = (XMLParser *)data;
-
 #else
-
 static void node_end_cb( XMLParser *parser, const char *tag )
 {
-
 #endif
    parser->_current_node = parser->_current_node->parent; 
 }
@@ -141,21 +160,19 @@ static void node_cdata_cb( XMLParser *parser, char *cdata)
 {
    if (cdata == NULL) return;
    if (parser->_current_node->cdata == NULL)
-   {
-      parser->_current_node->cdata =
-	 (char *)malloc(sizeof(char)*(strlen(cdata)+1));
-      strcpy(parser->_current_node->cdata, cdata);
-   } else {
-      parser->_current_node->cdata =
+     parser->_current_node->cdata = strdup(cdata);
+   else 
+     {
+       parser->_current_node->cdata =
 	 (char *)realloc(parser->_current_node->cdata,
 			 sizeof(char)*(strlen(parser->_current_node->cdata))
 			 + sizeof(char)*(strlen(cdata)+1));
-      strcat(parser->_current_node->cdata, cdata);
-   }
+       strcat(parser->_current_node->cdata, cdata);
+     }
 }
-
 #endif
 
+#ifdef DEBUG
 void xml_dump(XMLNode *node, int depth)
 {
    Nlist *tmp;
@@ -177,6 +194,7 @@ void xml_dump(XMLNode *node, int depth)
       xml_dump(tmp->data, depth+2);
    }
 }
+#endif
 
 static Params * 
 _params_clone(Params *params)
@@ -207,41 +225,37 @@ _params_free(Params *params)
 {
   Params *params_cpy = NULL;
   while(params != NULL)
-     {
-       params_cpy = params;
-       params = params_cpy->next;
-       if (params_cpy->key) free(params_cpy->key);
-       if (params_cpy->value) free(params_cpy->value);
-       free (params_cpy);
-     }
+    {
+      params_cpy = params;
+      params = params_cpy->next;
+      if (params_cpy->key) free(params_cpy->key);
+      if (params_cpy->value) free(params_cpy->value);
+      free (params_cpy);
+    }
 }
 
 static void 
 _xml_parser_free(XMLNode *node)
 {
-   Nlist *tmp, *old_tmp = NULL;
+  Nlist *tmp, *old_tmp = NULL;
 
-   _params_free(node->attr);
+  _params_free(node->attr);
+  
+  if (node->cdata) free(node->cdata);
+  if (node->tag)  free(node->tag);
+  
+  tmp = node->kids;
+  
+  while (tmp != NULL)
+    {
+      old_tmp = tmp->next;
+      _xml_parser_free(tmp->data);
+      free(tmp);
+      tmp = old_tmp;
+    }
 
-   if (node->cdata) free(node->cdata);
-   if (node->tag)  free(node->tag);
-   
-   tmp = node->kids;
-
-   while (tmp != NULL)
-     {
-       old_tmp = tmp->next;
-       _xml_parser_free(tmp->data);
-       free(tmp);
-       tmp = old_tmp;
-     }
-
-   free(node);
+  free(node);
 }
-
-
-
-/* --------------------------------------------------------------- */
 
 Params *xml_params_new(void)
 {
@@ -404,27 +418,25 @@ static char *parse(XMLParser *parser, char *doc)
 
 #endif
 
-static char* load_file(const char* filename) {
-	struct stat st;
-	FILE* fp;
-	char* str;
-	int len;
+static char* 
+load_file(const char* filename) 
+{
+  struct stat st;
+  FILE*       fp;
+  char*       str;
+  int         len;
 
-	/* Get the file size. */
-	if (stat(filename, &st)) return NULL;
+  if (stat(filename, &st)) return NULL;
 
-	/* Open the file. */
-	fp = fopen(filename, "rb");
-	if (!(fp = fopen(filename, "rb"))) return NULL;
+  if (!(fp = fopen(filename, "rb"))) return NULL;
 
-	/* Read in the file. */
-	str = (char *)malloc(sizeof(char)*(st.st_size + 1));
-	len = fread(str, 1, st.st_size, fp);
-	if (len >= 0) str[len] = '\0';
+  str = (char *)malloc(sizeof(char)*(st.st_size + 1));
+  len = fread(str, 1, st.st_size, fp);
+  if (len >= 0) str[len] = '\0';
 
-	fclose(fp);
+  fclose(fp);
 
-	return str;
+  return str;
 }
 
 #ifndef DEBUG
@@ -436,7 +448,8 @@ catch_sigsegv(int sig)
 }
 #endif
 
-XMLParser *xml_parser_new(void)
+XMLParser 
+*xml_parser_new(void)
 {
    XMLParser *parser;
    parser = (XMLParser *)malloc(sizeof(XMLParser));
@@ -449,13 +462,15 @@ XMLParser *xml_parser_new(void)
    return parser;
 }
 
-void xml_parser_free(XMLParser *parser, XMLNode *root)
+void 
+xml_parser_free(XMLParser *parser, XMLNode *root)
 {
    if (root) _xml_parser_free(root);
    free(parser);
 }
 
-XMLNode *xml_parse_data_dom(XMLParser *parser, char *data)
+XMLNode*
+xml_parse_data_dom(XMLParser *parser, char *data)
 {
 #ifdef USE_EXPAT
 
@@ -468,6 +483,7 @@ XMLNode *xml_parse_data_dom(XMLParser *parser, char *data)
 
   XML_SetElementHandler(p, node_start_cb, node_end_cb);
   /* XML_SetCharacterDataHandler(p, chars); */
+
   XML_SetUserData(p, (void *)parser);
 
   if (! XML_Parse(p, data, strlen(data), 1)) {
@@ -502,7 +518,8 @@ XMLNode *xml_parse_data_dom(XMLParser *parser, char *data)
 #endif
 }
 
-XMLNode *xml_parse_file_dom(XMLParser *parser, char *filename)
+XMLNode*
+xml_parse_file_dom(XMLParser *parser, char *filename)
 {
   XMLNode *root;
   char *data = load_file(filename);

@@ -1,3 +1,18 @@
+2004-11-07  mallum,,,  <mallum@handhelds.org>
+
+	* src/structs.h:
+	* src/ewmh.c: (ewmh_init):
+	Add state_above hint.
+
+	* src/misc.c: (fork_exec), (sig_handler), (handle_xerror),
+	(ignore_xerror), (mwm_get_decoration_flags):
+	* src/wm.c: (wm_new), (wm_load_config):
+	Minor clean up of misc.c. Remove err() call.
+	
+	* src/xml.c: (list_add_node), (xml_node_new):
+	* src/xml.h:
+	Minor cleanup of xml.c . Remove xml_dump() 
+
 2004-11-02  mallum,,,  <mallum@handhelds.org>
 
 	* src/wm.c: (wm_make_new_client):

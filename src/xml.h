@@ -1,3 +1,5 @@
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,24 +16,23 @@
 #endif
  
 typedef struct _params {
-   char *key;
-   char *value;
+   char           *key;
+   char           *value;
    struct _params *next;
 } Params;
 
 typedef struct _nlist {
    struct _xml_node *data;
-   struct _nlist *next;
+   struct _nlist    *next;
 } Nlist;
 
 typedef struct _xml_node {
 
-   char *tag;
-   Params *attr;
-   char *cdata;
-   
+   char             *tag;
+   Params           *attr;
+   char             *cdata;
    struct _xml_node *parent; 
-   Nlist *kids;
+   Nlist            *kids;
 
 } XMLNode;
 
@@ -47,8 +48,9 @@ typedef struct _xmlparser {
 
 XMLNode *xml_node_new(const char *name, Params *attr);
 
+#ifdef DEBUG
 void xml_dump(XMLNode *node, int depth);
-
+#endif
 
 /* --------------------------------------------------------------- */
 
