@@ -1,3 +1,8 @@
+2004-02-06  Matthew Allum,,,  <mallum@handhelds.org>
+
+	* data/themes/borillo/theme.xml:
+	correct alpha attribute
+
 2004-02-06  Matthew Allum,,,  <mallum@openedhand.com>
 
 	* src/keys.c: (keys_load_config):

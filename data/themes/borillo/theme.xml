@@ -6,7 +6,7 @@
 <color id="black" def="#11111d" />
 <color id="bg" def="#7297ce" />
 <color id="textcol" def="white" />
-<color id="trans" def="#ffffff" alpha="0"/>
+<color id="trans" def="#ffffff00" />
 
 
 <font id="titlefont" def="Bitstream Vera Sans-10:bold|verdana-7|fixed" />
