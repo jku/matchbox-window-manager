@@ -570,7 +570,6 @@ theme_frame_paint( MBTheme *theme,
   MBThemeFrame     *frame;
   MBPixbufImage    *img;
   MBThemeLayer     *layer_label = NULL, *layer_icon = NULL;
-  MBThemeLayer     *layer_sublabel = NULL;
   struct list_item *layer_list_item;
   int               label_rendered_width;
   int               decor_idx = 0;
@@ -683,84 +682,37 @@ theme_frame_paint( MBTheme *theme,
 							      (unsigned char*) c->name,
 							      (c->name_is_utf8) ? MB_ENCODING_UTF8 : MB_ENCODING_LATIN,
 							      text_render_opts );
-
+      
       dbg("%s() label_rendered_width = %i, frame clip width = %i\n",
 	  __func__, label_rendered_width, frame->label_w);
 
       /* Has text changed or first render */
-
+      
       if (c->name_rendered_end_pos != (frame->label_x + label_rendered_width))
 	{
 	  c->name_rendered_end_pos = (frame->label_x + label_rendered_width);
 	}
 
-
-      /* now do sublabel if exists */
-
-      if (c->subname)
-	{
-	  layer_sublabel = (MBThemeLayer*)list_find_by_id(frame->layers, 
-							  LAYER_SUB_LABEL);
-	  if (layer_sublabel)
-	    {
-	      /* 
-	       * The sub label can set its own clip width for the main label
-	       * when visible. we need to reset various vars if this is 
-	       * case. 
-               */
-	      if (layer_sublabel->sublabel->sublabel_label_clip_w) 
-		{
-		  int sub_clip_w_pixels = param_get(frame, layer_sublabel->sublabel->sublabel_label_clip_w, dw);
-		  
-
-		  if (label_rendered_width > sub_clip_w_pixels)
-		    {
-		      label_rendered_width = mb_font_render_simple_get_width (layer_label->label->font, 
-									      sub_clip_w_pixels,
-									      (unsigned char*) c->name,
-									      (c->name_is_utf8) ? MB_ENCODING_UTF8 : MB_ENCODING_LATIN,
-									      text_render_opts );
-
-		      frame->label_w = sub_clip_w_pixels;
-		      c->name_rendered_end_pos = (frame->label_x + label_rendered_width);
-		    }
-		}
-
-	      /* Hack round param_get not taking client param ... */
-
-	      if (layer_sublabel->x->unit == MBParamLabelEnd)
-		{
-		  frame->sublabel_x = c->name_rendered_end_pos + layer_sublabel->x->offset;
-		}
-	      else
-		frame->sublabel_x = param_get(frame, layer_sublabel->x, dw);
-
-	      frame->sublabel_w = param_get(frame, layer_sublabel->w, dw);
-
-	      c->name_total_width = (frame->sublabel_x + frame->sublabel_w) - frame->label_x;
-	     
-	    }
-	}
-      else c->name_total_width = label_rendered_width;
+      c->name_total_width = label_rendered_width;
     }
 
   /* Paint the acout pixbuf image, if not cached */
   if (!have_img_cached)
-     _theme_paint_core( theme, c, frame, img, 0, 0, dw, dh );
+    _theme_paint_core( theme, c, frame, img, 0, 0, dw, dh );
   
   /* Icons - are a pain as we cant cache them */
-
+  
   if ((layer_icon = (MBThemeLayer*)list_find_by_id(frame->layers, 
 						   LAYER_ICON)) != NULL)
     {
       MBPixbufImage *img_tmp = NULL;
       dbg("%s() painting icon\n", __func__);
-
+      
       if (have_img_cached)
 	{
 	  img_tmp = mb_pixbuf_img_clone(theme->wm->pb, 
 					theme->img_caches[frame_type]);
-
+	  
 	  theme_frame_icon_paint(theme, c, img_tmp, 
 				 param_get(frame, layer_icon->x, dw), 
 				 param_get(frame, layer_icon->y, dh));
@@ -775,15 +727,15 @@ theme_frame_paint( MBTheme *theme,
 			     param_get(frame, layer_icon->x, dw), 
 			     param_get(frame, layer_icon->y, dh));
     } 
-
+  
   /* Finally paint to the pixmap. */
   
   mb_pixbuf_img_render_to_drawable(pixbuf, img, 
 				   mb_drawable_pixmap(drawable), 
 				   0, 0);
-
+  
   /* and masks for shaping */
-
+  
   if (c->backing_masks[MSK_NORTH] != None &&
       ( frame_type == FRAME_MAIN || frame_type == FRAME_DIALOG 
 	|| frame_type == FRAME_MSG || frame_type == FRAME_DIALOG_NORTH)
@@ -799,7 +751,7 @@ theme_frame_paint( MBTheme *theme,
     mb_pixbuf_img_render_to_mask(theme->wm->pb, img, 
 				 c->backing_masks[MSK_SOUTH],
 				 0, 0);
-
+  
   if (c->backing_masks[MSK_EAST] != None  &&
       ( frame_type == FRAME_MAIN_EAST || frame_type == FRAME_DIALOG_EAST 
 	|| frame_type == FRAME_MSG_EAST )
@@ -807,7 +759,7 @@ theme_frame_paint( MBTheme *theme,
     mb_pixbuf_img_render_to_mask(theme->wm->pb, img, 
 				 c->backing_masks[MSK_EAST],
 				 0, 0);
-
+  
   if (c->backing_masks[MSK_WEST] != None  &&
       ( frame_type == FRAME_MAIN_WEST || frame_type == FRAME_DIALOG_WEST 
 	|| frame_type == FRAME_MSG_WEST )
@@ -817,25 +769,25 @@ theme_frame_paint( MBTheme *theme,
 				 0, 0);
   
   /* If we've painted an icon we need to free up our temporary image */
-
+  
   if (free_img)
     mb_pixbuf_img_free(theme->wm->pb, img);
-
+  
   /* No point caching frame images which dont have buttons */
-
+  
   if (decor_idx != NORTH)
     theme_img_cache_clear (theme, frame_type);
-
+  
   /* Now paint text onto pixmap */
-
+  
   if (layer_label && c->name && !(c->flags & CLIENT_BORDERS_ONLY_FLAG))
     {
       int fy = param_get(frame, layer_label->y, dh); 
-
+      
       dbg("%s() rendering '%s' text\n", __func__, c->name);
-
+      
       mb_font_set_color (layer_label->label->font, layer_label->label->col);
-
+      
       dbg("%s() painting text '%s' with r: %i, g: %i, b: %i, a: %i\n",
 	  __func__, 
 	  (unsigned char*) c->name,
@@ -843,8 +795,8 @@ theme_frame_paint( MBTheme *theme,
 	  mb_col_green(layer_label->label->col),
 	  mb_col_blue(layer_label->label->col),
 	  mb_col_alpha(layer_label->label->col));
-
-
+      
+      
       mb_font_render_simple (layer_label->label->font, 
 			     drawable, 
 			     frame->label_x,
@@ -854,22 +806,10 @@ theme_frame_paint( MBTheme *theme,
 			     (c->name_is_utf8) ? MB_ENCODING_UTF8 : MB_ENCODING_LATIN,
 			     text_render_opts);
       dbg("%s() rendered text\n", __func__);
-
-      if (layer_sublabel && c->subname)
-	{
-	  mb_font_render_simple (layer_label->label->font, 
-				 drawable, 
-				 frame->sublabel_x,
-				 fy,
-				 frame->sublabel_w,
-				 (unsigned char*) c->subname,
-				 MB_ENCODING_UTF8,
-				 text_render_opts);
-	}
     }
 
   /* Finally put the drawable on the decoration frame background */
-
+  
   XSetWindowBackgroundPixmap(w->dpy, c->frames_decor[decor_idx], 
 			     mb_drawable_pixmap(drawable));
   XClearWindow(w->dpy, c->frames_decor[decor_idx]);

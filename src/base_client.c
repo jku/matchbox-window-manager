@@ -62,8 +62,6 @@ base_client_new(Wm *w, Window win)
    if ((c->name = ewmh_get_utf8_prop(w, win, w->atoms[_NET_WM_NAME])) != NULL)
      c->name_is_utf8 = True;
 
-   c->subname = ewmh_get_utf8_prop(w, win, w->atoms[MB_WIN_SUB_NAME]);
-
    /* Basic attributes */
 
    XGetWindowAttributes(w->dpy, win, &attr);
