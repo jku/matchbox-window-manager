@@ -14,7 +14,7 @@
 */
 
 /*
-  $Id: main_client.c,v 1.15 2004/11/10 21:52:13 mallum Exp $
+  $Id: main_client.c,v 1.16 2004/11/11 18:09:37 mallum Exp $
 */
 
 #include "main_client.h"
@@ -681,8 +681,6 @@ main_client_unmap(Client *c)
 	   if (w->flags & SINGLE_FLAG)
 	     w->flags ^= SINGLE_FLAG; /* single flag off ( for menu button ) */
 	   
-	   w->stack_top_app = NULL; /* XXX safe ? */
-	   
 	   /* is there a desktop ? */
 	   next_client = wm_get_desktop(w);
 	 }
@@ -695,6 +693,9 @@ main_client_unmap(Client *c)
 	   if (c->flags & CLIENT_NEW_FOR_DESKTOP)
 	     next_client = wm_get_desktop(w);
 	 }
+
+       w->stack_top_app = NULL; /* wm_activate_client(next_client) below
+				   will update this if need be           */
      }
 
    c->mapped = False;

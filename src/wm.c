@@ -1986,7 +1986,11 @@ wm_activate_client(Client *c)
       /* Raise panel + toolbars just above app but below app dialogs */
 
       if (!(c->flags & CLIENT_FULLSCREEN_FLAG))
-	stack_move_type_above_client(MBCLIENT_TYPE_PANEL, c);
+	{
+	  dbg("%s() moving panels above %s\n", __func__, c->name);
+	  stack_move_type_above_client(MBCLIENT_TYPE_PANEL, c);
+	  stack_dump(w);
+	}
 
       stack_move_type_above_client(MBCLIENT_TYPE_TOOLBAR, c);
 
@@ -2010,6 +2014,8 @@ wm_activate_client(Client *c)
       /* Now move transient for root messages to top */
 
       stack_move_transients_to_top(w, NULL, CLIENT_HAS_URGENCY_FLAG);
+
+
 
       /* Deal with desktop flag etc */
       if (c->type != MBCLIENT_TYPE_DESKTOP)
@@ -2044,51 +2050,50 @@ wm_activate_client(Client *c)
        * panels and toolbars. May be a cleaner way than this.
        */
 
-      if (!w->flags & DESKTOP_RAISED_FLAG)
+      if (!(w->flags & DESKTOP_RAISED_FLAG))
 	{
-
-	  /*
-	  if (c->trans)
-	    {
-	      Client *client_above = c->trans;
-
-	      while (client_above->trans) 
-		client_above = client_above->trans;
-
-	      stack_move_type_below_client(MBCLIENT_TYPE_TOOLBAR
-					   |MBCLIENT_TYPE_PANEL, client_above);
-	    }
-	  else 
-	  */
 	  if (wm_get_visible_main_client(w))
 	    {
-	      /* Move above main app win, therefore below dialogs */
+
+	      stack_dump(w);
+
+	      dbg("%s() now raising panels+toolbar above dialog\n", __func__);
+
+
+	      /* Move just above main app win, therefore *below* dialogs */
 	      stack_move_type_above_client(MBCLIENT_TYPE_TOOLBAR
 					   |MBCLIENT_TYPE_PANEL, 
 					   wm_get_visible_main_client(w));
 	    }
-	  else
-	    stack_move_type_below_client(MBCLIENT_TYPE_TOOLBAR
-					 |MBCLIENT_TYPE_PANEL, c);
+	  else 	 /* move type above nothing - eg to bottom */
+	    stack_move_type_above_client(MBCLIENT_TYPE_TOOLBAR
+					 |MBCLIENT_TYPE_PANEL, NULL);
+	  /* ABOVE is broken as no Wm reference !!! */
+	}
+    }
 
-	}
-    }
-  else if (c->type == MBCLIENT_TYPE_PANEL)
+
+  /* Always make sure embedded titlebar panels arn't visible for desktop 
+   */
+  if (c == w->have_titlebar_panel 
+      && w->flags & DESKTOP_RAISED_FLAG
+      && mbtheme_has_titlebar_panel(w->mbtheme)
+      && !(w->have_titlebar_panel->flags & CLIENT_DOCK_TITLEBAR_SHOW_ON_DESKTOP))
     {
-      /* Make sure embedded titlebar panels arn't visible for desktop 
-       */
-      if (c == w->have_titlebar_panel 
-	  && w->flags & DESKTOP_RAISED_FLAG
-	  && mbtheme_has_titlebar_panel(w->mbtheme)
-	  && !(w->have_titlebar_panel->flags & CLIENT_DOCK_TITLEBAR_SHOW_ON_DESKTOP))
-	{
-	  stack_move_below_client(c, w->client_desktop);
-	}
+      stack_move_below_client(c, w->client_desktop);
+      /* TODO: Change to stack move bottom ? 
+       *
+       * eg use stack_move_above_client(c, NULL)
+      */
     }
-    
+
   ewmh_update(w);
 
   client_set_focus(client_to_focus); /* set focus if needed and ewmh active */
+
+  stack_dump(w);
+
+  dbg("%s() now syncing above window stack\n", __func__);
 
   stack_sync_to_display(w);
 
