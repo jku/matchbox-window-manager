@@ -217,6 +217,8 @@ theme_frame_button_paint(MBTheme *theme,
 
 	  button_h = param_get(frame, button->h, dest_h);
 
+	  dbg("%s() button x is %i, destw %i\n", __func__, button_x, dest_w);
+
 	  /* See if the clien already has a wm button object created */
 
 	  while (client_button_obj != NULL)
@@ -295,6 +297,7 @@ theme_frame_button_paint(MBTheme *theme,
 				     button_x, button_y,
 				     button_w, button_h,
 				     0, 0 );
+
 		}
 
 	      /* Now actually paint depending on button state */
@@ -316,6 +319,7 @@ theme_frame_button_paint(MBTheme *theme,
 							  0, 0, copy_w, copy_h,
 							  0, 0, 
 							  button->img_active_blend);
+
 		} 
 	      else 
 		{

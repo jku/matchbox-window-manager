@@ -555,7 +555,7 @@ void main_client_button_press(Client *c, XButtonEvent *e)
 {
   Wm *w = c->wm;
 
-  int     ch = 0;
+  int     ch = 0, offset_east = 0, offset_west = 0, total_w = 0;
   Client *p  = NULL;
 
    if (!w->config->use_title) return;
@@ -587,9 +587,17 @@ void main_client_button_press(Client *c, XButtonEvent *e)
 	 }
      }
 
+   offset_east  = theme_frame_defined_width_get(w->mbtheme, 
+						FRAME_MAIN_EAST );
+   offset_west  = theme_frame_defined_width_get(w->mbtheme, 
+						FRAME_MAIN_WEST );
+
+
    ch = theme_frame_defined_height_get(w->mbtheme, FRAME_MAIN);
 
-   switch (client_button_do_ops(c, e, FRAME_MAIN, c->width, ch))
+   total_w = c->width + offset_east + offset_west;
+
+   switch (client_button_do_ops(c, e, FRAME_MAIN, total_w, ch))
      {
       case BUTTON_ACTION_DESKTOP:
 	 wm_toggle_desktop(w);

@@ -141,22 +141,21 @@ dialog_client_get_coverage(Client *c, int *x, int *y, int *w, int *h)
 void
 dialog_client_move_resize(Client *c)
 {
-   int frm_size     = dialog_client_title_height(c);
-   int offset_south = 0, offset_west = 0, offset_east = 0;
+  Wm *w = c->wm;
+  int frm_size     = dialog_client_title_height(c);
+  int offset_south = 0, offset_west = 0, offset_east = 0;
 
-   dialog_client_get_offsets(c, &offset_east, &offset_south, &offset_west);
+  dialog_client_get_offsets(c, &offset_east, &offset_south, &offset_west);
 
-   base_client_move_resize(c);
+  base_client_move_resize(c);
 
-   XMoveResizeWindow(c->wm->dpy, c->window, 
-		     offset_west,
-		     frm_size,
-		     c->width, c->height);
+  XMoveResizeWindow(w->dpy, c->window, offset_west, frm_size,
+		    c->width, c->height);
 
 #ifndef USE_COMPOSITE
-   if (c->wm->config->dialog_shade && (c->flags & CLIENT_IS_MODAL_FLAG))
+   if (w->config->dialog_shade && (c->flags & CLIENT_IS_MODAL_FLAG))
      {
-       XMoveWindow(c->wm->dpy, 
+       XMoveWindow(w->dpy, 
 		   c->window, 
 		   c->x, 
 		   c->y);
@@ -164,7 +163,7 @@ dialog_client_move_resize(Client *c)
    else
 #endif
      {
-       XMoveResizeWindow(c->wm->dpy, 
+       XMoveResizeWindow(w->dpy, 
 			 c->frame, 
 			 c->x - offset_west, 
 			 c->y - frm_size, 
@@ -176,6 +175,13 @@ dialog_client_move_resize(Client *c)
    if (!(c->flags & CLIENT_TITLE_HIDDEN_FLAG))
      client_decor_frames_move_resize(c, offset_west, offset_east, 
 				     frm_size, offset_south);
+
+   if (c->win_modal_blocker) 
+     {
+       XMoveResizeWindow(w->dpy, c->win_modal_blocker, 
+			 0, 0, w->dpy_width, w->dpy_height);
+     }
+
 }
 
 int
@@ -358,6 +364,28 @@ dialog_client_reparent(Client *c)
 
      }
 
+   if (c->flags & CLIENT_IS_MODAL_FLAG
+       && c->trans == NULL )	/* modal for device. XXX check recursive ? */
+     {
+       /* Create an InputOnly fullscreen window to aid in making 
+	* modal dialogs *really* modal to the whole display by
+	* block button events. 
+       */
+       c->win_modal_blocker = XCreateWindow(w->dpy, 
+					    w->root, 
+					    0, 0,
+					    w->dpy_width,
+					    w->dpy_height,
+					    0,
+					    CopyFromParent,
+					    InputOnly,  
+					    CopyFromParent,
+					    CWOverrideRedirect|CWEventMask,
+					    &attr);
+       XMapWindow(w->dpy, c->win_modal_blocker);
+       w->stack_n_items++;
+     }
+
    XClearWindow(w->dpy, c->frame);
    
    XSetWindowBorderWidth(w->dpy, c->window, 0);
@@ -370,6 +398,8 @@ dialog_client_reparent(Client *c)
    if (c->frame != c->window)
      XReparentWindow(w->dpy, c->window, c->frame, 
 		     offset_west, offset_north);
+
+
 }
 
 /*  Padding between dialog borders and area available */
@@ -1072,6 +1102,13 @@ dialog_client_destroy(Client *c)
 
   /* Focus the saved next or return a likely candidate if none found */
   d = dialog_client_set_focus_next(c);
+
+  if (c->win_modal_blocker)
+    {
+      Wm *w = c->wm;
+      XDestroyWindow(w->dpy, c->win_modal_blocker);
+      w->stack_n_items--;
+    }
 
   base_client_destroy(c);
 

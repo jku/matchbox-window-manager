@@ -358,6 +358,10 @@ typedef struct _client
   Bool              have_cache, have_set_bg;
   struct list_item *buttons; 
 
+  /* InputOnly modal 'blocker' win */
+
+  Window            win_modal_blocker;
+
   /* State stuff */
 
   int		    ignore_unmap;

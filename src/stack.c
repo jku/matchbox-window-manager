@@ -196,6 +196,9 @@ stack_get_window_list(Wm *w)
   {
     dbg("%i:%li, ", i, c->frame);
     win_list[i++] = c->frame;
+
+    if (c->win_modal_blocker)
+      win_list[i++] = c->win_modal_blocker;
   }
 
   dbg("\n");
