@@ -1787,6 +1787,8 @@ wm_make_new_client(Wm *w, Window win)
 
    dbg("%s() showing new client\n", __func__);
 
+   c->redraw(c, False);
+
    wm_activate_client(c);
 
    /* below is probably now mostly uneeded ? */
