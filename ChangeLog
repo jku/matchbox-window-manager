@@ -1,3 +1,8 @@
+2004-03-08  Matthew Allum,,,  <mallum@openedhand.com>
+
+	* src/composite-engine.c: (comp_engine_render):
+	Dont shadow CM_TRANSLUCENCY windows ( at least for now )
+
 2004-02-26  Matthew Allum,,,  <mallum@openedhand.com>
 
 	* src/mbtheme.c: (_theme_paint_core), (theme_frame_paint):

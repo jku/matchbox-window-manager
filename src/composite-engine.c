@@ -1250,6 +1250,7 @@ comp_engine_render(Wm *w, XserverRegion region)
 	      Picture shadow_pic;
 	  
 	      t->get_coverage(t, &x, &y, &width, &height);  
+
 	  
 	      if (w->config->shadow_style == SHADOW_STYLE_SIMPLE)
 		{
@@ -1269,50 +1270,57 @@ comp_engine_render(Wm *w, XserverRegion region)
 		  
 		  XFixesSetPictureClipRegion (w->dpy, w->root_buffer, 
 					      0, 0, shadow_region);
-		  
-		  XRenderComposite (w->dpy, PictOpOver, w->black_picture, 
-				    None, 
-				    w->root_buffer,
-				    0, 0, 0, 0,
-				    x + w->config->shadow_dx,
-				    y + w->config->shadow_dy,
-				    width  + w->config->shadow_padding_width, 
-				    height + w->config->shadow_padding_height);
 
 		  if (t->transparency != -1)
-		    XRenderComposite (w->dpy, PictOpOver, t->picture, w->trans_picture,
-				      w->root_buffer, 0, 0, 0, 0, x, y, width, height);
-		  
+		    {
+		      /* No shadows currently for transparent windows */
+		      XRenderComposite (w->dpy, PictOpOver, 
+					t->picture, w->trans_picture,
+					w->root_buffer, 0, 0, 0, 0, 
+					x, y, width, height);
+		    } else {		  
+		      XRenderComposite (w->dpy, PictOpOver, w->black_picture, 
+					None, 
+					w->root_buffer,
+					0, 0, 0, 0,
+					x + w->config->shadow_dx,
+					y + w->config->shadow_dy,
+					width  + w->config->shadow_padding_width, 
+					height + w->config->shadow_padding_height);
+		    }
+
 		  XFixesDestroyRegion (w->dpy, shadow_region);
 		}
 	      else 		/* GAUSSIAN */
 		{
 		  
-		  /* Combine pregenerated shadow tiles */
-		  shadow_pic 
-		    = shadow_gaussian_make_picture (w, 
-						    width + w->config->shadow_padding_width, 
-						    height + w->config->shadow_padding_height);
-		  
 		  XFixesSetPictureClipRegion (w->dpy, w->root_buffer, 
 					      0, 0, t->border_clip);
-		  
-		  XRenderComposite (w->dpy, PictOpOver, w->black_picture, 
-				    shadow_pic, 
-				    w->root_buffer,
-				    0, 0, 0, 0,
-				    x + w->config->shadow_dx,
-				    y + w->config->shadow_dy,
-				    width + w->config->shadow_padding_width, 
-				    height + w->config->shadow_padding_height);
-		  
+
 		  if (t->transparency != -1)
-		    XRenderComposite (w->dpy, PictOpOver, t->picture, w->trans_picture,
-				      w->root_buffer, 0, 0, 0, 0, x, y, width, height);
+		    {
+		      /* No shadows currently for transparent windows */
+		      XRenderComposite (w->dpy, PictOpOver, 
+					t->picture, w->trans_picture,
+					w->root_buffer, 0, 0, 0, 0, 
+					x, y, width, height);
+		    } else {		  
+		      /* Combine pregenerated shadow tiles */
+		      shadow_pic 
+			= shadow_gaussian_make_picture (w, 
+							width + w->config->shadow_padding_width, 
+							height + w->config->shadow_padding_height);
 
-
-		  XRenderFreePicture (w->dpy, shadow_pic);
-		  
+		      XRenderComposite (w->dpy, PictOpOver, w->black_picture, 
+					shadow_pic, 
+					w->root_buffer,
+					0, 0, 0, 0,
+					x + w->config->shadow_dx,
+					y + w->config->shadow_dy,
+					width + w->config->shadow_padding_width, 
+					height + w->config->shadow_padding_height);
+		      XRenderFreePicture (w->dpy, shadow_pic);
+		    }
 		}
 	      
 	    }
