@@ -1,5 +1,16 @@
 2004-11-01  mallum,,,  <mallum@handhelds.org>
 
+	* src/client_common.c: (client_set_focus):
+	* src/dialog_client.c: (dialog_client_destroy):
+	* src/wm.c: (wm_handle_button_event), (wm_activate_client):
+	More focus model fixes.
+
+	* src/mbtheme-standalone.c: (theme_frame_menu_paint),
+	(theme_frame_menu_get_dimentions):
+	Update standalone build a little for newer internals
+
+2004-11-01  mallum,,,  <mallum@handhelds.org>
+
 	* src/base_client.c: (base_client_new), (base_client_process_name),
 	(base_client_move_resize), (base_client_hide), (base_client_show),
 	(base_client_destroy):

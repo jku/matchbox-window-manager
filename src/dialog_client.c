@@ -1129,10 +1129,16 @@ void dialog_client_destroy(Client *c)
   if (c->next_focused_client)
     client_set_focus(c->next_focused_client);
   else
-    client_set_focus(wm_get_visible_main_client(w));
+    d = wm_get_visible_main_client(w);
 
   base_client_destroy(c);
 
+  /* 
+     We call activate_client mainly to figure out what to focus next.
+     This probably only happens in the case of transient for root
+     dialogs which likely have no real focus history.
+  */
+  if (d) wm_activate_client(d);
 
 #if 0
   /* We could be a dialog over a desktop, in which case we

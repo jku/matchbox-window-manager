@@ -788,7 +788,7 @@ wm_handle_button_event(Wm *w, XButtonEvent *e)
 
    dbg("%s() called", __func__);
 
-   /* raise dialogs */
+   /* Raise dialogs, set focus if needed  */
    if (c)
      {
        /* Click was on window rather than decorations */
@@ -2065,7 +2065,8 @@ wm_activate_client(Client *c)
 
   XGrabServer(w->dpy);
 
-  c->show(c);
+  c->show(c); 			/* Set 'relative' pos in stack, map windows
+				   if needed etc                           */
 
   dbg("%s() DESKTOP_RAISED_FLAG is %i\n", 
       __func__, (w->flags & DESKTOP_RAISED_FLAG));
@@ -2187,6 +2188,7 @@ wm_activate_client(Client *c)
   stack_sync_to_display(w);
 
   XSync(w->dpy, False);	    
+
   XUngrabServer(w->dpy);
 }
 

@@ -229,8 +229,37 @@ client_set_focus(Client *c)
        * Main clients save this slightly differently, see there hide() method.
        * In there case its used to store what dialog to focus when 'reshown'.  
       */
+#if 0
       if (!(c->type & (MBCLIENT_TYPE_DESKTOP|MBCLIENT_TYPE_APP)))
 	c->next_focused_client = w->focused_client;
+
+      /* Special case for transient for root dialogs.  
+       * Dont save for main clients, dialog closing will better figure it out.
+       */
+      if (c->type == MBCLIENT_TYPE_DIALOG 
+	  && c->trans == NULL
+	  && w->focused_client != NULL 
+	  && w->focused_client->type & (MBCLIENT_TYPE_DESKTOP
+					|MBCLIENT_TYPE_APP))
+	c->next_focused_client = NULL; 
+#endif
+
+      if (w->focused_client)
+	{
+	  Client *trans_old = w->focused_client;
+	  Client *trans_new = c;
+
+	  while (trans_old->trans != NULL)
+	    trans_old = trans_old->trans;
+
+	  while (trans_new->trans != NULL)
+	    trans_new = trans_new->trans;
+
+	  /* Are we both transient for the same thing */
+	  if (trans_new && trans_old && trans_new == trans_old)
+	    c->next_focused_client = w->focused_client;
+	}
+
 
       w->focused_client = c;
 

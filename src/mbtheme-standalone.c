@@ -621,23 +621,21 @@ theme_frame_menu_paint(MBTheme* theme, Client *c)
 
    theme_frame_paint( theme, c, FRAME_MENU, 0, 0, c->width, c->height);
 
-   START_CLIENT_LOOP(c->wm,p)
+   stack_enumerate(c->wm,p)
       if (p->type == mainwin && p->name
 	  && client_get_state(p) == NormalState )
       {
 	_theme_frame_menu_paint_text_entry(theme, c, p, item_current_y);
 	item_current_y += item_h;
       }
-   END_CLIENT_LOOP(c->wm,p)
 
-   START_CLIENT_LOOP(c->wm,p)
+   stack_enumerate(c->wm,p)
       if (p->type == mainwin && p->name
 	  && client_get_state(p) == IconicState )
       {
 	_theme_frame_menu_paint_text_entry(theme, c, p, item_current_y);
 	item_current_y += item_h;
       }
-   END_CLIENT_LOOP(c->wm,p);
 
    if ((p = wm_get_desktop(c->wm)) != NULL) 
      {
@@ -654,7 +652,7 @@ theme_frame_menu_get_dimentions(MBTheme* theme, int* w, int *h)
 
   space_avail = theme->wm->dpy_width - 16;
 
-  START_CLIENT_LOOP(theme->wm, p);   
+  stack_enumerate(theme->wm, p);   
   {
     if ((p->type == mainwin || p->type == desktop) && p->name)
       {
@@ -678,7 +676,6 @@ theme_frame_menu_get_dimentions(MBTheme* theme, int* w, int *h)
 	if (tmp_w > width) width = tmp_w;
       }
    }
-  END_CLIENT_LOOP(theme->wm, p);
     
   width += MENU_ENTRY_PADDING;
     
