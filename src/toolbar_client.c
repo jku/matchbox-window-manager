@@ -13,6 +13,11 @@
    GNU General Public License for more details.
 */
 
+/* Toolbar windows are small collapsable 'panel' like windows at bottom 
+ * of display. They are mainly to hold input methods like software keyboards
+ * stroke recognisers etc. 
+ */
+
 #include "toolbar_client.h"
 
 Client*
@@ -63,7 +68,6 @@ toolbar_client_configure(Client *c)
   c->width = w->dpy_width - toolbar_win_offset(c)
     - wm_get_offsets_size(w, WEST,  NULL, False)
     - wm_get_offsets_size(w, EAST,  NULL, False);
-
 }
 
 void
@@ -103,37 +107,39 @@ toolbar_client_move_resize(Client *c)
 void
 toolbar_client_reparent(Client *c)
 {
-    XSetWindowAttributes attr;
+  Wm *w = c->wm;
 
-    int frm_size = theme_frame_defined_width_get(c->wm->mbtheme, 
-						 FRAME_UTILITY_MAX );   
-    attr.override_redirect = True; 
-    attr.background_pixel  = BlackPixel(c->wm->dpy, c->wm->screen);
-    attr.event_mask        = ChildMask|ButtonPressMask|ExposureMask;
-    
-    c->frame =
-       XCreateWindow(c->wm->dpy, c->wm->root, 0, c->y,
-		     c->wm->dpy_width, c->height, 0,
-		     CopyFromParent, CopyFromParent, CopyFromParent,
-		     CWOverrideRedirect|CWEventMask|CWBackPixel,
-		     &attr);
-   
-   attr.background_pixel = BlackPixel(c->wm->dpy, c->wm->screen);
-   
-   c->title_frame =
-      XCreateWindow(c->wm->dpy, c->frame, 0, 0, frm_size, c->height, 0,
-		    CopyFromParent, CopyFromParent, CopyFromParent,
-		    CWOverrideRedirect|CWBackPixel|CWEventMask, &attr);
+  XSetWindowAttributes attr;
 
-   XSetWindowBorderWidth(c->wm->dpy, c->window, 0);
-   XAddToSaveSet(c->wm->dpy, c->window);
-   XSelectInput(c->wm->dpy, c->window,
-		ButtonPressMask|ColormapChangeMask|PropertyChangeMask);
-
-   dbg("%s() reparenting at %i\n", __func__, toolbar_win_offset(c));
-   
-   XReparentWindow(c->wm->dpy, c->window, c->frame,
-		   toolbar_win_offset(c), 0);
+  int frm_size = theme_frame_defined_width_get(w->mbtheme, 
+					       FRAME_UTILITY_MAX );   
+  attr.override_redirect = True; 
+  attr.background_pixel  = BlackPixel(w->dpy, w->screen);
+  attr.event_mask        = ChildMask|ButtonPressMask|ExposureMask;
+  
+  c->frame =
+    XCreateWindow(w->dpy, w->root, 0, c->y,
+		  w->dpy_width, c->height, 0,
+		  CopyFromParent, CopyFromParent, CopyFromParent,
+		  CWOverrideRedirect|CWEventMask|CWBackPixel,
+		  &attr);
+  
+  attr.background_pixel = w->grey_col.pixel;
+  
+  c->title_frame =
+    XCreateWindow(w->dpy, c->frame, 0, 0, frm_size, c->height, 0,
+		  CopyFromParent, CopyFromParent, CopyFromParent,
+		  CWOverrideRedirect|CWBackPixel|CWEventMask, &attr);
+  
+  XSetWindowBorderWidth(w->dpy, c->window, 0);
+  XAddToSaveSet(w->dpy, c->window);
+  XSelectInput(w->dpy, c->window,
+	       ButtonPressMask|ColormapChangeMask|PropertyChangeMask);
+  
+  dbg("%s() reparenting at %i\n", __func__, toolbar_win_offset(c));
+  
+  XReparentWindow(w->dpy, c->window, c->frame,
+		  toolbar_win_offset(c), 0);
 }
 
 
@@ -154,16 +160,13 @@ toolbar_client_show(Client *c)
 
    c->mapped = True;
 
-#if 0
-  if (w->main_client  		/* XXX NEEDED ANYMORE ? */
-      && (w->main_client->flags & CLIENT_FULLSCREEN_FLAG))
+  if (w->stack_top_app 
+      && (w->stack_top_app->flags & CLIENT_FULLSCREEN_FLAG))
     main_client_manage_toolbars_for_fullscreen(c, True);
-#endif
 
    win_state = client_get_state(c);
 
-   /* initially mapped */
-   if (win_state == WithdrawnState)
+   if (win_state == WithdrawnState)    /* initial show() state */
      {
        client_set_state(c,NormalState);
        wm_update_layout(c->wm, c, - c->height);
@@ -193,52 +196,35 @@ toolbar_client_show(Client *c)
    toolbar_client_move_resize(c);
 
    stack_move_above_extended(c, NULL, 
-			     MBCLIENT_TYPE_APP|MBCLIENT_TYPE_DESKTOP, 
-			     0);
+			     MBCLIENT_TYPE_APP|MBCLIENT_TYPE_DESKTOP, 0);
 
    XMapSubwindows(w->dpy, c->frame);
    XMapWindow(w->dpy, c->frame);
-
-   if (client_want_focus(c))
-   {
-      dbg("client wants focus");
-      XSetInputFocus(w->dpy, c->window,
-		     RevertToPointerRoot, CurrentTime);
-      w->focused_client = c;
-   } 
-
-   base_client_show(c);
-
-#if 0
-   /* make sure any dialog clients are raised above */
-   /* move / resize any dialogs */
-   if (w->main_client &&   !(w->flags & DESKTOP_RAISED_FLAG)) 
-     base_client_show(w->main_client);
-#endif
 }
 
 void
 toolbar_client_hide(Client *c)
 {
-   if (c->flags & CLIENT_IS_MINIMIZED || client_get_state(c) == IconicState) 
-     return;
+  Wm   *w = c->wm;
+
+  if (c->flags & CLIENT_IS_MINIMIZED || client_get_state(c) == IconicState) 
+    return;
    
-   client_set_state(c,IconicState);
-   c->flags |= CLIENT_IS_MINIMIZED; 
+  client_set_state(c,IconicState);
+  c->flags |= CLIENT_IS_MINIMIZED; 
 
-   c->ignore_unmap++;
-   XUnmapWindow(c->wm->dpy, c->window);
-
-   client_buttons_delete_all(c);   
-
-   c->x = wm_get_offsets_size(c->wm, WEST,  NULL, False);
-
-   c->y = c->y + (c->height - theme_frame_defined_height_get(c->wm->mbtheme,
-							     FRAME_UTILITY_MIN)
-		  );
+  c->ignore_unmap++;
+  XUnmapWindow(w->dpy, c->window);
+  
+  client_buttons_delete_all(c);   
+  
+  c->x = wm_get_offsets_size(c->wm, WEST,  NULL, False);
+  
+  c->y = c->y +(c->height - theme_frame_defined_height_get(c->wm->mbtheme,
+							   FRAME_UTILITY_MIN));
 #ifdef STANDALONE
    if (c->backing) 
-     XFreePixmap(c->wm->dpy, c->backing);
+     XFreePixmap(w->dpy, c->backing);
    c->backing = None;
 #else
    if (c->backing != NULL)
@@ -264,15 +250,14 @@ toolbar_client_destroy(Client *c)
                         dialog resizing/repositioning via restack
                         to ignore use  */
 
-  if (c->x == theme_frame_defined_width_get(c->wm->mbtheme,
-					    FRAME_UTILITY_MAX )
+  if (c->x == theme_frame_defined_width_get(w->mbtheme, FRAME_UTILITY_MAX )
       || (c->flags & CLIENT_TITLE_HIDDEN_FLAG) )
     {
       wm_update_layout(w, c, c->height);
     } 
   else 
     {
-      wm_update_layout(w, c, theme_frame_defined_height_get(c->wm->mbtheme,
+      wm_update_layout(w, c, theme_frame_defined_height_get(w->mbtheme,
 							   FRAME_UTILITY_MIN));
     }
   
@@ -297,11 +282,12 @@ toolbar_client_get_coverage(Client *c, int *x, int *y, int *w, int *h)
 void
 toolbar_client_button_press(Client *c, XButtonEvent *e)
 {
-   int frame_id, cw, ch;
-   int max_offset = theme_frame_defined_width_get(c->wm->mbtheme, 
-						   FRAME_UTILITY_MAX);
-   int min_offset = theme_frame_defined_height_get(c->wm->mbtheme, 
-						    FRAME_UTILITY_MIN);
+  Wm *w = c->wm;
+  int frame_id, cw, ch;
+  int max_offset = theme_frame_defined_width_get(w->mbtheme,
+						 FRAME_UTILITY_MAX);
+  int min_offset = theme_frame_defined_height_get(w->mbtheme, 
+						  FRAME_UTILITY_MIN);
 
    if (!(c->flags & CLIENT_IS_MINIMIZED))
      {
@@ -354,65 +340,67 @@ toolbar_win_offset(Client *c)
 void
 toolbar_client_redraw(Client *c, Bool use_cache)
 {
-   int max_offset = theme_frame_defined_width_get(c->wm->mbtheme, 
-						   FRAME_UTILITY_MAX);
-   int min_offset = theme_frame_defined_height_get(c->wm->mbtheme, 
-						    FRAME_UTILITY_MIN);
-   if (use_cache && c->backing != None) return;
+  Wm *w = c->wm;
 
-   client_buttons_delete_all(c);
-
-   if (c->flags & CLIENT_IS_MINIMIZED)
-   {
-     if (!min_offset) return;
-
-     if (c->flags & CLIENT_TITLE_HIDDEN_FLAG) max_offset = 0;
-
+  int max_offset = theme_frame_defined_width_get(w->mbtheme, 
+						 FRAME_UTILITY_MAX);
+  int min_offset = theme_frame_defined_height_get(w->mbtheme, 
+						  FRAME_UTILITY_MIN);
+  if (use_cache && c->backing != None) return;
+  
+  client_buttons_delete_all(c);
+  
+  if (c->flags & CLIENT_IS_MINIMIZED)
+    {
+      if (!min_offset) return;
+      
+      if (c->flags & CLIENT_TITLE_HIDDEN_FLAG) max_offset = 0;
+      
       if (c->backing == None)
-	 client_init_backing(c, c->width + max_offset, min_offset);
-
-      theme_frame_paint(c->wm->mbtheme, c, FRAME_UTILITY_MIN, 
+	client_init_backing(c, c->width + max_offset, min_offset);
+      
+      theme_frame_paint(w->mbtheme, c, FRAME_UTILITY_MIN, 
 			0, 0, 
 			c->width + max_offset, 
 			min_offset); 
-
-      theme_frame_button_paint(c->wm->mbtheme, c, BUTTON_ACTION_CLOSE, 
+      
+      theme_frame_button_paint(w->mbtheme, c, BUTTON_ACTION_CLOSE, 
 			       INACTIVE, FRAME_UTILITY_MIN, 
 			       c->width + max_offset, min_offset);
-
-      theme_frame_button_paint(c->wm->mbtheme, c, BUTTON_ACTION_MAX, 
+      
+      theme_frame_button_paint(w->mbtheme, c, BUTTON_ACTION_MAX, 
 			       INACTIVE, FRAME_UTILITY_MIN, 
 			       c->width + max_offset, min_offset);
-
-   } else {
-
-     if (!max_offset) return;
-
-     if (c->flags & CLIENT_TITLE_HIDDEN_FLAG) return;
-
-     if (c->backing == None)
-       client_init_backing(c, max_offset, c->height);
-
-      theme_frame_paint( c->wm->mbtheme, c, FRAME_UTILITY_MAX,
+      
+    } else {
+      
+      if (!max_offset) return;
+      
+      if (c->flags & CLIENT_TITLE_HIDDEN_FLAG) return;
+      
+      if (c->backing == None)
+	client_init_backing(c, max_offset, c->height);
+      
+      theme_frame_paint( w->mbtheme, c, FRAME_UTILITY_MAX,
 			 0, 0, max_offset, c->height);
-
-      theme_frame_button_paint(c->wm->mbtheme, c, BUTTON_ACTION_CLOSE, 
+      
+      theme_frame_button_paint(w->mbtheme, c, BUTTON_ACTION_CLOSE, 
 			       INACTIVE, FRAME_UTILITY_MAX, 
 			       max_offset, c->height);
-
-      theme_frame_button_paint(c->wm->mbtheme, c, BUTTON_ACTION_MIN, 
+      
+      theme_frame_button_paint(w->mbtheme, c, BUTTON_ACTION_MIN, 
 			       INACTIVE, FRAME_UTILITY_MAX, 
 			       max_offset, c->height);
-   }
-
+    }
+  
 #ifdef STANDALONE
-   XSetWindowBackgroundPixmap(c->wm->dpy, c->title_frame, c->backing);
+  XSetWindowBackgroundPixmap(w->dpy, c->title_frame, c->backing);
 #else
-   XSetWindowBackgroundPixmap(c->wm->dpy, c->title_frame, 
-			      mb_drawable_pixmap(c->backing));
+  XSetWindowBackgroundPixmap(w->dpy, c->title_frame, 
+			     mb_drawable_pixmap(c->backing));
 #endif
-   XClearWindow(c->wm->dpy, c->title_frame);
-
+  XClearWindow(w->dpy, c->title_frame);
+  XFlush(w->dpy);
 }
 
 

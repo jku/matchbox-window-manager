@@ -58,10 +58,10 @@ Bool
 client_set_focus(Client *c);
 
 void
-client_get_transient_list(MBList **list, Client *c);
+client_get_transient_list(Wm *w, MBList **list, Client *c);
 
 Client*
-client_get_highest_transient(Client *c);
+client_get_highest_transient(Client *c, int client_flags);
 
 Client *
 client_get_next (Client* c, MBClientTypeEnum wanted);

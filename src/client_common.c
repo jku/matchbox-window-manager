@@ -275,22 +275,32 @@ client_set_focus(Client *c)
 }
 
 void
-client_get_transient_list(MBList **list, Client *c)
+client_get_transient_list(Wm *w, MBList **list, Client *c)
 {
-  Wm     *w = c->wm;
   Client *p = NULL;
 
   stack_enumerate(w,p)
     {
-      if (p != c && p->trans)
+      if (p != c && p->type == MBCLIENT_TYPE_DIALOG)
 	{
-	  /* Follow transients 'down', for a match. */
 	  Client *trans = p->trans;
-	  while (trans != NULL && trans != c)
-	    trans = trans->trans;
 
-	  if (trans == c)
-	    list_add(list, NULL, 0, p);
+	  if (c == NULL) 
+	    { 			
+	      /* Transient for root dialogs */
+	      if (trans == NULL)
+		  list_add(list, NULL, 0, p);
+	    }
+	  else
+	    {
+	      /* Follow transients 'down', for a match. */
+
+	      while (trans != NULL && trans != c)
+		trans = trans->trans;
+
+	      if (trans == c)
+		list_add(list, NULL, 0, p);
+	    }
 	}
     }
 
@@ -308,7 +318,7 @@ client_get_transient_list(MBList **list, Client *c)
 }
 
 Client*
-client_get_highest_transient(Client *c)
+client_get_highest_transient(Client *c, int client_flags)
 {
   Wm     *w = c->wm;
   Client *p = NULL;
@@ -318,7 +328,9 @@ client_get_highest_transient(Client *c)
     {
       if (p != c && p->trans && p->trans == c)
 	{
-	  highest = client_get_highest_transient(p);
+	  if (client_flags && !(p->flags & client_flags))
+	    continue;
+	  highest = client_get_highest_transient(p, client_flags);
 	}
     }
 

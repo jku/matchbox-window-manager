@@ -14,7 +14,7 @@
 */
 
 /*
-  $Id: base_client.c,v 1.9 2004/11/01 20:22:08 mallum Exp $
+  $Id: base_client.c,v 1.10 2004/11/02 16:18:18 mallum Exp $
 */
 
 
@@ -47,13 +47,13 @@ base_client_new(Wm *w, Window win)
    c->wm      = w;
 
    /* Set up the 'methods' - expect to be overidden */
+
    base_client_set_funcs(c);
 
    stack_prepend_bottom(c); 
 
    for (i=0; i<MSK_COUNT; i++)
      c->backing_masks[i] = None;
-
 
    /* Window Name */
 
@@ -157,33 +157,6 @@ base_client_new(Wm *w, Window win)
 
 #endif
      
-
-#if 0
-
-
-   /* Add the client to the circular list */
-   if (w->head_client == NULL)
-   {
-      c->next = c;
-      c->prev = c;
-      w->head_client = c;
-   }
-   else
-   {
-      if (w->main_client)
-      {
-	 c->prev = w->main_client;
-	 c->next = w->main_client->next;
-      } else {
-	 c->prev = w->head_client;
-	 c->next = w->head_client->next;
-       }	    
-      c->prev->next = c;
-      c->next->prev = c;
-   }
-
-#endif
-
    /* Where is client running ? */
 
   if (XGetWMClientMachine(c->wm->dpy, c->window, &text_prop))
@@ -251,6 +224,7 @@ base_client_new(Wm *w, Window win)
 	     }
 #endif
 	 }
+       
        XFree(protocols);
     }
 
@@ -460,7 +434,7 @@ base_client_show(Client *c)
 	    {
 	       dbg("%s() raising transient %s\n", __func__, t->name);
 
-#ifdef USE_MSG_WIN
+#if 0
 	       /* Only raise 'global' msg wins above everything */
 	       if (t->flags & CLIENT_IS_MESSAGE_DIALOG
 		   && !(t->flags & CLIENT_IS_MESSAGE_DIALOG_HI)

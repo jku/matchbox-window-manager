@@ -55,7 +55,7 @@ stack_move_above_extended(Client *client,
 			  int     flags);
 
 void
-stack_move_transients_to_top(Wm *w, Client *client_trans_for);
+stack_move_transients_to_top(Wm *w, Client *client_trans_for, int flags);
 
 void
 stack_move_type_above_client(MBClientTypeEnum wanted_type, Client *client);

@@ -251,7 +251,7 @@ stack_move_type_below_client(MBClientTypeEnum wanted_type, Client *client)
 }
 
 void
-stack_move_transients_to_top(Wm *w, Client *client_trans_for)
+stack_move_transients_to_top(Wm *w, Client *client_trans_for, int flags)
 {
   /* This function shifts a clients transients to the top
    * of the stack keeping there respective order.   
@@ -260,9 +260,33 @@ stack_move_transients_to_top(Wm *w, Client *client_trans_for)
    *
    */
 
+  MBList *transient_list = NULL, *list_item = NULL;
+
+  client_get_transient_list(w, &transient_list, client_trans_for);
+      
+  list_enumerate(transient_list, list_item)
+    {
+      Client *cur = (Client *)list_item->data;
+      
+      if (flags && !(cur->flags & flags))
+	continue;
+
+      dbg("%s() moving %s to top (trans for %s)\n", 
+	  __func__, cur->name, 
+	  client_trans_for ? client_trans_for->name : "NULL" );
+
+      stack_move_top(cur);
+    }
+
+  list_destroy(&transient_list);
+
+
+#if 0
   Client *cur = NULL, *client_tmp = NULL, *fake_stack_top = NULL;
 
   cur = w->stack_bottom;
+
+  if (!cur) return;
 
   do
     {
@@ -270,6 +294,9 @@ stack_move_transients_to_top(Wm *w, Client *client_trans_for)
       client_tmp = cur->above; 
       if (cur->type == MBCLIENT_TYPE_DIALOG && cur->trans == client_trans_for)
 	{
+	  if (flags && !(cur->flags & flags))
+	    continue;
+
 	  stack_move_top(cur);
 	  // cur->show(cur);
 	  /* we never want to check above our initial raise */
@@ -278,6 +305,7 @@ stack_move_transients_to_top(Wm *w, Client *client_trans_for)
       cur = client_tmp;
     }
   while (cur != fake_stack_top);
+#endif
 
 }
 

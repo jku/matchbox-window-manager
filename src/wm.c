@@ -166,7 +166,7 @@ wm_new(int argc, char **argv)
    w->sn_mapping_list = NULL;
 #endif
 
-#ifdef USE_MSG_WIN
+#if 0
    w->msg_win_queue_head = NULL;
 #endif
 
@@ -219,12 +219,6 @@ wm_usage(char *progname)
    printf("\tStartup Notification support     yes\n");
 #else
    printf("\tStartup Notification support     no\n");
-#endif
-
-#ifdef USE_MSG_WIN
-   printf("\tMessage Window Support           yes\n");
-#else
-   printf("\tMessage Window Support           no\n");
 #endif
 
 #ifdef USE_EXPAT
@@ -670,7 +664,7 @@ wm_event_loop(Wm* w)
 	tvt.tv_sec = 1;
 #endif      
 
-#ifdef USE_MSG_WIN
+#if 0
       if (w->msg_win_queue_head)
 	tvt.tv_sec = 1;
 #endif
@@ -745,7 +739,7 @@ wm_event_loop(Wm* w)
 	    wm_sn_timeout_check (w);
 #endif      
 
-#ifdef USE_MSG_WIN
+#if 0
 	if (w->msg_win_queue_head)
 	  {
 	    wm_msg_win_queue_process (w);
@@ -914,7 +908,7 @@ wm_handle_keypress(Wm *w, XKeyEvent *e)
 
 	      current_cycle = w->sn_cycles;
 
-	      if (w->head_client)
+	      if (!stack_empty(w))
 		{
 		  while(current_cycle != NULL)
 		    {
@@ -1410,7 +1404,7 @@ wm_handle_client_message(Wm *w, XClientMessageEvent *e)
    /* Handle messages from mbcontrol */
    if (e->message_type == w->atoms[MB_COMMAND])
      {				
-       dbg("%s() mb command requested\n", __func__ );
+       dbg("%s() mb command requested %li\n", __func__, e->data.l[0] );
        switch (e->data.l[0])
 	 {
 #ifndef STANDALONE
@@ -1423,13 +1417,15 @@ wm_handle_client_message(Wm *w, XClientMessageEvent *e)
 	     int           status;
 	     char         *value = NULL;
 
+	     dbg("%s() atempting to switch theme\n", __func__ );
+
 	     status = XGetWindowProperty(w->dpy, w->root,
 					 w->atoms[_MB_THEME], 0L, 512L, False,
 					 AnyPropertyType, &realType,
 					 &format, &n, &extra,
 					 (unsigned char **) &value);
 	     
-	     if (status == Success && value != 0 && *value != 0 && n == 0)
+	     if (status == Success && value != NULL)
 	       {
 		 dbg("%s() switching theme to %s\n", __func__, value);
 		 mbtheme_switch(w, value);
@@ -1625,7 +1621,7 @@ wm_make_new_client(Wm *w, Window win)
 		   c = dialog_client_new(w, win, NULL);
 		   if (c == NULL) goto end;
 		 }
-#ifdef USE_MSG_WIN
+#if 0
 	       else if (value[0] == w->atoms[WINDOW_TYPE_MESSAGE])
 		 {
 		   
@@ -1698,6 +1694,7 @@ wm_make_new_client(Wm *w, Window win)
 			a possible parent                                  */
       {
 	 Client *p;
+	 dbg("%s() transient window not managed\n", __func__);
 	 if ((wmhints = XGetWMHints(w->dpy, win)) != NULL)
 	 {
 	    if (wmhints->window_group && !stack_empty(w))
@@ -1708,7 +1705,8 @@ wm_make_new_client(Wm *w, Window win)
 	    }
 	 }
       }
-      dbg("%s() Transient etc looks good, creating dialog\n", __func__);
+      dbg("%s() Transient ( %s) looks good, creating dialog\n", 
+	  __func__, t->name);
       if (!c)  /* if t is is NULL, dialog will always be visible */
 	c = dialog_client_new(w, win, t); 
       else if (c->type == MBCLIENT_TYPE_DIALOG) /* client already exists and is dialog  */
@@ -2107,18 +2105,39 @@ wm_activate_client(Client *c)
 
       /* Move transient dialogs to top */
 
-      client_get_transient_list(&transient_list, c);
+#if 0
+      client_get_transient_list(w, &transient_list, c);
       
       list_enumerate(transient_list, list_item)
 	{
 	  stack_move_top((Client *)list_item->data);
 	}
+#endif
 
-      list_destroy(&transient_list);
+      stack_move_transients_to_top(w, c, 0);
 
       /* Move transient for root dialogs to very top */
 
-      stack_move_transients_to_top(w, NULL);
+      stack_move_transients_to_top(w, NULL, 0);
+
+      /* Urgent dialogs go above transient for root  */
+
+      stack_move_transients_to_top(w, c, CLIENT_HAS_URGENCY_FLAG);
+
+#if 0
+      list_enumerate(transient_list, list_item)
+	{
+	  Client *cur = (Client *)list_item->data;
+	  if (cur->flags & CLIENT_HAS_URGENCY_FLAG)
+	    stack_move_top((Client *)list_item->data);
+	}
+#endif
+      /* Now move transient for root messages to top */
+
+      stack_move_transients_to_top(w, NULL, CLIENT_HAS_URGENCY_FLAG);
+
+
+      // list_destroy(&transient_list);
 
       /* Deal with desktop flag etc */
       if (c->type != MBCLIENT_TYPE_DESKTOP)
@@ -2784,7 +2803,7 @@ wm_sn_monitor_event_func (SnMonitorEvent *event,
     case SN_MONITOR_EVENT_COMPLETED:
       dbg("%s() SN_MONITOR_EVENT_COMPLETED\n", __func__ );
 
-      if (w->head_client)
+      if (!stack_empty(w))
 	{
 
 	  stack_enumerate(w, p)
@@ -2828,7 +2847,7 @@ wm_lowlight(Wm *w, Client *c)
   Pixmap pxm_tmp;
   XSetWindowAttributes attr;
 
-#ifdef USE_MSG_WIN
+#if 0
   Client *msg_client = NULL;
 
   if (w->msg_win_queue_head)
@@ -2893,112 +2912,6 @@ wm_lowlight(Wm *w, Client *c)
   XFreePixmap(w->dpy, pxm_tmp);
 
 #endif
-}
-#endif
-
-#ifdef USE_MSG_WIN
-
-void
-wm_msg_win_queue_add(Wm *w, Window win)
-{
-  MsgWinQueue *tmp = w->msg_win_queue_head;
-  int timeout;
-
-  Atom type;
-  int format;
-  long bytes_after;
-  int *data = NULL;
-  long n_items;
-  int result;
-
-  result =  XGetWindowProperty (w->dpy, win, 
-				w->atoms[WINDOW_TYPE_MESSAGE_TIMEOUT],
-				0, 1L,
-				False, XA_CARDINAL,
-				&type, &format, &n_items,
-				&bytes_after, (unsigned char **)&data);
-
-  if (result != Success || data == NULL)
-    {
-      timeout = -1; 		/* No timeout */
-    }
-  else timeout = data[0];
-    
-  if (data) XFree (data);
-
-  dbg("%s() timeout is %i\n", __func__, timeout);
-
-  if (w->msg_win_queue_head == NULL)
-    {
-      dbg("%s() message queue is empty, adding new head\n", __func__);
-      w->msg_win_queue_head = malloc(sizeof(MsgWinQueue));
-      memset(w->msg_win_queue_head, 0, sizeof(MsgWinQueue));
-
-      w->msg_win_queue_head->win = win;
-      w->msg_win_queue_head->timeout = timeout;
-      return;
-    }
-  
-  dbg("%s() queue has items, adding to back \n", __func__);
-
-  while (tmp->next != NULL) tmp = tmp->next;
-
-  tmp->next = malloc(sizeof(MsgWinQueue));
-  memset(tmp->next, 0, sizeof(MsgWinQueue));
-  tmp->next->win = win;
-  tmp->next->timeout = timeout;
-}
-
-
-void
-wm_msg_win_queue_pop(Wm *w)
-{
-  MsgWinQueue *tmp;
-
-  dbg("%s() called\n", __func__);
-
-  if (w->msg_win_queue_head == NULL) return;
-
-  tmp = w->msg_win_queue_head;
-
-  w->msg_win_queue_head = w->msg_win_queue_head->next;
-
-  free(tmp);
-
-  if (w->msg_win_queue_head)
-    {
-      XWindowAttributes doh_attr;
-      if (XGetWindowAttributes(w->dpy, w->msg_win_queue_head->win, &doh_attr))
-	{
-	  wm_make_new_client(w, w->msg_win_queue_head->win);
-	}
-      else /* Eek window no longer exists  */
-	{
-	  wm_msg_win_queue_pop(w); /* so pop again */
-	}
-    }
-}
-
-
-void
-wm_msg_win_queue_process(Wm *w)
-{
-  Client      *client_msg = NULL;
-  if (w->msg_win_queue_head == NULL) return;
-
-  /*
-  dbg("%s() queue head has timeout %i\n", 
-      __func__, w->msg_win_queue_head->timeout );
-  */
-
-  if (w->msg_win_queue_head->timeout > 0) w->msg_win_queue_head->timeout--;
-
-  if (w->msg_win_queue_head->timeout == 0) 
-    if ((client_msg = wm_find_client(w, w->msg_win_queue_head->win, 
-				     WINDOW)) != NULL)
-      {
-	wm_remove_client(w, client_msg);
-      }
 }
 #endif
 

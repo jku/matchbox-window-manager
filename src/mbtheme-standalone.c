@@ -622,7 +622,7 @@ theme_frame_menu_paint(MBTheme* theme, Client *c)
    theme_frame_paint( theme, c, FRAME_MENU, 0, 0, c->width, c->height);
 
    stack_enumerate(c->wm,p)
-      if (p->type == mainwin && p->name
+      if (p->type == MBCLIENT_TYPE_APP && p->name
 	  && client_get_state(p) == NormalState )
       {
 	_theme_frame_menu_paint_text_entry(theme, c, p, item_current_y);
@@ -630,7 +630,7 @@ theme_frame_menu_paint(MBTheme* theme, Client *c)
       }
 
    stack_enumerate(c->wm,p)
-      if (p->type == mainwin && p->name
+      if (p->type == MBCLIENT_TYPE_APP && p->name
 	  && client_get_state(p) == IconicState )
       {
 	_theme_frame_menu_paint_text_entry(theme, c, p, item_current_y);
@@ -652,9 +652,10 @@ theme_frame_menu_get_dimentions(MBTheme* theme, int* w, int *h)
 
   space_avail = theme->wm->dpy_width - 16;
 
-  stack_enumerate(theme->wm, p);   
+  stack_enumerate(theme->wm, p) 
   {
-    if ((p->type == mainwin || p->type == desktop) && p->name)
+    if ((p->type == MBCLIENT_TYPE_APP || p->type == MBCLIENT_TYPE_DESKTOP) 
+	&& p->name)
       {
 	unsigned char *name = p->name;
 	 

@@ -69,6 +69,8 @@ dialog_client_new(Wm *w, Window win, Client *trans)
 
    dialog_client_check_for_state_hints(c);
 
+   c->trans = trans;
+
    return c;
 }
 
@@ -82,8 +84,7 @@ dialog_client_get_offsets(Client *c, int *e, int *s, int *w)
       return;
     }
 
-#ifdef USE_MSG_WIN
-  if (c->flags & CLIENT_IS_MESSAGE_DIALOG)
+  if (c->flags & CLIENT_HAS_URGENCY_FLAG)
     {
       *s = theme_frame_defined_height_get(c->wm->mbtheme, 
 				       FRAME_MSG_SOUTH);
@@ -93,7 +94,6 @@ dialog_client_get_offsets(Client *c, int *e, int *s, int *w)
 					 FRAME_MSG_WEST );
       return;
     }
-#endif 
 
    *s = theme_frame_defined_height_get(c->wm->mbtheme, 
 				       FRAME_DIALOG_SOUTH);
@@ -207,12 +207,10 @@ dialog_client_title_height(Client *c)
    if (c->flags & CLIENT_TITLE_HIDDEN_FLAG)
       return 0;
 
-#ifdef USE_MSG_WIN
-  if (c->flags & CLIENT_IS_MESSAGE_DIALOG)
+  if (c->flags & CLIENT_HAS_URGENCY_FLAG)
     {
       return theme_frame_defined_height_get(c->wm->mbtheme, FRAME_MSG);
     }
-#endif
 
   if (c->flags & CLIENT_BORDERS_ONLY_FLAG
       && theme_has_frame_type_defined(c->wm->mbtheme, FRAME_DIALOG_NORTH))    
@@ -225,6 +223,7 @@ dialog_client_title_height(Client *c)
 void
 dialog_client_show(Client *c)
 {
+  Wm *w = c->wm;
   Client *highest_client = NULL;
   MBList *transient_list = NULL, *list_item = NULL;
 
@@ -232,8 +231,8 @@ dialog_client_show(Client *c)
 
   if (!c->mapped)
     {
-      XMapSubwindows(c->wm->dpy, c->frame);
-      XMapWindow(c->wm->dpy, c->frame);
+      XMapSubwindows(w->dpy, c->frame);
+      XMapWindow(w->dpy, c->frame);
     }
 
   /* 
@@ -250,13 +249,14 @@ dialog_client_show(Client *c)
        * - so recursives find the highest transient for this app
        * - raise ourselves above 
        */
-
       Client *lowest_trans = c->trans;
+      int urgent_flag = (c->flags & CLIENT_HAS_URGENCY_FLAG) ?
+	CLIENT_HAS_URGENCY_FLAG : 0;
 
       while (lowest_trans->trans != NULL) 
 	lowest_trans = lowest_trans->trans;
 
-      highest_client = client_get_highest_transient(lowest_trans);
+      highest_client = client_get_highest_transient(lowest_trans, urgent_flag);
 
       if (c->mapped && highest_client == c)
 	{
@@ -285,9 +285,9 @@ dialog_client_show(Client *c)
   else
     stack_move_top(c);
 
-  /* Now move any transients for use above */
+  /* Now move any transients for us above us */
 
-  client_get_transient_list(&transient_list, c);
+  client_get_transient_list(w, &transient_list, c);
  
   highest_client = c;
 
@@ -299,6 +299,11 @@ dialog_client_show(Client *c)
 
   list_destroy(&transient_list);
 
+  if (wm_get_visible_main_client(w))
+    stack_move_transients_to_top(w, wm_get_visible_main_client(w), 
+				 CLIENT_HAS_URGENCY_FLAG);
+
+  stack_move_transients_to_top(w, NULL, CLIENT_HAS_URGENCY_FLAG);
 
 #if 0
 
@@ -321,7 +326,7 @@ dialog_client_show(Client *c)
 
   comp_engine_client_show(c->wm, c);
 
-#ifdef USE_MSG_WIN 	
+#if 0 	
   if (c->flags & CLIENT_IS_MESSAGE_DIALOG_LO)
     {      Client *t = NULL;
 
@@ -461,7 +466,7 @@ dialog_get_available_area(Client *c,
   Wm *w = c->wm;
 
   if (c->flags & CLIENT_TITLE_HIDDEN_FLAG 
-      || c->flags & CLIENT_IS_MESSAGE_DIALOG)
+      || c->flags & CLIENT_HAS_URGENCY_FLAG)
     {
       /* Decorationless dialogs can position themselves anywhere */
       *y = 0; *x = 0; *height = w->dpy_height; *width = w->dpy_width;
@@ -525,7 +530,7 @@ dialog_check_geometry(Client *c,
   if (c->flags & CLIENT_TITLE_HIDDEN_FLAG)
     return True;
 
-  if (c->flags & CLIENT_IS_MESSAGE_DIALOG)
+  if (c->flags & CLIENT_HAS_URGENCY_FLAG)
     return True;
 
   dialog_get_available_area(c,&avail_x, &avail_y, &avail_width, &avail_height);
@@ -626,7 +631,7 @@ dialog_init_geometry(Client *c)
   /* Message Dialogs are free to postion/size where ever but can use totally  
    * offscreen request to position to window corners - see below
    */
-  if (c->flags & CLIENT_IS_MESSAGE_DIALOG)
+  if (c->flags & CLIENT_HAS_URGENCY_FLAG)
     {
       int win_width  = c->width + bdr_east;
       int win_height = c->height + bdr_south;
@@ -718,7 +723,7 @@ dialog_client_redraw(Client *c, Bool use_cache)
     frame_ref_top   = FRAME_DIALOG_NORTH;
 
   /* 'message dialogs have there own decorations */
-  if (c->flags & CLIENT_IS_MESSAGE_DIALOG)
+  if (c->flags & CLIENT_HAS_URGENCY_FLAG)
     {
       frame_ref_top   = FRAME_MSG;
       frame_ref_east  = FRAME_MSG_EAST;
@@ -762,7 +767,7 @@ dialog_client_redraw(Client *c, Bool use_cache)
 
   /* We dont paint buttons for borderonly and message dialogs */
   if (!(c->flags & CLIENT_BORDERS_ONLY_FLAG
-	|| c->flags & CLIENT_IS_MESSAGE_DIALOG))
+	|| c->flags & CLIENT_HAS_URGENCY_FLAG))
     {
 
       theme_frame_button_paint(c->wm->mbtheme, c, 
@@ -857,8 +862,6 @@ dialog_client_button_press(Client *c, XButtonEvent *e)
   Wm *w = c->wm;
   int offset_north = dialog_client_title_height(c);
   int offset_south = 0, offset_west = 0, offset_east = 0;
-
-  if (c->flags & CLIENT_IS_MESSAGE_DIALOG) return;
 
   dialog_client_get_offsets(c, &offset_east, &offset_south, &offset_west);
 
@@ -1062,7 +1065,7 @@ dialog_client_drag(Client *c) /* drag box */
 	
 	c->show(c);
 	
-#ifdef USE_MSG_WIN
+#if 0
 	/* Check for message super above dialogs */
 	START_CLIENT_LOOP(c->wm, t)
 	  {
@@ -1119,7 +1122,7 @@ void dialog_client_destroy(Client *c)
 {
   Wm     *w = c->wm; 
   Client *d = NULL;
-#ifdef USE_MSG_WIN
+#if 0
   int was_msg = (c->flags & CLIENT_IS_MESSAGE_DIALOG
 		 && !(c->flags & CLIENT_IS_MESSAGE_DIALOG_HI)
 		 && !(c->flags & CLIENT_IS_MESSAGE_DIALOG_LO));
@@ -1161,7 +1164,7 @@ void dialog_client_destroy(Client *c)
     }
 #endif
 
-#ifdef USE_MSG_WIN
+#if 0
 
    if (was_msg) 
      {
