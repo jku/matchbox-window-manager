@@ -944,8 +944,23 @@ dialog_client_button_press(Client *c, XButtonEvent *e)
 		  }
 		
 		XUngrabPointer(w->dpy, CurrentTime); 
+
+		/* For some odd reason the above make focus get 
+                 * lost ( for gtk apps at least ). We therefore
+                 * reset it.
+                 * ( we have to set focused client to NULL for set_focus()
+                 *   logic to work :( may a re_focus() is better ).
+		*/
+		if (w->focused_client == c)
+		  {
+		    w->focused_client = NULL;
+		    client_set_focus(c);
+		  }
+
 		XSync(w->dpy, False);
 	      }
+
+	    
 
 	    return;
 	  }

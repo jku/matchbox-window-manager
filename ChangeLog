@@ -1,3 +1,9 @@
+2005-02-28  mallum,,,  <mallum@openedhand.com>
+
+	* src/dialog_client.c: (dialog_client_button_press):
+	Fix for static mode dialogs losing focus when hidden via title
+	bar click.
+
 2005-02-23  mallum,,,  <mallum@openedhand.com>
 
 	* src/keys.c: (keys_add_entry), (keys_load_config):
