@@ -1084,13 +1084,18 @@ void
 dialog_client_iconize(Client *c)
 {
   Wm     *w = c->wm; 
-  Client *d = NULL;
+  Client *d = NULL, *p = NULL;
 
   client_set_state(c, IconicState);
   c->flags |= CLIENT_IS_MINIMIZED;
   c->mapped = False;
   XUnmapWindow(w->dpy, c->frame); 
-  
+
+  /* Make sure any transients get iconized too */  
+  stack_enumerate(w, p)
+    if (p->trans == c)
+      p->iconize(p);
+
   if ((d = dialog_client_set_focus_next(d)) != NULL)
     wm_activate_client(d);
 }

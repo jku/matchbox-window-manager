@@ -718,9 +718,16 @@ main_client_hide(Client *c)
 void
 main_client_iconize(Client *c)
 {
+  Wm *w = c->wm;
+  Client *p = NULL;
+
   client_set_state(c, IconicState);
   c->flags |= CLIENT_IS_MINIMIZED;
-  main_client_unmap(c);
+
+  /* Make sure any transients get iconized too */
+  stack_enumerate(w, p)
+    if (p->trans == c)
+      p->iconize(p);
 }
 
 void
