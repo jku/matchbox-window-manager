@@ -1,3 +1,10 @@
+2005-01-17  mallum,,,  <mallum@openedhand.com>
+
+	* src/ewmh.c: (ewmh_handle_root_message):
+	* src/wm.c: (wm_handle_configure_request):
+	Allow window stacking changes for dialogs vai _NET_STATE_ABOVE
+	changing and a window raising itself. 
+
 2005-01-14  mallum,,,  <mallum@openedhand.com>
 
 	* data/kbdconfig:

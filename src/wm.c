@@ -1203,6 +1203,8 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
    int             req_w      = e->width;
    int             req_h      = e->height;
 
+   Bool            want_activate = False;
+
    /* TODO: Double check ICCCM on this code. 
     *       see http://tronche.com/gui/x/icccm/sec-4.html#s-4.1.5
     *       Only send synthetic configure notify on no change.
@@ -1250,23 +1252,30 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
        /* e->above  is sibling 
         * e->detail is stack_mode 
 	*/
-#ifdef DEBUG
+
        Client *sibling = wm_find_client(w, e->window, WINDOW);
 
-       dbg("%s() value_mask & (CWSibling|CWStackMode) sibling is %s\n",
-	   __func__, sibling ? sibling->name : "unkown" );
+       dbg("%s() value_mask & (CWSibling|CWStackMode) sibling is %s (%li vs %li\n",
+	   __func__, sibling ? sibling->name : "unkown", e->window, c->window );
 
        if (sibling)
 	 {
 	   switch (e->detail)
 	     {
 	     case Above:
+
 	       dbg("%s() (CWSibling|CWStackMode) above %s\n",
 		   __func__, sibling->name);
+
+	       /* Dialog 'above its self, call activate to raise it */
+	       if (sibling == c && c->type == MBCLIENT_TYPE_DIALOG)
+		   want_activate = True;
 	       break;
 	     case Below:
 	       dbg("%s() (CWSibling|CWStackMode) below %s\n",
 		   __func__, sibling->name);
+	       /* Unsupported currently clear flags */
+	       value_mask &= ~(CWSibling|CWStackMode);
 	       break;
 	     case TopIf:    	/* What do these mean ? */
 	     case BottomIf: 
@@ -1274,13 +1283,14 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 	     default:
 	       dbg("%s() (CWSibling|CWStackMode) uh? %s\n",
 		   __func__, sibling->name);
+	       /* Unsupported currently clear flags */
+	       value_mask &= ~(CWSibling|CWStackMode);
 	       break;
 
 	     }
 	 }
-#endif       
-       /* Just clear the flags now to be safe */
-       value_mask &= ~(CWSibling|CWStackMode);
+       else /* Just clear the flags now to be safe */
+	 value_mask &= ~(CWSibling|CWStackMode);
      }
 
    if (c->type == MBCLIENT_TYPE_PANEL) 	/* Panels can move */
@@ -1345,7 +1355,8 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
        /* If any changes, now make them fit it into avaialable area. */
 
        if (req_x != c->x || req_y != c->y 
-	   || req_w != c->width || req_h != c->height)
+	   || req_w != c->width || req_h != c->height
+	   || want_activate)
 	 {
 	   Bool want_fake_configure = False;
 	   
@@ -1371,6 +1382,13 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 	    */
 	   if (want_fake_configure)
 	     client_deliver_config(c);
+
+	   /* Client wants to be raised to top of stack */
+	   if (want_activate)
+	     {
+	       dbg("%s(): calling activate client\n", __func__);
+	       wm_activate_client(c);
+	     }
 	   
 	   dialog_client_move_resize(c);
 	   dialog_client_redraw(c, False);

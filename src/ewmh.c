@@ -205,6 +205,25 @@ ewmh_handle_root_message(Wm *w, XClientMessageEvent *e)
 	       break;
 	     }
 	 }
+       else if (e->data.l[1] == w->atoms[WINDOW_STATE_ABOVE]
+		&& ((c = wm_find_client(w, e->window, WINDOW)) != NULL)
+		&& c->type == MBCLIENT_TYPE_DIALOG)
+	 {
+	   dbg("got EWMH above state change\n");
+	   switch (e->data.l[0])
+	     {
+	     case _NET_WM_STATE_REMOVE:
+	       c->flags &= ~CLIENT_HAS_ABOVE_STATE;
+	       break;
+	     case _NET_WM_STATE_ADD:
+	       c->flags |= CLIENT_HAS_ABOVE_STATE;
+	       break;
+	     case _NET_WM_STATE_TOGGLE:
+	       c->flags ^= CLIENT_HAS_ABOVE_STATE;
+	       break;
+	     }
+	   wm_activate_client(c);
+	 }
        return 1;
      } 
    else if (e->message_type == w->atoms[_NET_SHOW_DESKTOP]
