@@ -387,13 +387,29 @@ dialog_client_configure(Client *c)
   int offset_south = 0, offset_west = 0, offset_east = 0, offset_north = 0;
 
   /* Check if we actually want to perform any sizing intervention */
-  if (c->wm->config->dialog_stratergy == WM_DIALOGS_STRATERGY_FREE
-      || (c->flags & CLIENT_IS_MESSAGE_DIALOG))
+  if (c->wm->config->dialog_stratergy == WM_DIALOGS_STRATERGY_FREE)
     return;
 
   /* Figure out window border offsets */
   dialog_client_get_offsets(c, &offset_east, &offset_south, &offset_west);
   offset_north = dialog_client_title_height(c);
+
+  /* Message Dialogs are free to postion/size where ever but can use totally  
+   * offscreen request to position to window corners - see below
+   */
+  if (c->flags & CLIENT_IS_MESSAGE_DIALOG)
+    {
+      int total_win_width  = c->width + offset_east + offset_west;
+      int total_win_height = c->height + offset_south + offset_north;
+
+      if (c->x > c->wm->dpy_width) 
+	c->x = c->wm->dpy_width - total_win_width - (c->x - c->wm->dpy_width );
+
+      if (c->y > c->wm->dpy_height) 
+	c->y = c->wm->dpy_height - total_win_height - (c->y - c->wm->dpy_height );
+      return;
+    }
+
 
   /* Check window has decoration */
   if (!(c->flags & CLIENT_TITLE_HIDDEN_FLAG))
