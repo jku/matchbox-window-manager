@@ -47,7 +47,9 @@ client_get_state(Client *c)
   int           real_format;
   unsigned long items_read, items_left;
   long         *data = NULL, state = WithdrawnState;
-  
+
+  misc_trap_xerrors(); 
+
   if (XGetWindowProperty(w->dpy, c->window,
 			 w->atoms[WM_STATE], 0L, 2L, False,
 			 w->atoms[WM_STATE], &real_type, &real_format,
@@ -55,6 +57,9 @@ client_get_state(Client *c)
 			 (unsigned char **) &data) == Success
       && items_read)
     state = *data;
+
+  if (misc_untrap_xerrors()) 	/* Just in case */
+    state = WithdrawnState; 
 
   if (data)
     XFree(data);
