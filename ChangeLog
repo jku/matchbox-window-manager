@@ -1,3 +1,8 @@
+2005-01-07  mallum,,,  <mallum@openedhand.com>
+
+	* src/mbtheme.c: (mbtheme_switch):
+	Fix Segv for changing theme with no managed clients.
+
 2005-01-06  mallum,,,  <mallum@openedhand.com>
 
 	* src/mbtheme.c: (theme_frame_icon_paint),

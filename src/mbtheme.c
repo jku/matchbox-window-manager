@@ -2399,7 +2399,7 @@ mbtheme_switch (Wm   *w,
 	}
     }
 
-  stack_enumerate(c->wm, p)
+  stack_enumerate(w, p)
     {
       client_buttons_delete_all(p);
       
