@@ -1,5 +1,12 @@
 2005-01-21  mallum,,,  <mallum@openedhand.com>
 
+	* data/themes/Default/theme.xml:
+	offset shadow a little more.
+	* src/wm.c: (wm_handle_client_message):
+	debug statement added for toggling compositor.
+
+2005-01-21  mallum,,,  <mallum@openedhand.com>
+
 	* src/dialog_client.c: (dialog_client_button_press):
 	Only hide dialog in static mode if title bar clicked, not
 	side/bottom decorations.

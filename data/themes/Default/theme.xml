@@ -244,6 +244,6 @@
 
 </frame>
 
-<shadow style="simple" dx="2" dy="2" color="shadowcol"/>
+<shadow style="simple" dx="3" dy="3" color="shadowcol"/>
 
 </theme>
