@@ -1,3 +1,9 @@
+2004-06-04  Matthew Allum,,,  <mallum@handhelds.org>
+
+	* src/mbtheme.c: (_theme_paint_core):
+	Clip pixmap image if calculated dimentions bigger than
+	are to be painted on. Attempted fix for bug #81
+
 2004-06-03  Matthew Allum,,,  <mallum@handhelds.org>
 
 	* src/dialog_client.c: (dialog_client_drag):

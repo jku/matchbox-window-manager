@@ -473,6 +473,10 @@ _theme_paint_core( MBTheme *theme, Client *c, MBThemeFrame *frame,
       y = param_get(frame, layer_cur->y, dh);
       w = param_get(frame, layer_cur->w, dw);
       h = param_get(frame, layer_cur->h, dh);
+
+      /* Clip if calculated sizes are bigger than dest */
+      if (w > dw) w = dw;
+      if (h > dh) h = dh;
 	
       if ( layer_list_item->id == LAYER_PIXMAP 
 	   || layer_list_item->id == LAYER_PIXMAP_TILED)
