@@ -1,7 +1,15 @@
+2004-04-05  Matthew Allum,,,  <mallum@openedhand.com>
+
+	* configure.ac:
+	Add support for test builds with gconf/gprof
+	Clean up the configure --help output 
+
 2004-03-26  Matthew Allum,,,  <mallum@openedhand.com>
 
 	* src/dialog_client.c: (dialog_client_drag):
 	Fix underlying apps getting expose for invisable dialog drag.
+
+2004-03-22 matchbox-panel-0.8.1 released released tag: RELEASE_0_8_1
 
 2004-03-22  Matthew Allum,,,  <mallum@handhelds.org>
 

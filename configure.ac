@@ -22,49 +22,59 @@ SUPPORTS_XSETTINGS=0
 dnl ----- Args -------------------------------------------------------------
 
 AC_ARG_ENABLE(standalone-xft,
-  [  --enable-standalone-xft   enable standalone build ( with Xft font), [default=no]],
+  [  --enable-standalone-xft       enable standalone build ( with Xft font), [default=no]],
   enable_standalone_xft=$enableval, enable_standalone_xft=no)
 
 AC_ARG_ENABLE(standalone,
-  [  --enable-standalone       enable standalone build.],
+  [  --enable-standalone           enable standalone build.],
   enable_standalone=$enableval, enable_standalone=no)
 
 AC_ARG_ENABLE(composite,
-  [  --enable-composite        enable composite support.],
+  [  --enable-composite            enable composite support.],
   enable_composite=$enableval, enable_composite=no)
 
 AC_ARG_ENABLE(startup_notification,
-  [  --enable-startup-notification   enable startup notification support],
+  [  --enable-startup-notification enable startup notification support],
      enable_startup_notification=$enableval, enable_startup_notification=no )
 
-AC_ARG_ENABLE(debug,
-  [  --enable-debug    enable debug ( verbose ) build],
-     enable_debug=$enableval, enable_debug=no )
-
 AC_ARG_ENABLE(expat,
-  [  --enable-expat    enable expat XML parser support],
+  [  --enable-expat                enable expat XML parser support],
      enable_expat=$enableval, enable_expat=no )
 
 AC_ARG_WITH(expat-includes,    
-	[  --with-expat-includes=DIR     Use Expat includes in DIR], 
+  [  --with-expat-includes=DIR     Use Expat includes in DIR], 
 	   expat_includes=$withval, expat_includes=yes)
 
 AC_ARG_WITH(expat-lib,         
-	[  --with-expat-lib=DIR          Use Expat library in DIR], 
+  [  --with-expat-lib=DIR          Use Expat library in DIR], 
 	   expat_lib=$withval, expat_lib=yes)
 
 AC_ARG_ENABLE(gconf,
-  [  --enable-gconf    enable gconf support],
+  [  --enable-gconf                enable gconf support],
      enable_gconf=$enableval, enable_gconf=no )
 
 AC_ARG_ENABLE(keyboard,
-[  --disable-keyboard    disable keyboard support [default=no]],
+  [  --disable-keyboard            disable keyboard support [default=no]],
    		enable_keyboard=$enableval, 
 		enable_keyboard=yes)
 
 AC_ARG_ENABLE(message_wins,
-  [  --enable-message-wins enable 'message' window support ( see docs )],
+  [  --enable-message-wins         enable 'message' window support ( see docs )],
   enable_message_wins=$enableval, enable_message_wins=no)
+
+AC_ARG_ENABLE(debug,
+  [  --enable-debug                enable debug ( verbose ) build],
+     enable_debug=$enableval, enable_debug=no )
+
+AC_ARG_ENABLE(gcov,
+  [  --enable-gcov                 enable gcov coverage ( testing only ) build],
+     enable_gcov=$enableval, enable_gcov=no )
+
+AC_ARG_ENABLE(gprof,
+  [  --enable-gprof                enable gprof profiler ( testing only ) build],
+     enable_gprof=$enableval, enable_gprof=no )
+
+
 
 
 dnl ---- Check we can find libmb 
@@ -313,8 +323,28 @@ fi
 dnl ------ GCC flags --------------------------------------------------------
 
 if test "x$GCC" = "xyes"; then
-        GCC_WARNINGS="-g -Wall -fno-strict-aliasing"
-        LIBMB_CFLAGS="$GCC_WARNINGS $LIBMB_CFLAGS"
+
+   if test x$enable_gprof = xyes; then
+         GCC_WARNINGS="$GCC_WARNINGS -pg"
+	 AC_MSG_RESULT([Enabling gprof Support.])	
+   fi	 
+
+   if test x$enable_gcov = xyes; then
+         GCC_WARNINGS="$GCC_WARNINGS -fprofile-arcs -ftest-coverage"
+	 AC_MSG_RESULT([Enabling gcov Support.])	
+   fi	 
+
+   GCC_WARNINGS="-g -Wall -fno-strict-aliasing $GCC_WARNINGS"
+   LIBMB_CFLAGS="$GCC_WARNINGS $LIBMB_CFLAGS"
+
+else
+   if test x$enable_gprof = xyes; then
+      AC_MSG_WARN([*** Need gcc compiler for gprof support])
+   fi
+
+   if test x$enable_gcov = xyes; then
+      AC_MSG_WARN([*** Need gcc compiler for gcov support])
+   fi
 fi
 
 
@@ -375,6 +405,8 @@ echo "
         compiler:               ${CC} ${X_LIBS}
 
         Building with Debug:                ${enable_debug}
+        Building with gcov:                 ${enable_gcov}
+        Building with gprof:                ${enable_gprof}
 
         Building Standalone:                ${enable_standalone}
         Building Standalone with Xft:       ${enable_standalone_xft}
