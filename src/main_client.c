@@ -14,7 +14,7 @@
 */
 
 /*
-  $Id: main_client.c,v 1.8 2004/08/21 11:46:19 mallum Exp $
+  $Id: main_client.c,v 1.9 2004/08/30 16:59:36 mallum Exp $
 */
 
 #include "main_client.h"
@@ -104,9 +104,30 @@ main_client_manage_toolbars_for_fullscreen(Client *c, Bool main_client_showing)
 	  if (p->type == toolbar && p->mapped) 
 	    {
 	      if (main_client_showing)
-		p->y += south_panel_size; 
+		{
+		  p->y += south_panel_size; 
+
+		  /* cover vertical panels */
+		  p->x = toolbar_win_offset(p);
+		  p->width = w->dpy_width - toolbar_win_offset(p);
+		}
 	      else
-		p->y -= south_panel_size; 
+		{
+		  /* uncover any vertical panels */
+		  p->x = toolbar_win_offset(p) 
+		    + wm_get_offsets_size(w, WEST,  NULL, False);
+		  p->width = w->dpy_width - toolbar_win_offset(c)
+		    - wm_get_offsets_size(w, WEST,  NULL, False)
+		    - wm_get_offsets_size(w, EAST,  NULL, False);
+
+		  p->y -= south_panel_size; 
+
+		  /* seems like below is sometimes needed but why ?
+		  client_buttons_delete_all(c);
+		  c->redraw(c, False);
+		  */
+		}
+
 	      p->move_resize(p);
 	      XMapRaised(w->dpy, p->frame);
 	    }
