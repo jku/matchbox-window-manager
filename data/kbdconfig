@@ -12,7 +12,7 @@
 <Alt>p=prev
 <Alt>c=close
 <Alt>d=desktop
-<Alt>m=!mbcontrol -mbmenu
+<Alt>m=!matchbox-remote -mbmenu
 
 ### App launching.
 
@@ -29,7 +29,7 @@
 <alt><shift>Tab=prev
 
 <alt>space=taskmenu
-<alt>escape=!mbcontrol -mbmenu
+<alt>escape=!matchbox-remote -mbmenu
 <alt>f4=close
 
 f11=fullscreen
@@ -42,6 +42,6 @@ f11=fullscreen
 
 ### Special keys, likely probably only available on extended keyboards. 
 
-#App=!mbcontrol -mbmenu
-#Menu=!mbcontrol -mbmenu
+#App=!matchbox-remote -mbmenu
+#Menu=!matchbox-remote -mbmenu
 

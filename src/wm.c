@@ -269,7 +269,7 @@ wm_usage(char *progname)
    printf("\tXRM support                      no\n");
 #endif
 
-   printf("\nVisit http://matchbox.handhelds.org for more info.\n");
+   printf("\nVisit http://projects.o-hand.com/matchbox for more info.\n");
    printf("(c) 2004 OpenedHand Ltd\n");
    exit(0);
 }
@@ -406,7 +406,7 @@ wm_load_config (Wm   *w,
    if ((w->dpy = XOpenDisplay(w->config->display_name)) == NULL) 
      {
        fprintf(stderr, 
-	       "matchbox: can't open display! check your DISPLAY variable.\n");
+	       "matchbox-wm: can't open display! check your DISPLAY variable.\n");
        exit(1);
      }
 }

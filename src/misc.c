@@ -89,7 +89,7 @@ handle_xerror(Display *dpy, XErrorEvent *e)
       {
         char msg[255];
         XGetErrorText(dpy, e->error_code, msg, sizeof msg);
-        fprintf(stderr, "matchbox: X error warning (%#lx): %s (opcode: %i)\n",
+        fprintf(stderr, "matchbox-wm: X error warning (%#lx): %s (opcode: %i)\n",
 		e->resourceid, msg, e->request_code);
       }
 

@@ -2461,7 +2461,7 @@ mbtheme_init (Wm   *w,
   
   if (!file_exists(theme_filename))
     {
-      fprintf(stderr, "matchbox: unable to open theme: %s\n", 
+      fprintf(stderr, "matchbox-wm: unable to open theme: %s\n", 
 	      theme_filename); 
       /* If the defualt is not openable either - give up :( */
       if (!file_exists(DEFAULTTHEME)) exit(1);
@@ -2493,13 +2493,13 @@ mbtheme_init (Wm   *w,
 
   if (root_node == NULL)
     {
-     fprintf(stderr, "Failed to parse theme file: %s\n", 
+     fprintf(stderr, "matchbox-wm: Failed to parse theme file: %s\n", 
 	     theme_filename);
-     fprintf(stderr, "Please check this file contains valid XML\n") ;
+     fprintf(stderr, "matchbox-wm: Please check this file contains valid XML\n") ;
 
      if (!strncmp(theme_filename, DEFAULTTHEME, 255))
        exit(1); 		    /* give up, the defualt theme is corrupt */
-     fprintf(stderr, "matchbox: switching to default\n");
+     fprintf(stderr, "matchbox-wm: switching to default\n");
      xml_parser_free(parser, root_node); 
      return mbtheme_init (w, NULL); /* try again with defualt */
    }
@@ -2508,7 +2508,7 @@ mbtheme_init (Wm   *w,
    if (!get_attr(root_node, "engine_version")
        || (strcmp(get_attr(root_node, "engine_version"), "1") != 0))
      {
-       fprintf(stderr, "matchbox: %s is not valid for this version of matchbox.\n", theme_filename );
+       fprintf(stderr, "matchbox-wm: %s is not valid for this version of matchbox.\n", theme_filename );
        if (!strncmp(theme_filename, DEFAULTTHEME, 255))
 	 exit(1); 	   /* give up, the defualt theme is corrupt */
        fprintf(stderr, "matchbox: switching to default\n");
