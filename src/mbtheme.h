@@ -176,6 +176,10 @@ typedef struct _mbtheme {
   char           subst_char;
   MBPixbufImage *subst_img;
 
+  /* App side decoration pixmap cache */
+
+  Pixmap app_win_pxm_cache[3];
+
   struct _wm    *wm;
    
 } MBTheme;

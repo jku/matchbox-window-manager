@@ -1,3 +1,17 @@
+2004-12-14  mallum <mallum@openedhand.com>
+
+	* src/mbtheme.c: (theme_frame_paint),
+	(theme_frame_defined_width_get), (theme_frame_defined_height_get),
+	(theme_img_cache_clear), (theme_img_cache_clear_all),
+	(parse_shadow_tag), (mbtheme_new):
+	* src/mbtheme.h:
+	* src/structs.h:
+	Implement a new pixmap cache that caches pixmaps for east/west/south
+	app window decorations. 
+
+	* src/wm.c: (wm_handle_configure_notify):
+	Clear *all* caches or a display size change/rotation 
+
 2004-12-10  mallum <mallum@openedhand.com>
 
 	* src/base_client.c: (base_client_destroy):

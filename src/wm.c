@@ -918,8 +918,8 @@ wm_handle_button_event(Wm *w, XButtonEvent *e)
 	     c->next_focused_client = NULL;
 	 }
 
-       XAllowEvents(w->dpy, ReplayPointer, CurrentTime);
        /* forward grabbed events */
+       XAllowEvents(w->dpy, ReplayPointer, CurrentTime);
 
        return;
      }
@@ -1094,8 +1094,8 @@ wm_handle_configure_notify(Wm *w, XConfigureEvent *e)
 	
 	XGrabServer(w->dpy);
 
-	/* Clear any caches so decorations get redrawn */
-	theme_img_cache_clear( w->mbtheme, FRAME_MAIN );
+	/* Clear all caches so everything gets redrawn ok */
+	theme_img_cache_clear_all( w->mbtheme );
 
 	stack_enumerate(w, p)
 	 {

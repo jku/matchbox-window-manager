@@ -662,6 +662,27 @@ theme_frame_paint( MBTheme *theme,
       break;
     }
 
+  /* 
+   *  The pixmaps for side decorations ( east, west, south ) rarely
+   *  change for app wins and dont have text. We can therefore cache
+   *  the generated pixmaps to save both mem and cpu
+   */
+  if (frame_type == FRAME_MAIN_SOUTH 
+      || frame_type == FRAME_MAIN_EAST
+      || frame_type == FRAME_MAIN_WEST)
+    {
+      if (theme->app_win_pxm_cache[decor_idx] != None)
+	{
+	  dbg("%s() getting pixmap frame from cache\n", __func__);
+
+	  XSetWindowBackgroundPixmap(w->dpy, c->frames_decor[decor_idx], 
+				     theme->app_win_pxm_cache[decor_idx]);
+	  XClearWindow(w->dpy, c->frames_decor[decor_idx]);
+	  XSync(w->dpy, False);
+	  return True;
+	}
+    }
+
    drawable = mb_drawable_new(pixbuf, dw, dh);
 
    /* Cacheing */
@@ -904,6 +925,23 @@ theme_frame_paint( MBTheme *theme,
 			     mb_drawable_pixmap(drawable));
   XClearWindow(w->dpy, c->frames_decor[decor_idx]);
   XSync(c->wm->dpy, False);
+
+  /* Cache the pixmaps of these frame types.  
+   * ( note we copy so xft part of drawable gets freed ok ).
+  */
+  if (frame_type == FRAME_MAIN_SOUTH 
+      || frame_type == FRAME_MAIN_EAST
+      || frame_type == FRAME_MAIN_WEST)
+    {
+      dbg("%s() cacheing pixmap frame\n", __func__);
+
+      theme->app_win_pxm_cache[decor_idx] 
+	= XCreatePixmap(w->dpy, mb_drawable_pixmap(drawable), 
+			dw, dh, DefaultDepth(w->dpy, w->screen));
+      XCopyArea(w->dpy, mb_drawable_pixmap(drawable), 
+		theme->app_win_pxm_cache[decor_idx], theme->gc, 
+		0, 0, dw, dh, 0, 0);
+    }
 
   mb_drawable_unref(drawable);
 
@@ -1390,6 +1428,14 @@ theme_img_cache_clear_all( MBTheme *theme )
   int i;
   for (i=0; i < N_FRAME_TYPES; i++)
     theme_img_cache_clear( theme, i );
+
+  for (i=0; i < 3; i++)
+    if (theme->app_win_pxm_cache[i] != None)
+      {
+	dbg("%s() clearing pixmap cache\n", __func__);
+	XFreePixmap(theme->wm->dpy, theme->app_win_pxm_cache[i]);
+	theme->app_win_pxm_cache[i] = None;
+      }
 }
 
 
@@ -2229,9 +2275,12 @@ MBTheme *
 mbtheme_new (Wm *w)
 {
   XGCValues gv;
+  int       i;
   MBTheme *t = (MBTheme *)malloc(sizeof(MBTheme));
   memset(t, 0, sizeof(MBTheme));
 
+  for (i=0; i<3; i++)
+    t->app_win_pxm_cache[i] = None;
 
   gv.graphics_exposures = False;
   gv.function           = GXcopy;

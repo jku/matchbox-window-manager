@@ -108,10 +108,11 @@
 
 /* General Defines */
 
-#define NORTH  0
-#define EAST   1
-#define SOUTH  2
-#define WEST   3
+
+#define EAST   0
+#define SOUTH  1
+#define WEST   2
+#define NORTH  3     /* Note, North must be last or pixmap caching will fail*/
 
 #define ACTIVE   1
 #define INACTIVE 2
