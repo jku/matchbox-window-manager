@@ -14,7 +14,7 @@
 */
 
 /*
-  $Id: main_client.c,v 1.9 2004/08/30 16:59:36 mallum Exp $
+  $Id: main_client.c,v 1.10 2004/08/30 19:32:36 mallum Exp $
 */
 
 #include "main_client.h"
@@ -122,10 +122,6 @@ main_client_manage_toolbars_for_fullscreen(Client *c, Bool main_client_showing)
 
 		  p->y -= south_panel_size; 
 
-		  /* seems like below is sometimes needed but why ?
-		  client_buttons_delete_all(c);
-		  c->redraw(c, False);
-		  */
 		}
 
 	      p->move_resize(p);
@@ -296,8 +292,17 @@ main_client_toggle_fullscreen(Client *c)
   XGrabServer(c->wm->dpy);
 
   c->flags ^= CLIENT_FULLSCREEN_FLAG;
+
   main_client_configure(c);
   main_client_move_resize(c);
+
+  if (!(c->flags & CLIENT_FULLSCREEN_FLAG))
+    {
+      /* Client was fullscreen - to be safe we redraw decoration buttons */
+      client_buttons_delete_all(c);    
+      c->redraw(c, False);
+    }
+
 
   if (c->wm->have_titlebar_panel 
       && mbtheme_has_titlebar_panel(c->wm->mbtheme))
