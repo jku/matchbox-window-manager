@@ -22,88 +22,89 @@
 void
 client_set_state(Client *c, int state)
 {
-   CARD32 data[2];
+  Wm *w = c->wm;
+  CARD32 data[2];
 
-   data[0] = state;
-   data[1] = None;
+  data[0] = state;
+  data[1] = None;
    
-   XChangeProperty(c->wm->dpy, c->window, 
-		   c->wm->atoms[WM_STATE], c->wm->atoms[WM_STATE],
-		   32, PropModeReplace, (unsigned char *)data, 2);
+  XChangeProperty(w->dpy, c->window, 
+		  w->atoms[WM_STATE], w->atoms[WM_STATE],
+		  32, PropModeReplace, (unsigned char *)data, 2);
 }
 
 long
 client_get_state(Client *c)
 {
-    Atom real_type; int real_format;
-    unsigned long items_read, items_left;
-    long *data = NULL, state = WithdrawnState;
+  Wm *w = c->wm;
 
-    if (XGetWindowProperty(c->wm->dpy, c->window,
-			   c->wm->atoms[WM_STATE], 0L, 2L, False,
-			   c->wm->atoms[WM_STATE], &real_type, &real_format,
-			   &items_read, &items_left,
-			   (unsigned char **) &data) == Success
-	&& items_read) {
-      state = *data;
-    }
+  Atom          real_type; 
+  int           real_format;
+  unsigned long items_read, items_left;
+  long         *data = NULL, state = WithdrawnState;
+  
+  if (XGetWindowProperty(w->dpy, c->window,
+			 w->atoms[WM_STATE], 0L, 2L, False,
+			 w->atoms[WM_STATE], &real_type, &real_format,
+			 &items_read, &items_left,
+			 (unsigned char **) &data) == Success
+      && items_read)
+    state = *data;
 
-    if (data)
-      XFree(data);
+  if (data)
+    XFree(data);
 
-    return state;
+  return state;
 }
 
 
 void
 client_deliver_config(Client *c)
 {
-   XConfigureEvent ce;
+  Wm *w = c->wm;
+  XConfigureEvent ce;
    
-   ce.type = ConfigureNotify;
-   ce.event = c->window;
-   ce.window = c->window;
+  ce.type   = ConfigureNotify;
+  ce.event  = c->window;
+  ce.window = c->window;
+  
+  ce.x = c->x;
+  ce.y = c->y;
    
-   ce.x = c->x;
-   ce.y = c->y;
+  ce.width  = c->width;
+  ce.height = c->height;
+  ce.border_width = 0;
+  ce.above = None;
+  ce.override_redirect = 0;
    
-   ce.width  = c->width;
-   ce.height = c->height;
-   ce.border_width = 0;
-   ce.above = None;
-   ce.override_redirect = 0;
-   
-   dbg("%s() to %s  x: %i , y: %i w: %i h: %i \n", 
-       __func__, c->name, ce.x, ce.y, ce.width, ce.height);
+  dbg("%s() to %s  x: %i , y: %i w: %i h: %i \n", 
+      __func__, c->name, ce.x, ce.y, ce.width, ce.height);
 
-   XSendEvent(c->wm->dpy, c->window, False,
-	      StructureNotifyMask, (XEvent *)&ce);
+  XSendEvent(w->dpy, c->window, False,
+	     StructureNotifyMask, (XEvent *)&ce);
 }
 
 void
 client_deliver_wm_protocol(Client *c, Atom delivery)
 {
-  /* TODO: should call client_deliver_message() */
-    XEvent e;
-    e.type = ClientMessage;
-    e.xclient.window = c->window;
-    e.xclient.message_type = c->wm->atoms[WM_PROTOCOLS];
-    e.xclient.format = 32;
-    e.xclient.data.l[0] = delivery;
-    e.xclient.data.l[1] = CurrentTime;
-    XSendEvent(c->wm->dpy, c->window, False, 0, &e);
+  Wm *w = c->wm;
+
+  client_deliver_message(c, w->atoms[WM_PROTOCOLS], 
+			 delivery, CurrentTime, 0, 0, 0);
 }
 
 void
 client_deliver_message(Client       *c, 
 		       Atom          delivery_atom,
+		       unsigned long data0,
 		       unsigned long data1,
 		       unsigned long data2,
 		       unsigned long data3,
 		       unsigned long data4)
 {
-  XEvent ev;
   Wm *w = c->wm;
+
+  XEvent ev;
 
   memset(&ev, 0, sizeof(ev));
 
@@ -111,12 +112,14 @@ client_deliver_message(Client       *c,
   ev.xclient.window = c->window;
   ev.xclient.message_type = delivery_atom;
   ev.xclient.format = 32;
-  ev.xclient.data.l[0] = CurrentTime;
+  ev.xclient.data.l[0] = data0;
   ev.xclient.data.l[1] = data1;
   ev.xclient.data.l[2] = data2;
   ev.xclient.data.l[3] = data3;
   ev.xclient.data.l[4] = data4;
+
   XSendEvent(w->dpy, c->window, False, NoEventMask, &ev);
+
   XSync(w->dpy, False);
 }
 
@@ -126,7 +129,7 @@ Bool
 client_obliterate(Client *c)
 {
   char buf[257];
-  int sig  = 9;
+  int  sig  = 9;
 
   if (c->host_machine == NULL || !c->pid)
     return False;
@@ -156,52 +159,95 @@ client_obliterate(Client *c)
 void
 client_deliver_delete(Client *c)
 {
-    int i, n, found = 0;
-    Atom *protocols;
+  Wm *w = c->wm;
+  int i, n, found = 0;
+  Atom *protocols;
     
-    if (XGetWMProtocols(c->wm->dpy, c->window, &protocols, &n)) {
-        for (i=0; i<n; i++)
-	   if (protocols[i] == c->wm->atoms[WM_DELETE_WINDOW]) found++;
-        XFree(protocols);
+  if (XGetWMProtocols(w->dpy, c->window, &protocols, &n)) {
+    for (i=0; i<n; i++)
+      if (protocols[i] == w->atoms[WM_DELETE_WINDOW]) found++;
+    XFree(protocols);
+  }
+
+  /* Initiate pinging the app - to really kill hung applications */
+  if (c->has_ping_protocol && c->pings_pending == -1) 
+    {
+      c->pings_pending = 0;
+      w->n_active_ping_clients++;
     }
 
-    /* Initiate pinging the app - to really kill hung applications */
-    if (c->has_ping_protocol && c->pings_pending == -1) 
-      {
-	c->pings_pending = 0;
-	c->wm->n_active_ping_clients++;
-      }
-
-    if (found)
-      client_deliver_wm_protocol(c, c->wm->atoms[WM_DELETE_WINDOW]);
-    else 
-      {
-	if (!client_obliterate(c))
-	  XKillClient(c->wm->dpy, c->window);
-      }
+  if (found)
+    client_deliver_wm_protocol(c, w->atoms[WM_DELETE_WINDOW]);
+  else 
+    {
+      if (!client_obliterate(c))
+	XKillClient(w->dpy, c->window);
+    }
 }
-
-/* ----- new bits ---------*/
 
 int
 client_want_focus(Client *c)
 {
-   /* TODO: check _WM protocols too ? */
-   int ret = 1;
-   XWMHints *hints;
+  Wm *w = c->wm;
 
-   if (c->flags & CLIENT_IS_MESSAGE_DIALOG)
-     return 0;
+  int       ret = 1;
+  XWMHints *hints;
 
-   hints = XGetWMHints(c->wm->dpy, c->window);
+  /* TODO: check _WM protocols too ? */
+
+  if (c->flags & CLIENT_IS_MESSAGE_DIALOG)
+    return 0;
+
+   hints = XGetWMHints(w->dpy, c->window);
+
    if (hints != NULL)
-     if ((hints->flags & InputHint) && (hints->input == False)) ret = 0;
-   XFree(hints);
+     {
+       if ((hints->flags & InputHint) && (hints->input == False)) 
+	 ret = 0;
+
+       XFree(hints);
+     }
 
    if (ret) ewmh_set_active(c->wm);
+
    return ret;
 }
 
+void
+client_get_transient_list(MBList **list, Client *c)
+{
+  Wm     *w = c->wm;
+  Client *p = NULL;
+
+  stack_enumerate(w,p)
+    {
+      if (p != c && p->trans && p->trans == c)
+	{
+	  list_add(list, NULL, 0, p);
+	  client_get_transient_list(list, p);  
+	}
+    }
+}
+
+Client*
+client_get_highest_transient(Client *c)
+{
+  Wm     *w = c->wm;
+  Client *p = NULL;
+  Client *highest = c;
+
+  stack_enumerate(w,p)
+    {
+      if (p != c && p->trans && p->trans == c)
+	{
+	  highest = client_get_highest_transient(p);
+	}
+    }
+
+  return highest;
+}
+
+/*
 Client*
 client_get_next(Client* c, MBClientTypeEnum wanted)
 {
@@ -219,30 +265,31 @@ client_get_prev(Client* c, MBClientTypeEnum wanted)
       if (p->type == wanted && p->mapped) return p;
    return c;
 }
+*/
 
 void
 client_init_backing(Client* c, int width, int height)
 {
+  Wm *w = c->wm;
 
 #ifdef STANDALONE
 
-  if (c->backing != None) XFreePixmap(c->wm->dpy, c->backing);
+  if (c->backing != None) XFreePixmap(w->dpy, c->backing);
 
-  c->backing = XCreatePixmap(c->wm->dpy, c->wm->root, width, height ,
-			     DefaultDepth(c->wm->dpy, c->wm->screen));
+  c->backing = XCreatePixmap(w->dpy, w->root, width, height ,
+			     DefaultDepth(w->dpy, w->screen));
 
-   /* todo check for error if pixmap cant be created */
 #if defined (USE_XFT) 
 
   if (c->xftdraw != NULL) XftDrawDestroy(c->xftdraw);
 
-   c->xftdraw = XftDrawCreate(c->wm->dpy, (Drawable) c->backing, 
-			      DefaultVisual(c->wm->dpy, c->wm->screen),
-			      DefaultColormap(c->wm->dpy, c->wm->screen));
+   c->xftdraw = XftDrawCreate(w->dpy, (Drawable) c->backing, 
+			      DefaultVisual(w->dpy, w->screen),
+			      DefaultColormap(w->dpy, w->screen));
 #endif
 
 
-#else  /* using libmb for font rendering */
+#else
 
    if (c->backing != NULL) 
      mb_drawable_unref(c->backing);
@@ -250,87 +297,94 @@ client_init_backing(Client* c, int width, int height)
 #ifdef USE_COMPOSITE
    if (c->is_argb32)
      {
-       c->backing = mb_drawable_new(c->wm->argb_pb, width, height);
+       c->backing = mb_drawable_new(w->argb_pb, width, height);
        dbg("%s() XXXXX creating 32bit drawable ( %i, %ix%i ) XXXX\n", 
-	   __func__, c->wm->argb_pb->depth, width, height);
-
-
+	   __func__, w->argb_pb->depth, width, height);
      }
    else
 #endif
-     c->backing = mb_drawable_new(c->wm->pb, width, height);
+     c->backing = mb_drawable_new(w->pb, width, height);
 
+     XFillRectangle(w->dpy, mb_drawable_pixmap(c->backing), 
+		    w->mbtheme->gc, 0, 0, width, height);
 #endif
-   
 }
 
+/* Create masks used for shaped decorations */
 void 
-client_init_backing_mask (Client *c, int width, int height, 
-			  int height_north, int height_south,
-			  int width_east, int width_west )
+client_init_backing_mask (Client *c, 
+			  int     width, 
+			  int     height, 
+			  int     height_north, 
+			  int     height_south,
+			  int     width_east, 
+			  int     width_west )
 {
-  GC shape_gc;
+  Wm *w = c->wm;
+  GC  shape_gc;
   int i = 0;
 
    for (i=0; i<MSK_COUNT; i++)
      if (c->backing_masks[i] != None)
-       XFreePixmap(c->wm->dpy, c->backing_masks[i]);
+       XFreePixmap(w->dpy, c->backing_masks[i]);
 
   c->backing_masks[MSK_NORTH] 
-    = XCreatePixmap(c->wm->dpy, c->wm->root, width, height_north, 1);
+    = XCreatePixmap(w->dpy, w->root, width, height_north, 1);
 
-  shape_gc = XCreateGC( c->wm->dpy, c->backing_masks[MSK_NORTH], 0, 0 );
+  shape_gc = XCreateGC( w->dpy, c->backing_masks[MSK_NORTH], 0, 0 );
 
-  XSetForeground(c->wm->dpy, shape_gc, 
-		 WhitePixel( c->wm->dpy, c->wm->screen ));
+  XSetForeground(w->dpy, shape_gc, 
+		 WhitePixel( w->dpy, w->screen ));
 
-  XFillRectangle(c->wm->dpy, c->backing_masks[MSK_NORTH],
+  XFillRectangle(w->dpy, c->backing_masks[MSK_NORTH],
 		 shape_gc, 0, 0, width, height_north);
 
   if (height_south)
     {
       c->backing_masks[MSK_SOUTH] 
-	= XCreatePixmap(c->wm->dpy, c->wm->root, width, height_south, 1);
+	= XCreatePixmap(w->dpy, w->root, width, height_south, 1);
 
-      XFillRectangle(c->wm->dpy, c->backing_masks[MSK_SOUTH],
+      XFillRectangle(w->dpy, c->backing_masks[MSK_SOUTH],
 		     shape_gc, 0, 0, width, height_south);
     }
 
   if (width_east)
     {
-      dbg("%s() creating backing mask with %ix%i\n", 
-	  __func__, width_east, height );
-
       c->backing_masks[MSK_EAST] 
-	= XCreatePixmap(c->wm->dpy, c->wm->root, width_east, height, 1);
+	= XCreatePixmap(w->dpy, w->root, width_east, height, 1);
 
-      XFillRectangle(c->wm->dpy, c->backing_masks[MSK_EAST],
+      XFillRectangle(w->dpy, c->backing_masks[MSK_EAST],
 		     shape_gc, 0, 0, width_east, height);
     }
 
   if (width_west)
     {
       c->backing_masks[MSK_WEST] 
-	= XCreatePixmap(c->wm->dpy, c->wm->root, width_west, height, 1);
+	= XCreatePixmap(w->dpy, w->root, width_west, height, 1);
 
-      XFillRectangle(c->wm->dpy, c->backing_masks[MSK_WEST],
+      XFillRectangle(w->dpy, c->backing_masks[MSK_WEST],
 		     shape_gc, 0, 0, width_west, height);
     }
 
-
-  XFreeGC(c->wm->dpy, shape_gc);
+  XFreeGC(w->dpy, shape_gc);
 }
 
 
-MBClientButton *
-client_button_new(Client *c, Window win_parent, 
-		  int x, int y, int w, int h,
-		  Bool want_inputonly, void *data )
+MBClientButton*
+client_button_new(Client *c, 
+		  Window  win_parent, 
+		  int     x, 
+		  int     y, 
+                  int     width, 
+		  int     height,
+		  Bool    want_inputonly, 
+		  void   *data )
 {
+  Wm *w = c->wm;
   XSetWindowAttributes attr;
-  int class = CopyFromParent;
+  int                  class = CopyFromParent;
+  MBClientButton      *b = malloc(sizeof(MBClientButton));
 
-  MBClientButton *b = malloc(sizeof(MBClientButton));
   memset(b, 0, sizeof(MBClientButton));
   
   attr.override_redirect = True; 
@@ -338,21 +392,23 @@ client_button_new(Client *c, Window win_parent,
   
   if (want_inputonly ) class = InputOnly;	      
   
-  b->x = x; b->y = y; b->w = w; b->h = h; b->data = data;
+  b->x = x; b->y = y; b->w = width; b->h = height; b->data = data;
   
-  b->win = XCreateWindow(c->wm->dpy, win_parent, x, y, w, h, 0,
+  b->win = XCreateWindow(w->dpy, win_parent, x, y, width, height, 0,
 			 CopyFromParent, class, CopyFromParent,
 			 CWOverrideRedirect|CWEventMask, &attr);
 
-  XMapWindow(c->wm->dpy, b->win);
+  XMapWindow(w->dpy, b->win);
   return b;
 }
 
 void
 client_button_remove(Client *c, int button_action)
 {
+  Wm *w = c->wm;
+
   struct list_item *l = c->buttons;
-  MBClientButton *b = NULL;
+  MBClientButton   *b = NULL;
 
   while (l != NULL)
     {
@@ -361,7 +417,7 @@ client_button_remove(Client *c, int button_action)
 	  b = (MBClientButton *)l->data;
 	  dbg("%s() destroying a button ( %li ) for %s\n", __func__, 
 	      b->win, c->name); 
-	  XDestroyWindow(c->wm->dpy, b->win);
+	  XDestroyWindow(w->dpy, b->win);
 	  b->win = None;
 	}
       l = l->next;
@@ -371,28 +427,30 @@ client_button_remove(Client *c, int button_action)
 void
 client_buttons_delete_all(Client *c)
 {
+  Wm               *w = c->wm;
   struct list_item *l = c->buttons, *p = NULL;
-  MBClientButton *b = NULL;
+  MBClientButton   *b = NULL;
   
   while (l != NULL)
     {
       b = (MBClientButton *)l->data;
       dbg("%s() destroying a button\n", __func__); 
       if (b->win != None)
-	XDestroyWindow(c->wm->dpy, b->win);
+	XDestroyWindow(w->dpy, b->win);
       free(b);
       p = l->next;
       free(l);
       l = p;
     }
+
   c->buttons = NULL;
 }
 
-MBClientButton *
+MBClientButton*
 client_get_button_from_event(Client *c, XButtonEvent *e)
 {
   struct list_item *l = c->buttons;
-  MBClientButton *b = NULL;
+  MBClientButton   *b = NULL;
 
   while (l != NULL)
     {
@@ -403,15 +461,15 @@ client_get_button_from_event(Client *c, XButtonEvent *e)
 	}
       l = l->next;
     }
+
   return NULL;
 }
 
-
-struct list_item *
+struct list_item*
 client_get_button_list_item_from_event(Client *c, XButtonEvent *e)
 {
   struct list_item *l = c->buttons;
-  MBClientButton *b = NULL;
+  MBClientButton   *b = NULL;
 
   while (l != NULL)
     {
@@ -422,56 +480,64 @@ client_get_button_list_item_from_event(Client *c, XButtonEvent *e)
 	}
       l = l->next;
     }
+
   return NULL;
 }
 
 int
-client_button_do_ops(Client *c, XButtonEvent *e, int frame_type, int w, int h)
+client_button_do_ops(Client       *c, 
+		     XButtonEvent *e, 
+		     int           frame_type, 
+		     int           width, 
+		     int           height)
 {
-  int button_action;
-  struct list_item* button_item = NULL;
-  MBClientButton *b = NULL;
-  XEvent ev;
+  Wm *w = c->wm;
+
+  int               button_action;
+  struct list_item *button_item = NULL;
+  MBClientButton   *b = NULL;
+  XEvent            ev;
 
   if ((button_item = client_get_button_list_item_from_event(c, e)) != NULL
        && button_item->id != -1 )
    {
      /* XXX hack hack hack - stop dubious 'invisible' text menu button 
-                             working when it shouldn't.....            */
-     if (frame_type == FRAME_MAIN && c->wm->flags & SINGLE_FLAG
+	working when it shouldn't.....            */
+     if (frame_type == FRAME_MAIN && w->flags & SINGLE_FLAG
 	 && button_item->id == BUTTON_ACTION_MENU
-	 && ( !wm_get_desktop(c->wm) || c->wm->flags & DESKTOP_DECOR_FLAG))
+	 && ( !wm_get_desktop(c->wm) || w->flags & DESKTOP_DECOR_FLAG))
        return -1;
 
      b = (MBClientButton *)button_item->data;
 
      if (b->press_activates)
        {
-	 XUngrabPointer(c->wm->dpy, CurrentTime); 
-	 client_deliver_message(c, c->wm->atoms[MB_GRAB_TRANSFER],
-				e->subwindow, 0, 0, 0);
+	 XUngrabPointer(w->dpy, CurrentTime); 
+	 client_deliver_message(c, w->atoms[MB_GRAB_TRANSFER],
+				CurrentTime, e->subwindow, 0, 0, 0);
 	 return button_item->id;
        }
 
-     if (XGrabPointer(c->wm->dpy, e->subwindow, False,
+     if (XGrabPointer(w->dpy, e->subwindow, False,
 		      ButtonPressMask|ButtonReleaseMask|
 		      PointerMotionMask|EnterWindowMask|LeaveWindowMask,
 		      GrabModeAsync,
-		      GrabModeAsync, None, c->wm->curs, CurrentTime)
-	 == GrabSuccess)
+		      GrabModeAsync, 
+		      None, w->curs, CurrentTime) == GrabSuccess)
        {
 	 Bool canceled = False;
+	
 	 button_action = button_item->id;
 
-	 theme_frame_button_paint(c->wm->mbtheme, c, button_action,
-				  ACTIVE, frame_type, w, h);
+	 theme_frame_button_paint(w->mbtheme, c, button_action,
+				  ACTIVE, frame_type, width, height);
 
 	 comp_engine_client_repair (c->wm, c);
-	 comp_engine_render(c->wm, c->wm->all_damage);
+	 comp_engine_render(c->wm, w->all_damage);
 
 	 for (;;) 
 	 {
-	    XMaskEvent(c->wm->dpy,
+	    XMaskEvent(w->dpy,
 		       ButtonPressMask|ButtonReleaseMask|
 		       PointerMotionMask|EnterWindowMask|LeaveWindowMask
 		       ,
@@ -481,30 +547,30 @@ client_button_do_ops(Client *c, XButtonEvent *e, int frame_type, int w, int h)
 	       case MotionNotify:
 		  break;
 	       case EnterNotify:
-		  theme_frame_button_paint(c->wm->mbtheme, c, button_action,
-					   ACTIVE, frame_type, w, h );
+		  theme_frame_button_paint(w->mbtheme, c, button_action,
+					   ACTIVE, frame_type, width, height );
 		  comp_engine_client_repair (c->wm, c);
-		  comp_engine_render(c->wm, c->wm->all_damage);
+		  comp_engine_render(c->wm, w->all_damage);
 		  canceled = False;
 		  break;
 	       case LeaveNotify:
-		  theme_frame_button_paint(c->wm->mbtheme, c, button_action,
-					   INACTIVE, frame_type, w, h );
+		  theme_frame_button_paint(w->mbtheme, c, button_action,
+					   INACTIVE,frame_type, width, height);
 		  comp_engine_client_repair (c->wm, c);
-		  comp_engine_render(c->wm, c->wm->all_damage);
+		  comp_engine_render(c->wm, w->all_damage);
 		  canceled = True;
 		  break;
 	       case ButtonRelease:
-		  theme_frame_button_paint(c->wm->mbtheme, c, button_action,
-					   INACTIVE, frame_type, w, h );
-		  XUngrabPointer(c->wm->dpy, CurrentTime);
+		  theme_frame_button_paint(w->mbtheme, c, button_action,
+					   INACTIVE,frame_type, width, height);
+		  XUngrabPointer(w->dpy, CurrentTime);
 		  if (!canceled)
 		  {
 		    return button_action;
 #if 0		    
 		     if (frm->buttons[b]->wants_dbl_click)
 		     {
-			if (c->wm->flags & DBL_CLICK_FLAG)
+			if (w->flags & DBL_CLICK_FLAG)
 			  {
 			    if ( b == ACTION_MENU_EXTRA) /* HACK */
 			      b = ACTION_MENU;
@@ -532,12 +598,12 @@ client_button_do_ops(Client *c, XButtonEvent *e, int frame_type, int w, int h)
 	    }
 
 #ifdef USE_COMPOSITE
-      if (c->wm->all_damage)
+      if (w->all_damage)
       	{
 	  dbg("%s() adding damage\n", __func__);
-	  comp_engine_render(c->wm, c->wm->all_damage);
-	  XFixesDestroyRegion (c->wm->dpy, c->wm->all_damage);
-	  c->wm->all_damage = None;
+	  comp_engine_render(c->wm, w->all_damage);
+	  XFixesDestroyRegion (w->dpy, w->all_damage);
+	  w->all_damage = None;
 	}
 #endif
 

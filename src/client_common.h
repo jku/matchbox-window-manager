@@ -21,6 +21,7 @@
 #include "toolbar_client.h"
 #include "dockbar_client.h"
 #include "dialog_client.h"
+#include "list.h"
 #include "misc.h"
 
 void 
@@ -38,6 +39,7 @@ client_deliver_wm_protocol (Client *c, Atom delivery);
 void
 client_deliver_message(Client       *c, 
 		       Atom          delivery,
+		       unsigned long data0,
 		       unsigned long data1,
 		       unsigned long data2,
 		       unsigned long data3,
@@ -51,6 +53,12 @@ client_deliver_delete (Client *c);
 
 int 
 client_want_focus (Client *c);
+
+void
+client_get_transient_list(MBList **list, Client *c);
+
+Client*
+client_get_highest_transient(Client *c);
 
 Client *
 client_get_next (Client* c, MBClientTypeEnum wanted);

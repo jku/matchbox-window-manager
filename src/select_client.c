@@ -44,7 +44,7 @@ select_client_new(Wm *w)
 
    button_x = theme_frame_button_get_x_pos(w->mbtheme, FRAME_MAIN, 
 					   BUTTON_ACTION_MENU,
-					   w->main_client->width);
+					   w->stack_top_app->width);
 #ifndef STANDALONE
    {
      /*
@@ -105,14 +105,14 @@ select_client_new(Wm *w)
    win = XCreateWindow(w->dpy, w->root,
 		       button_x + wm_get_offsets_size(w, WEST, NULL, True),
 		       wm_get_offsets_size(w, NORTH, NULL, True) 
-		       + main_client_title_height(w->main_client),
+		       + main_client_title_height(w->stack_top_app),
 		       width, height, 0,
 		       CopyFromParent, CopyFromParent, CopyFromParent,
 		       CWOverrideRedirect|CWBackPixel|CWEventMask,
 		       &attr);
 
    c = base_client_new(w, win);
-   c->type = menu;
+   c->type = MBCLIENT_TYPE_TASK_MENU;
    c->title_frame = c->frame = c->window;
 
    comp_engine_client_init(w, c); 
@@ -209,11 +209,10 @@ select_client_event_loop( Client *c, struct list_item *button_item_cur )
 	    case XK_KP_Enter:
 	      p = (Client *)button->data;
 	      theme_frame_menu_highlight_entry( c, button, INACTIVE); 
-	      if (p->type == desktop)
+	      if (p->type == MBCLIENT_TYPE_DESKTOP)
 		wm_toggle_desktop(c->wm);
 	      else
 		{
-		  base_client_hide_transients(c->wm->main_client);
 		  wm_activate_client(p);
 		}
 	      dbg("%s() returning ....\n", __func__);
@@ -225,11 +224,10 @@ select_client_event_loop( Client *c, struct list_item *button_item_cur )
 	    {
 	      p = (Client *)button->data;
 	      theme_frame_menu_highlight_entry( c, button, INACTIVE); 
-	      if (p->type == desktop)
+	      if (p->type == MBCLIENT_TYPE_DESKTOP)
 		wm_toggle_desktop(c->wm);
 	      else
 		{
-		  base_client_hide_transients(c->wm->main_client);
 		  wm_activate_client(p);
 		}
 	    }

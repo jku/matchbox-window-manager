@@ -13,6 +13,10 @@
    GNU General Public License for more details.
 */
 
+/* 
+ *  a Dockbar is a *Panel*.
+ */
+
 #include "dockbar_client.h"
 
 static int dockbar_client_orientation_calc(Client *c);
@@ -24,7 +28,7 @@ dockbar_client_new(Wm *w, Window win)
 
    if (!c) return NULL;
 
-   c->type         = dock;
+   c->type         = MBCLIENT_TYPE_PANEL;
    c->configure    = &dockbar_client_configure;
    c->show         = &dockbar_client_show;
    c->hide         = &dockbar_client_hide;
@@ -34,6 +38,7 @@ dockbar_client_new(Wm *w, Window win)
    c->flags        = dockbar_client_orientation_calc(c);
    
    c->frame = c->window;
+
    return c;
 }
 
@@ -81,44 +86,46 @@ dockbar_client_orientation_calc(Client *c)
 void
 dockbar_client_configure(Client *c)
 {
-   int n_offset = wm_get_offsets_size(c->wm, NORTH, c, False);
-   int s_offset = wm_get_offsets_size(c->wm, SOUTH, c, False);
-   int e_offset = wm_get_offsets_size(c->wm, EAST,  NULL, True);
-   int w_offset = wm_get_offsets_size(c->wm, WEST,  c, True);
+  Wm *w = c->wm;
+
+  int n_offset = wm_get_offsets_size(c->wm, NORTH, c, False);
+  int s_offset = wm_get_offsets_size(c->wm, SOUTH, c, False);
+  int e_offset = wm_get_offsets_size(c->wm, EAST,  NULL, True);
+  int w_offset = wm_get_offsets_size(c->wm, WEST,  c, True);
    
-   /* XXX - we should check for overlapping and if this happens
-            change em to normal clients. 
-   */
+  /* XXX - we should check for overlapping and if this happens
+     change em to normal clients. 
+  */
 
    if (c->flags & CLIENT_DOCK_NORTH)
      {
        c->y = n_offset;
        c->x = w_offset;
-       c->width  = c->wm->dpy_width - e_offset - w_offset;
+       c->width  = w->dpy_width - e_offset - w_offset;
      }
    else if (c->flags & CLIENT_DOCK_SOUTH)
      {
-       c->y = c->wm->dpy_height - s_offset - c->height;
+       c->y = w->dpy_height - s_offset - c->height;
        c->x = w_offset;
-       c->width  = c->wm->dpy_width - e_offset - w_offset;
+       c->width  = w->dpy_width - e_offset - w_offset;
      }
    else if (c->flags & CLIENT_DOCK_WEST)
      {
        c->y = 0;
        c->x = w_offset;
-       c->height = c->wm->dpy_height;
+       c->height = w->dpy_height;
      }
    else if (c->flags & CLIENT_DOCK_EAST)
      {
        c->y = 0;
-       c->x = c->wm->dpy_width - e_offset - c->width;
-       c->height = c->wm->dpy_height;
+       c->x = w->dpy_width - e_offset - c->width;
+       c->height = w->dpy_height;
      }
    else if (c->flags & CLIENT_DOCK_TITLEBAR)
      {
        XRectangle rect;
 
-       mbtheme_get_titlebar_panel_rect(c->wm->mbtheme, &rect, NULL);
+       mbtheme_get_titlebar_panel_rect(w->mbtheme, &rect, NULL);
  
        c->x      = rect.x + w_offset; 
        c->y      = rect.y + n_offset;
@@ -133,110 +140,126 @@ dockbar_client_configure(Client *c)
    dbg("%s() sizing as %i %i %i %i", __func__, c->x, c->y, 
        c->width, c->height);
    
-   XSetWindowBorderWidth(c->wm->dpy, c->window, 0);
-   XSetWindowBorder(c->wm->dpy, c->window, 0);
+   XSetWindowBorderWidth(w->dpy, c->window, 0);
+   XSetWindowBorder(w->dpy, c->window, 0);
    
 }
 
 void
 dockbar_client_move_resize(Client *c)
 {
-   base_client_move_resize(c);
+  Wm *w = c->wm;
 
-   dbg("%s() to %s  x: %i , y: %i w: %i h: %i \n", 
-       __func__, c->name, c->x, c->y, c->width, c->height);
+  base_client_move_resize(c);
 
-   XResizeWindow(c->wm->dpy, c->window, c->width, c->height);
-   XMoveWindow(c->wm->dpy, c->window, c->x, c->y);
+  dbg("%s() to %s  x: %i , y: %i w: %i h: %i \n", 
+      __func__, c->name, c->x, c->y, c->width, c->height);
+
+  XResizeWindow(w->dpy, c->window, c->width, c->height);
+  XMoveWindow(w->dpy, c->window, c->x, c->y);
 }
 
 void
 dockbar_client_show(Client *c) /*TODO: show and hide share common static func*/
 {
-   if (client_get_state(c) == NormalState) return;
+  Wm *w = c->wm;
 
-   dbg("%s() called\n", __func__);
+  if (client_get_state(c) == NormalState) return;
 
-   XGrabServer(c->wm->dpy);
-   
-   c->mapped = True;
+  dbg("%s() called\n", __func__);
+  
+  XGrabServer(w->dpy);
+  
+  c->mapped = True;
+  
+  if (c->flags & CLIENT_DOCK_EAST || c->flags & CLIENT_DOCK_WEST)
+    wm_update_layout(c->wm, c, - c->width);
+  else if ( c->flags & CLIENT_DOCK_NORTH )
+    {
+      wm_update_layout(c->wm, c, - c->height);
+    }
+  else if ( c->flags & CLIENT_DOCK_SOUTH )
+    wm_update_layout(c->wm, c, - c->height);
+  
+  client_set_state(c, NormalState);
 
-   if (c->flags & CLIENT_DOCK_EAST || c->flags & CLIENT_DOCK_WEST)
-     wm_restack(c->wm, c, - c->width);
-   else if ( c->flags & CLIENT_DOCK_NORTH )
-     {
-       wm_restack(c->wm, c, - c->height);
-     }
-   else if ( c->flags & CLIENT_DOCK_SOUTH )
-     wm_restack(c->wm, c, - c->height);
-   
-   client_set_state(c, NormalState);
+#if 0
 
    if (c->flags & CLIENT_DOCK_TITLEBAR)
      {
 
        dbg("%s() is titlebar dock\n", __func__);
 
-       if (!mbtheme_has_titlebar_panel(c->wm->mbtheme))
+       if (!mbtheme_has_titlebar_panel(w->mbtheme))
 	 {
 	   /* Theme does not have titlebar so we dont actually map it */
 	   dbg("%s() not mapping titlebar dock\n", __func__);
 
-	   XUngrabServer(c->wm->dpy);
+	   XUngrabServer(w->dpy);
 	   dockbar_client_hide(c);
 	   return;
 	 }
 
-       if (c->wm->main_client 
-	   && !(c->wm->main_client->flags & CLIENT_FULLSCREEN_FLAG)
-	   && !(c->wm->flags & DESKTOP_RAISED_FLAG))
-	 XMapRaised(c->wm->dpy, c->window);
+       if (w->main_client 
+	   && !(w->main_client->flags & CLIENT_FULLSCREEN_FLAG)
+	   && !(w->flags & DESKTOP_RAISED_FLAG))
+	 XMapRaised(w->dpy, c->window);
 
-       if (c->wm->flags & DESKTOP_RAISED_FLAG 
+       if (w->flags & DESKTOP_RAISED_FLAG 
 	   && c->flags & CLIENT_DOCK_TITLEBAR_SHOW_ON_DESKTOP)
-	 XMapRaised(c->wm->dpy, c->window);
+	 XMapRaised(w->dpy, c->window);
      }
-   else XMapRaised(c->wm->dpy, c->window);
+   else XMapRaised(w->dpy, c->window);
 
    base_client_show(c);
 
-   XUngrabServer(c->wm->dpy);
+#endif
+
+   XMapWindow(w->dpy, c->window);
+
+   stack_move_above_extended(c, NULL, 
+			     MBCLIENT_TYPE_APP|MBCLIENT_TYPE_DESKTOP, 
+			     0);
+
+   XUngrabServer(w->dpy);
 }
 
 void
 dockbar_client_hide(Client *c)
 {
+  Wm *w = c->wm;
 
-   if (client_get_state(c) == IconicState) return;
-   XGrabServer(c->wm->dpy);
-   client_set_state(c, IconicState);
-
-   c->mapped = False; 		/* Same reasoning as toolbar_destroy */
-
-   if (c->flags & CLIENT_DOCK_EAST || c->flags & CLIENT_DOCK_WEST)
-     wm_restack(c->wm, c, c->width);
-   else if (!(c->flags & CLIENT_DOCK_TITLEBAR))
-     wm_restack(c->wm, c, c->height);
-
-   base_client_hide(c);
-
-   XUngrabServer(c->wm->dpy);
+  if (client_get_state(c) == IconicState) return;
+  XGrabServer(w->dpy);
+  client_set_state(c, IconicState);
+  
+  c->mapped = False; 		/* Same reasoning as toolbar_destroy */
+  
+  if (c->flags & CLIENT_DOCK_EAST || c->flags & CLIENT_DOCK_WEST)
+    wm_update_layout(c->wm, c, c->width);
+  else if (!(c->flags & CLIENT_DOCK_TITLEBAR))
+    wm_update_layout(c->wm, c, c->height);
+  
+  base_client_hide(c);
+  
+  XUngrabServer(w->dpy);
 }
 
 void
 dockbar_client_destroy(Client *c)
 {
-   //dockbar_client_hide(c);
-  if (c == c->wm->have_titlebar_panel)
-    c->wm->have_titlebar_panel = NULL;
-
+  Wm *w = c->wm;
+  //dockbar_client_hide(c);
+  if (c == w->have_titlebar_panel)
+    w->have_titlebar_panel = NULL;
+  
   c->mapped = False;
-
-   if (c->flags & CLIENT_DOCK_EAST || c->flags & CLIENT_DOCK_WEST)
-     wm_restack(c->wm, c, c->width );
-   else if (!(c->flags & CLIENT_DOCK_TITLEBAR))
-     wm_restack(c->wm, c, c->height);
-
-   base_client_destroy(c);
+  
+  if (c->flags & CLIENT_DOCK_EAST || c->flags & CLIENT_DOCK_WEST)
+    wm_update_layout(c->wm, c, c->width );
+  else if (!(c->flags & CLIENT_DOCK_TITLEBAR))
+    wm_update_layout(c->wm, c, c->height);
+  
+  base_client_destroy(c);
 }
 

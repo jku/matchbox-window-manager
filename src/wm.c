@@ -46,8 +46,12 @@ wm_new(int argc, char **argv)
    XSetWindowAttributes sattr; /* for root win */
 
    Wm *w = NULL;
+   XColor dummy_col;
 
-   if ( (w = malloc(sizeof(Wm))) == NULL) err("err out of memory");
+   if ( (w = malloc(sizeof(Wm))) == NULL) 
+     err("err out of memory");
+
+   memset(w, 0, sizeof(Wm));
 
    w->flags = STARTUP_FLAG;
 
@@ -75,6 +79,15 @@ wm_new(int argc, char **argv)
    /* Tell root win we wanna be wm */
 
    XChangeWindowAttributes(w->dpy, w->root, CWEventMask, &sattr);
+
+   XSelectInput(w->dpy, w->root, sattr.event_mask);
+
+   /* Use this 'dull' color for 'base' window backgrounds and such. 
+      'Appears' to actually reduce flicker                           */
+   XAllocNamedColor(w->dpy, 
+		    DefaultColormap(w->dpy, w->screen), 
+		    "grey", 
+		    &w->grey_col, &dummy_col);
 
 #if defined(USE_GCONF) || defined(USE_PANGO)
    g_type_init() ;
@@ -166,6 +179,8 @@ wm_new(int argc, char **argv)
 
    w->flags ^= STARTUP_FLAG; 	/* Remove startup flag */
 
+   /* below color used for frame window backgrounds */
+
    return w;
 }
 
@@ -181,7 +196,7 @@ wm_usage(char *progname)
 #ifndef USE_COMPOSITE
    printf("\t-use_lowlight     <yes|no>\n");
 #endif
-   printf("\t-use_dialog_mode  <free|const|const-horiz>\n");
+   printf("\t-use_dialog_mode  <free|static|const-horiz>\n");
    printf("\t-use_desktop_mode <decorated|plain>\n");
    printf("\t-force_dialogs    <comma seperated list of window titles>\n");
    /*
@@ -430,8 +445,12 @@ wm_load_config (Wm   *w,
 	   w->config->dialog_stratergy 
 	     = WM_DIALOGS_STRATERGY_CONSTRAINED_HORIZ;
 	 }
-       else if (strncmp (value.addr, "const", (int) value.size) != 0)
-	 wm_usage("matchbox");
+       else if (strncmp (value.addr, "static", (int) value.size) == 0)
+	 {
+	   w->config->dialog_stratergy 
+	     = WM_DIALOGS_STRATERGY_STATIC;
+	 }
+       else wm_usage("matchbox");
      } 
 
    if (XrmGetResource (rDB, "matchbox.desktop", "Matchbox.Desktop",
@@ -506,29 +525,19 @@ wm_find_client(Wm *w, Window win, int mode)
     Client *c = NULL;
     if (w->head_client == NULL) return NULL;
 
-    if (mode == FRAME) {
-
-      /* This func gets called alot!
-       * Its likely the events landed on main_client 
-       * so we check that first to possibly save a few cycles.
-      */
-      if (w->main_client 
-	  && (w->main_client->frame == win 
-	      || w->main_client->title_frame == win)) 
-	  return w->main_client;
-
-       START_CLIENT_LOOP(w,c);
-       if (c->frame == win || c->title_frame == win) return c;
-       END_CLIENT_LOOP(w,c);
-    } else {
-
-      if (w->main_client && w->main_client->window == win)
-	return w->main_client;
-
-       START_CLIENT_LOOP(w,c);
-       if (c->window == win) return c;
-       END_CLIENT_LOOP(w,c);
-    }    
+    if (mode == FRAME) 
+      {
+	stack_enumerate(w, c)
+	  if (c->frame == win || c->title_frame == win) 
+	    return c;
+      } 
+    else 
+      {
+	stack_enumerate(w, c)
+	  if (c->window == win) 
+	    return c;
+      }    
+    
     return NULL;
 }
 
@@ -780,17 +789,22 @@ wm_handle_button_event(Wm *w, XButtonEvent *e)
    Client *p;
    Client *c = wm_find_client(w, e->window, WINDOW);
 
+   dbg("%s() called", __func__);
+
    /* raise dialogs */
-   if (c && c->type == dialog) 
-     c->show(c);
-
-   XAllowEvents(w->dpy, ReplayPointer, CurrentTime);
-
-   if (c && c->type != menu && c->type != dock && client_want_focus(c))
+   if (c)
      {
-       XSetInputFocus(c->wm->dpy, c->window,
-		      RevertToPointerRoot, CurrentTime);
-       c->wm->focused_client = c;
+       /* Click was on window rather than decorations */
+
+       if (c->type == MBCLIENT_TYPE_DIALOG 
+	   && w->config->dialog_stratergy != WM_DIALOGS_STRATERGY_STATIC)
+	 {
+	   /* raise the dialog up, handle focus etc */
+	   wm_activate_client(c);
+	 }
+
+       XAllowEvents(w->dpy, ReplayPointer, CurrentTime);
+       /* forward grabbed events */
        return;
      }
 
@@ -817,17 +831,15 @@ wm_handle_button_event(Wm *w, XButtonEvent *e)
    /* remove task menu if its up */
    if (w->flags & MENU_FLAG)
    {
-      if (c && c->type == menu ) c->button_press(c,e);
+      if (c && c->type == MBCLIENT_TYPE_TASK_MENU ) c->button_press(c,e);
 
-      START_CLIENT_LOOP(w,p) 
-	{
-	  if (p->type == menu)
-	    {
-	      select_client_destroy(p); 
-	      break;
-	    }
-	}
-      END_CLIENT_LOOP(w,p);
+      stack_enumerate(w, p)
+	if (p->type == MBCLIENT_TYPE_TASK_MENU)
+	  {
+	    select_client_destroy(p); 
+	    break;
+	  }
+
       return;
    }
 
@@ -844,7 +856,7 @@ wm_handle_keypress(Wm *w, XKeyEvent *e)
 {
 #ifndef NO_KBD
   MBConfigKbdEntry *entry =  w->config->kb->entrys;
-  Client *p;
+  Client *p = NULL;
 
 #ifdef USE_LIBSN
   Bool found = False;
@@ -855,13 +867,10 @@ wm_handle_keypress(Wm *w, XKeyEvent *e)
 
    if(w->flags & MENU_FLAG)
      {
-       START_CLIENT_LOOP(w,p)
-	 {
-	   if ( p->type == menu) break;
-	 }
-       END_CLIENT_LOOP(w,p);
-	 
-       if (p->type == menu)
+       stack_enumerate(w, p)
+	 if ( p->type == MBCLIENT_TYPE_TASK_MENU) break;
+       
+       if (p->type == MBCLIENT_TYPE_TASK_MENU)
 	 {
 	   select_client_event_loop( p, NULL );
 	   select_client_destroy (p);
@@ -929,30 +938,29 @@ wm_handle_keypress(Wm *w, XKeyEvent *e)
 	      break;
 #endif
 	    case KEY_ACTN_NEXT_CLIENT:
-	      if (w->main_client
-		  && client_get_next(w->main_client,mainwin) != w->main_client)
-		{
+		  wm_activate_client(stack_cycle_backward(w, MBCLIENT_TYPE_APP));
+		  /*
 		  XGrabServer(w->dpy);
 		  base_client_hide_transients(w->main_client);
 		  wm_activate_client(client_get_next(w->main_client, mainwin));
+
 		  XSync(w->dpy, False);	    
 		  XUngrabServer(w->dpy);
-		}
+		  */
 	      break;
 	    case KEY_ACTN_PREV_CLIENT:
-	      if (w->main_client
-		  && client_get_prev(w->main_client,mainwin) != w->main_client)
-		{
+		  wm_activate_client(stack_cycle_forward(w, MBCLIENT_TYPE_APP));
+		  /*
 		  XGrabServer(w->dpy);
 		  base_client_hide_transients(w->main_client);
 		  wm_activate_client(client_get_prev(w->main_client, mainwin));
 		  XSync(w->dpy, False);	    
 		  XUngrabServer(w->dpy);
-		}
+		  */
 	      break;
 	    case KEY_ACTN_CLOSE_CLIENT:
-	      if (w->main_client)
-		client_deliver_delete(w->main_client);
+	      if (w->stack_top_app)
+		client_deliver_delete(w->stack_top_app);
 	      break;
 	    case KEY_ACTN_TOGGLE_DESKTOP:
 	      wm_toggle_desktop(w);
@@ -961,12 +969,12 @@ wm_handle_keypress(Wm *w, XKeyEvent *e)
 	      select_client_new(w);
 	      break;
 	    case KEY_ACTN_HIDE_TITLEBAR:
-	      if (w->main_client) 
-		main_client_toggle_title_bar(w->main_client);
+	      if (w->stack_top_app) 
+		main_client_toggle_title_bar(w->stack_top_app);
 	      break;
 	    case KEY_ACTN_FULLSCREEN:
-	      if (w->main_client) 
-		main_client_toggle_fullscreen(w->main_client);
+	      if (w->stack_top_app) 
+		main_client_toggle_fullscreen(w->stack_top_app);
 	      break;
 	    }
 	}
@@ -980,7 +988,6 @@ void
 wm_handle_configure_notify(Wm *w, XConfigureEvent *e)
 {
    Client *p, *cdesktop = NULL;
-   Client *previous_main_client = w->main_client;
    Client *ctitledock   = NULL;
    int     height_diff, width_diff;
    
@@ -997,30 +1004,28 @@ wm_handle_configure_notify(Wm *w, XConfigureEvent *e)
 	w->dpy_width  = e->width; 
 	w->dpy_height = e->height;
 	
-	if (!w->head_client) return;
+	if (stack_empty(w)) return;
 	
 	XGrabServer(w->dpy);
 
-	 /* Clear any caches so decorations get redrawn */
-	 theme_img_cache_clear( w->mbtheme, FRAME_MAIN );
+	/* Clear any caches so decorations get redrawn */
+	theme_img_cache_clear( w->mbtheme, FRAME_MAIN );
 
-	 /* XXX Fix for panels in title bar, docks */
-
-	 START_CLIENT_LOOP(w,p);
+	stack_enumerate(w, p)
 	 {
 	   switch (p->type)
 	     {
-	     case mainwin :
+	     case MBCLIENT_TYPE_APP :
 	       p->width += width_diff;
 	       p->height += height_diff;
 	       p->have_cache = False;
 	       
 	       break;
-	     case toolbar :
+	     case MBCLIENT_TYPE_TOOLBAR :
 	       p->width += width_diff;
 	       p->y += height_diff;
 	       break;
-	     case dock :
+	     case MBCLIENT_TYPE_PANEL :
 	       if (p->flags & CLIENT_DOCK_WEST)
 		 {
 		   p->height += height_diff;
@@ -1044,10 +1049,10 @@ wm_handle_configure_notify(Wm *w, XConfigureEvent *e)
 		   ctitledock = p;
 		 }
 	       break;
-	     case dialog :
+	     case MBCLIENT_TYPE_DIALOG :
 	       dialog_client_configure(p);
 	       break;
-	     case desktop:
+	     case MBCLIENT_TYPE_DESKTOP:
 	       p->width += width_diff;
 	       p->height += height_diff;
 	       cdesktop = p;
@@ -1069,15 +1074,16 @@ wm_handle_configure_notify(Wm *w, XConfigureEvent *e)
 	   comp_engine_client_repair (w, p);
 
 	 }
-	 END_CLIENT_LOOP(w,p);
 
+#if 0
 	 if (!(w->flags & DESKTOP_RAISED_FLAG))
 	   wm_activate_client(previous_main_client);
 	 else
 	   { /* Let the desktop know is new workarea */
-	     ewmh_update_rects(w);
+	    
 	     ewmh_set_active(w);
 	   }
+#endif
 
 	 if (cdesktop)
 	   {
@@ -1094,6 +1100,10 @@ wm_handle_configure_notify(Wm *w, XConfigureEvent *e)
 
 	 comp_engine_destroy_root_buffer(w);
 	 comp_engine_render(w, None);
+
+	 ewmh_update_rects(w);
+
+	 wm_activate_client(wm_get_visible_main_client(w));
 
 	 XSync(w->dpy, False);
 	 XUngrabServer(w->dpy);
@@ -1127,7 +1137,7 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
    
    dbg("%s() for win %s - have w: %i vs %i, h: %i vs %i, x: %i vs %i, y: %i vs %i,\n", __func__, c->name, c->height, e->height, c->width, e->width, c->x, e->x, c->y, e->y );
    
-   if (c->type == dock) 	/* Docks can move */
+   if (c->type == MBCLIENT_TYPE_PANEL) 	/* Docks can move */
      {
        if ( c->height != e->height || c->width != e->width
 	    || c->x != e->x || c->y != e->y )
@@ -1157,7 +1167,7 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
        return;
      } 
 
-   if (c->type == toolbar) 	/* can change height */
+   if (c->type == MBCLIENT_TYPE_TOOLBAR) 	/* can change height */
      {
        if ((e->value_mask & CWHeight) && e->height 
 	   && e->height != c->height && !(c->flags & CLIENT_IS_MINIMIZED))
@@ -1166,7 +1176,7 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 	   c->y += change_amount;
 	   c->height = e->height;
 	   c->move_resize(c);
-	   wm_restack(w, c, change_amount); 
+	   wm_update_layout(w, c, change_amount); 
 	   return;
 	 }
      }
@@ -1176,7 +1186,7 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
    xwc.x = c->x;
    xwc.y = c->y;
 
-   if (c->type == dialog)
+   if (c->type == MBCLIENT_TYPE_DIALOG)
      {
        int req_x = e->x, req_y = e->y, req_w = e->width, req_h = e->height;
 
@@ -1266,8 +1276,9 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
        client_deliver_config(c);
      }
 
-   /* XXX Only raise a client if it size is constant and above is set 
-      This may be broken                                             */
+
+#if 0
+   /* XXX fix this crack xxx */
    if (c->width == e->width && c->height == e->height)
      {
        if (e->detail == Above && !(w->flags & DESKTOP_RAISED_FLAG))
@@ -1283,6 +1294,8 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 	   p->show(p);
 	 }
      }
+
+#endif
 
    /* make sure composite does any needed updates */
    if (need_comp_update == True)
@@ -1323,17 +1336,30 @@ wm_handle_unmap_event(Wm *w, XUnmapEvent *e)
    else
      {
        if (!c->mapped) return;
+
        XGrabServer(w->dpy);
-       if (XCheckTypedWindowEvent(c->wm->dpy, c->frame, DestroyNotify, &ev)) {
-	 dbg("%s() destroy on its way....\n", __func__ );
-	 wm_handle_destroy_event(w, &ev.xdestroywindow);
-       } else {
-	 dbg("%s() calling client destroy\n", __func__);
-	 client_set_state(c, WithdrawnState);
-	 XReparentWindow(w->dpy, c->window, w->root, c->x, c->y); 
-	 XUnmapWindow(w->dpy, c->window);
-	 c->destroy(c);
-       }
+
+       XUnmapWindow(w->dpy, c->frame);
+       XSync(w->dpy, False);
+
+       if (XCheckTypedWindowEvent(c->wm->dpy, c->frame, DestroyNotify, &ev)) 
+	 {
+	   dbg("%s() destroy on its way....\n", __func__ );
+	   wm_handle_destroy_event(w, &ev.xdestroywindow);
+	 } 
+       else
+	 {
+	   dbg("%s() calling client destroy\n", __func__);
+	   Window win_old;
+
+	   client_set_state(c, WithdrawnState);
+	   win_old = c->window;
+	   c->destroy(c);
+	   XReparentWindow(w->dpy, win_old, w->root, 0, 0); 
+	   XUnmapWindow(w->dpy, win_old); /* XXX This happens later */
+
+	 }
+
        XUngrabServer(w->dpy);
      }
 }
@@ -1373,7 +1399,7 @@ wm_handle_destroy_event(Wm *w, XDestroyWindowEvent *e)
 void
 wm_handle_client_message(Wm *w, XClientMessageEvent *e)
 {
-   Client *p = NULL, *c = wm_find_client(w, e->window, WINDOW);
+   Client *c = wm_find_client(w, e->window, WINDOW);
 
    dbg("%s() messgae type is %li\n", __func__, e->message_type);
 
@@ -1386,54 +1412,38 @@ wm_handle_client_message(Wm *w, XClientMessageEvent *e)
 #ifndef STANDALONE
 	 case MB_CMD_SET_THEME :
 	   {
-	     Atom realType;
+	     Atom          realType;
 	     unsigned long n;
 	     unsigned long extra;
-	     int format;
-	     int status;
-	     char * value = NULL;
+	     int           format;
+	     int           status;
+	     char         *value = NULL;
+
 	     status = XGetWindowProperty(w->dpy, w->root,
 					 w->atoms[_MB_THEME], 0L, 512L, False,
 					 AnyPropertyType, &realType,
 					 &format, &n, &extra,
 					 (unsigned char **) &value);
 	     
-	     if (status != Success || value == 0
-		 || *value == 0 || n == 0)
+	     if (status == Success && value != 0 && *value != 0 && n == 0)
 	       {
-		 ; 		/* Fails */
-	       } else {
 		 dbg("%s() switching theme to %s\n", __func__, value);
 		 mbtheme_switch(w, value);
 	       }
-	     if (value) XFree(value);
+
+	     if (value) 
+	       XFree(value);
+
 	     return;
 	   }
 #endif
 	 case MB_CMD_EXIT      :
 	   exit(0);
 	 case MB_CMD_NEXT      :
-	   if (w->main_client)
-	     {
-	       XGrabServer(w->dpy);
-	       XSync(w->dpy, False);	    
-	       p = client_get_next(w->main_client, mainwin);
-	       w->main_client->hide(w->main_client);
-	       p->show(p);
-	       XUngrabServer(w->dpy);
-	    }
+	   wm_activate_client(stack_cycle_backward(w, MBCLIENT_TYPE_APP));
 	   break;
-
 	 case MB_CMD_PREV      :
-	   if (w->main_client)
-	     {
-	       XGrabServer(w->dpy);
-	       XSync(w->dpy, False);	    
-	       p = client_get_prev(w->main_client, mainwin);
-	       w->main_client->hide(w->main_client);
-	       p->show(p);
-	       XUngrabServer(w->dpy);
-	    }
+	   wm_activate_client(stack_cycle_forward(w, MBCLIENT_TYPE_APP));
 	   break;
 	 case MB_CMD_DESKTOP   :
 	   wm_toggle_desktop(w);
@@ -1492,8 +1502,11 @@ wm_handle_property_change(Wm *w, XPropertyEvent *e)
     }
   else if (e->atom == w->atoms[_NET_WM_NAME])
     {
-      if (c->name) XFree(c->name);
+      if (c->name) 
+	XFree(c->name);
+
       c->name = ewmh_get_utf8_prop(w, c->window, w->atoms[_NET_WM_NAME]);
+
       if (c->name)
 	c->name_is_utf8 = True;
       else
@@ -1545,14 +1558,14 @@ wm_make_new_client(Wm *w, Window win)
    Atom          realType, *value = NULL;
    unsigned long n, extra, val[1];
    int           format, status;
-   Client       *c = NULL, *t = NULL, *old_main_client = NULL;
+   Client       *c = NULL, *t = NULL;
    XWMHints     *wmhints;
    int           mwm_flags = 0;
 
    XGrabServer(w->dpy);
-
+#if 0
    if (w->main_client) old_main_client = w->main_client;
-
+#endif
    dbg("%s() initiated\n", __func__);
 
    if (wm_win_force_dialog(w, win))
@@ -1685,26 +1698,27 @@ wm_make_new_client(Wm *w, Window win)
 	 {
 	    if (wmhints->window_group && w->head_client != NULL)
 	    {
-	       START_CLIENT_LOOP(w,p);
-	       if (wmhints->window_group == p->window)
-	       { t = p; break; }
-	       END_CLIENT_LOOP(w,p);
+	       stack_enumerate(w, p)
+		 if (wmhints->window_group == p->window)
+		   { t = p; break; }
 	    }
 	 }
       }
       dbg("%s() Transient etc looks good, creating dialog\n", __func__);
       if (!c)  /* if t is is NULL, dialog will always be visible */
 	c = dialog_client_new(w, win, t); 
-      else if (c->type == dialog) /* client already exists and is dialog  */
+      else if (c->type == MBCLIENT_TYPE_DIALOG) /* client already exists and is dialog  */
 	c->trans = t;
 	
    }
    
    if (c == NULL) /* default to a main client */
    {
+#if 0
       /* make sure fullscreen window goes below any utility wins / docks etc */
       if (w->main_client && (w->main_client->flags & CLIENT_FULLSCREEN_FLAG))
 	 main_client_hide(w->main_client);
+#endif
       c = main_client_new(w, win);
 
       if (c == NULL) /* Something has gone wrong - prolly win dissapeared */
@@ -1754,7 +1768,7 @@ wm_make_new_client(Wm *w, Window win)
 
    dbg("%s() calling configure method for new client\n", __func__);
 
-   if (w->config->no_cursor && c->type != dock)
+   if (w->config->no_cursor && c->type != MBCLIENT_TYPE_PANEL)
      XDefineCursor (w->dpy, c->window, blank_curs);
    
    c->configure(c);
@@ -1771,22 +1785,25 @@ wm_make_new_client(Wm *w, Window win)
 
    dbg("%s() showing new client\n", __func__);
 
-   c->show(c);
+   wm_activate_client(c);
+
+   /* below is probably now mostly uneeded ? */
 
    XGrabButton(c->wm->dpy, Button1, 0, c->window, True, ButtonPressMask,
 	       GrabModeSync, GrabModeSync, None, None);
 
    ewmh_state_set(c);
-   ewmh_update(c->wm);
-   ewmh_set_active(c->wm);
-
    client_set_state(c, NormalState);
 
    /* This is really only for an lowlighting panels to make sure 
       they get really hidden. 
+
+      XXX can probably go.
    */
+#if 0
    if (old_main_client && w->main_client != old_main_client)
      base_client_hide_transients(old_main_client);
+#endif
 
  end:
 
@@ -1804,17 +1821,17 @@ wm_remove_client(Wm *w, Client *c)
   dbg("%s() called for %s\n", __func__, c->name);
 
   XGrabServer(c->wm->dpy);
-  XSetErrorHandler(ignore_xerror);
+
   c->destroy(c);
-  XSetErrorHandler(handle_xerror);
+
   XUngrabServer(w->dpy);
 }
 
 
 void
-wm_restack(Wm         *w, 
-	   Client     *client_changed, 
-	   signed int  change_amount)
+wm_update_layout(Wm         *w, 
+		 Client     *client_changed, 
+		 signed int  change_amount) /* XXX Change to relayout */
 {
  Client *p;
  XGrabServer(w->dpy);
@@ -1826,14 +1843,14 @@ wm_restack(Wm         *w,
 
      dbg("%s() restacking, comparing %i is less than %i for %s\n",
 	 __func__, p->y, client_changed->y, p->name);
-     if (client_changed->type == dock 
+     if (client_changed->type == MBCLIENT_TYPE_PANEL 
 	 && client_changed->flags & CLIENT_DOCK_WEST)
        {
 	 if (p->x >= client_changed->x) 
 	   {
 	     switch (p->type)
 	       {
-	       case mainwin :
+	       case MBCLIENT_TYPE_APP :
 		 p->width += change_amount;
 		 p->x     -= change_amount;
 		 p->move_resize(p);
@@ -1842,8 +1859,8 @@ wm_restack(Wm         *w,
 		 client_buttons_delete_all(p);
 		 main_client_redraw(p, False); /* force title redraw */
 		 break;
-	       case toolbar :
-	       case dock    :
+	       case MBCLIENT_TYPE_TOOLBAR :
+	       case MBCLIENT_TYPE_PANEL    :
 		 if (p->flags & CLIENT_DOCK_EAST)
 		   break;
 		 if (p->flags & CLIENT_DOCK_TITLEBAR)
@@ -1875,14 +1892,14 @@ wm_restack(Wm         *w,
 	       }
 	   }
        }
-     else if (client_changed->type == dock 
+     else if (client_changed->type == MBCLIENT_TYPE_PANEL 
 	      && client_changed->flags & CLIENT_DOCK_EAST)
        {
 	 if (p->x <= client_changed->x) 
 	   {
 	     switch (p->type)
 	       {
-	       case mainwin :
+	       case MBCLIENT_TYPE_APP :
 		 p->width += change_amount;
 		 p->move_resize(p);
 		 client_deliver_config(p);
@@ -1890,8 +1907,8 @@ wm_restack(Wm         *w,
 		 client_buttons_delete_all(p);
 		 main_client_redraw(p, False); /* force title redraw */
 		 break;
-	       case toolbar :
-	       case dock    :
+	       case MBCLIENT_TYPE_TOOLBAR :
+	       case MBCLIENT_TYPE_PANEL   :
 		 if (p->flags & CLIENT_DOCK_WEST)
 		   break;
 		 if (p->flags & CLIENT_DOCK_TITLEBAR)
@@ -1927,14 +1944,14 @@ wm_restack(Wm         *w,
 	       }
 	   }
        }
-     else if (client_changed->type == dock 
+     else if (client_changed->type == MBCLIENT_TYPE_PANEL 
 	      && client_changed->flags & CLIENT_DOCK_NORTH)
        {
 	 if (p->y >= client_changed->y) 
 	   {
 	     switch (p->type)
 	       {
-	       case mainwin :
+	       case MBCLIENT_TYPE_APP :
 		 p->height += change_amount;
 		 p->y      -= change_amount;
 		 p->move_resize(p);
@@ -1942,7 +1959,7 @@ wm_restack(Wm         *w,
 		 client_deliver_config(p);
 		 main_client_redraw(p, False); /* force title redraw */
 		 break;
-	       case dock :
+	       case MBCLIENT_TYPE_PANEL :
 		 if (p->flags & CLIENT_DOCK_NORTH
 		     || p->flags & CLIENT_DOCK_TITLEBAR)
 		   {
@@ -1961,12 +1978,13 @@ wm_restack(Wm         *w,
 	 dbg("%s(): restack NORMAL comparing %i <= %i for %s\n",
 	     __func__, p->y, client_changed->y, p->name);
 	 if ( (p->y <= client_changed->y) 
-	      || (client_changed->type == dock && p->type == toolbar))
+	      || (client_changed->type == MBCLIENT_TYPE_PANEL 
+		  && p->type == MBCLIENT_TYPE_TOOLBAR))
 	   {
 	     dbg("%s() restacking ( NORMAL )%s", __func__, p->name);
 	     switch (p->type)
 	       {
-	       case mainwin :
+	       case MBCLIENT_TYPE_APP :
 		 /* if (p->flags & CLIENT_FULLSCREEN_FLAG) break; */
 		 p->height += change_amount;
 		 p->move_resize(p);
@@ -1974,12 +1992,12 @@ wm_restack(Wm         *w,
 		 client_deliver_config(p);
 		 main_client_redraw(p, False); /* force title redraw */
 		 break;
-	       case toolbar :
+	       case MBCLIENT_TYPE_TOOLBAR :
 		 p->y += change_amount;
 		 p->move_resize(p);
 		 client_deliver_config(p);
 		 break;
-	       case dock :
+	       case MBCLIENT_TYPE_PANEL :
 		 if (p->flags & CLIENT_DOCK_SOUTH)
 		   {
 		     p->y += change_amount;
@@ -1987,7 +2005,7 @@ wm_restack(Wm         *w,
 		     client_deliver_config(p);
 		   }
 		 break;
-	       case dialog :
+	       case MBCLIENT_TYPE_DIALOG :
 		 /*
 		 if (p->flags & CLIENT_SHRUNK_FOR_TB_FLAG)
 		   {
@@ -2005,9 +2023,10 @@ wm_restack(Wm         *w,
 
 
  /* Handle dialogs */
- START_CLIENT_LOOP(w, p)
+
+ stack_enumerate(w, p)
    {
-     if (p->type == dialog) 
+     if (p->type == MBCLIENT_TYPE_DIALOG) 
        {
 	 int req_x = p->x, req_y = p->y, req_w = p->width, req_h = p->height;
 
@@ -2019,7 +2038,6 @@ wm_restack(Wm         *w,
 	   }
        }
    }
- END_CLIENT_LOOP(w, p);
 
  XSync(w->dpy, False);
  XUngrabServer(w->dpy);
@@ -2027,13 +2045,20 @@ wm_restack(Wm         *w,
  ewmh_update_rects(w);
 }
 
-
 void 
 wm_activate_client(Client *c)
 {
+  Wm *w;
+
   if (c == NULL) return;
+
+  w = c->wm;
+
   dbg("%s() called for %s\n", __func__, c->name);
 
+  /* old code */
+
+#if 0
   /* Current main client is full screen, make sure it really hidden  */
   if (c->wm->main_client 
       && (c->wm->main_client->flags & CLIENT_FULLSCREEN_FLAG))
@@ -2042,10 +2067,84 @@ wm_activate_client(Client *c)
   /* Hide any lingering dialogs  */
   if (c->type == mainwin) 
     base_client_hide_transients(c->wm->main_client);
+#endif
+
+  XGrabServer(w->dpy);
 
   c->show(c);
+
+  dbg("%s() DESKTOP_RAISED_FLAG is %i\n", 
+      __func__, (w->flags & DESKTOP_RAISED_FLAG));
+
+  if (c->type == MBCLIENT_TYPE_APP || c->type == MBCLIENT_TYPE_DESKTOP) 
+    {
+      /* Manage other affected wins by the activation
+       *
+       *
+       */
+
+      Client *p = NULL;
+      MBList *transient_list = NULL, *list_item = NULL;
+
+      /* Raise panel + toolbars just above app but below app dialogs */
+
+      if (!(c->flags & CLIENT_FULLSCREEN_FLAG))
+	stack_move_type_above_client(MBCLIENT_TYPE_PANEL, c);
+
+      stack_move_type_above_client(MBCLIENT_TYPE_TOOLBAR, c);
+
+      /* Move transient dialogs to top */
+
+      client_get_transient_list(&transient_list, c);
+      
+      list_enumerate(transient_list, list_item)
+	{
+	  stack_move_top((Client *)list_item->data);
+	}
+
+      list_destroy(&transient_list);
+
+      // stack_move_transients_to_top(w, c);
+
+      /*
+      stack_enumerate_transients(w,p,c)
+	p->show(p);
+      */
+
+      /* Move transient for root dialogs to very top */
+
+      stack_move_transients_to_top(w, NULL);
+
+      /* Deal with desktop flag etc */
+      if (c->type != MBCLIENT_TYPE_DESKTOP)
+	{
+	  w->flags &= ~DESKTOP_RAISED_FLAG;
+	  w->stack_top_app = c;      
+	}
+      else
+	{
+	  w->flags |= DESKTOP_RAISED_FLAG;
+	}
+    }
+  else if (c->type == MBCLIENT_TYPE_DIALOG)
+    {
+      /* A Little insurance - on mapping, a dialog can end up below 
+       * panels and toolbars. May be a cleaner way than this.
+       */
+
+      /* XXX below breaks when desktop is showing */
+      stack_move_type_below_client(MBCLIENT_TYPE_TOOLBAR|MBCLIENT_TYPE_PANEL, 
+				   c->trans ? c->trans : wm_get_visible_main_client(w));
+    }
+
   ewmh_update(c->wm);
   ewmh_set_active(c->wm);
+
+  stack_sync_to_display(w);
+
+  XSync(w->dpy, False);	    
+  XUngrabServer(w->dpy);
+
 }
 
 
@@ -2053,10 +2152,19 @@ Client*   /* Returns either desktop or main app client */
 wm_get_visible_main_client(Wm *w)
 {
   if (w->flags & DESKTOP_RAISED_FLAG)
-    return wm_get_desktop(w);
+    {
+      dbg("%s() returning desktop - %p\n", __func__, wm_get_desktop(w)); 
+      return wm_get_desktop(w);
+    }
 
-  if (w->main_client) return w->main_client;
+  if (w->stack_top_app) 
+    {
+      dbg("%s() returning stack top : %p\n", __func__, w->stack_top_app); 
+      return w->stack_top_app;
+    }
  
+  dbg("%s() returning NULL\n", __func__); 
+
   return NULL;
 }
 
@@ -2076,7 +2184,8 @@ wm_get_offsets_size(Wm*     w,
 
   dbg("%s() called\n", __func__);
 
-   START_CLIENT_LOOP(w, p)
+
+  stack_enumerate(w, p)
      {
        if ((ignore_client && p == ignore_client) || p->mapped == False) 
 	 continue;
@@ -2084,29 +2193,29 @@ wm_get_offsets_size(Wm*     w,
        switch(wanted_direction)
 	 {
 	 case NORTH:
-	   if (p->type == dock && p->flags & CLIENT_DOCK_NORTH)
+	   if (p->type == MBCLIENT_TYPE_PANEL && p->flags & CLIENT_DOCK_NORTH)
 	     {
 	       p->get_coverage(p, &x, &y, &ww, &h);
 	       result += h;
 	     }
 	   break;
 	 case SOUTH:
-	   if ((p->type == dock && p->flags & CLIENT_DOCK_SOUTH)
-	       || (p->type == toolbar && include_toolbars) )
+	   if ((p->type == MBCLIENT_TYPE_PANEL && p->flags & CLIENT_DOCK_SOUTH)
+	       || (p->type == MBCLIENT_TYPE_TOOLBAR && include_toolbars) )
 	     {
 	       p->get_coverage(p, &x, &y, &ww, &h);
 	       result += h;
 	     }
 	   break;
 	 case EAST:
-	   if (p->type == dock && p->flags & CLIENT_DOCK_EAST)
+	   if (p->type == MBCLIENT_TYPE_PANEL && p->flags & CLIENT_DOCK_EAST)
 	   {
 	       p->get_coverage(p, &x, &y, &ww, &h);
 	       result += ww;
 	   }
 	   break;
 	 case WEST:
-	   if (p->type == dock && p->flags & CLIENT_DOCK_WEST)
+	   if (p->type == MBCLIENT_TYPE_PANEL && p->flags & CLIENT_DOCK_WEST)
 	   {
 	       p->get_coverage(p, &x, &y, &ww, &h);
 	       result += ww;
@@ -2114,7 +2223,6 @@ wm_get_offsets_size(Wm*     w,
 	   break;
 	 }
      }
-   END_CLIENT_LOOP(w, p);
 
    return result;
 }
@@ -2123,8 +2231,6 @@ wm_get_offsets_size(Wm*     w,
 void
 wm_toggle_desktop(Wm *w)
 {
-  Client *p;
-
   dbg("%s() called desktop flag is : %i \n", __func__, 
       (w->flags & DESKTOP_RAISED_FLAG));
 
@@ -2134,6 +2240,21 @@ wm_toggle_desktop(Wm *w)
        return;
      }
 
+   if (w->flags & DESKTOP_RAISED_FLAG)
+     {
+       dbg("%s() hiding desktop\n", __func__);
+       wm_activate_client(w->stack_top_app);
+     }
+   else
+     {
+       dbg("%s() showing desktop\n", __func__);
+       wm_activate_client(wm_get_desktop(w));
+
+     }
+
+   // w->flags ^= DESKTOP_RAISED_FLAG; - now handled in dekstop->show & activate
+
+#if 0
    /* Toggle decorated desktop */
    if (w->flags & DESKTOP_DECOR_FLAG)
      {
@@ -2180,7 +2301,8 @@ wm_toggle_desktop(Wm *w)
 
    } else {
      dbg("%s() Desktop is hidden, showing it\n", __func__);
-      START_CLIENT_LOOP(w,p)
+
+     stack_enumerate(w, p)
 	{
 	  if ( p->type == desktop) 
 	   {
@@ -2194,9 +2316,8 @@ wm_toggle_desktop(Wm *w)
 	       }
 	   }
 	}
-      END_CLIENT_LOOP(w,p);
 
-      START_CLIENT_LOOP(w,p)
+     stack_enumerate(w, p)
 	{
 	  if ( p->type == toolbar) 
 	    { XMapRaised(w->dpy, p->frame); }
@@ -2211,7 +2332,6 @@ wm_toggle_desktop(Wm *w)
 	      p->show(p);
 	    }
 	}
-      END_CLIENT_LOOP(w,p);
 
       if (!(w->flags & DESKTOP_RAISED_FLAG))
 	w->flags ^= DESKTOP_RAISED_FLAG;	
@@ -2224,6 +2344,7 @@ wm_toggle_desktop(Wm *w)
 
    ewmh_update(w);
    ewmh_set_active(w);
+#endif
 }
 
 void
@@ -2251,20 +2372,7 @@ wm_set_cursor_visibility(Wm *w, Bool visible)
 Client *
 wm_get_desktop(Wm *w)
 {
-  Client *p;
-
-  dbg("%s() called\n", __func__);
- 
-  if (!w->head_client) return NULL;
-
-  START_CLIENT_LOOP(w,p)
-    {
-      if ( (w->flags & DESKTOP_DECOR_FLAG)
-	   && (p->flags & CLIENT_IS_DESKTOP_FLAG)) return p;
-      if ( p->type == desktop) return p;
-    }
-  END_CLIENT_LOOP(w,p);
-  return NULL;
+  return w->client_desktop;
 }
 
 #ifdef USE_XSETTINGS
@@ -2633,7 +2741,8 @@ wm_sn_monitor_event_func (SnMonitorEvent *event,
 
       if (w->head_client)
 	{
-	  START_CLIENT_LOOP(w,p)
+
+	  stack_enumerate(w, p)
 	    {
 	      if (p->startup_id && !strcmp(p->startup_id, seq_id))
 		{
@@ -2646,7 +2755,6 @@ wm_sn_monitor_event_func (SnMonitorEvent *event,
 		  break;
 		}
 	    }
-	  END_CLIENT_LOOP(w,p);
 	}
       else w->sn_busy_cnt--;
       break;

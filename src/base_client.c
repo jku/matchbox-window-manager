@@ -14,7 +14,7 @@
 */
 
 /*
-  $Id: base_client.c,v 1.7 2004/09/24 11:05:16 mallum Exp $
+  $Id: base_client.c,v 1.8 2004/10/28 17:13:28 mallum Exp $
 */
 
 
@@ -40,7 +40,7 @@ base_client_new(Wm *w, Window win)
    c = malloc(sizeof(Client));
    memset(c, 0, sizeof(Client));
    
-   c->type    = mainwin; /* start off with common case */
+   c->type    = MBCLIENT_TYPE_APP; /* start off with common case */
    c->buttons = NULL;
    c->name    = NULL;
 
@@ -167,6 +167,9 @@ base_client_new(Wm *w, Window win)
       c->next->prev = c;
    }
 
+   stack_prepend_bottom(c);
+   stack_dump(w);
+
 #ifdef STANDALONE
    c->backing      = None;
 #else
@@ -274,7 +277,7 @@ base_client_process_name(Client *c)
 {
   Wm *w = c->wm;
   XTextProperty text_prop;
-  Client *p; int i, max = 0; char *tmp_name = NULL;
+  Client *p = NULL; int i, max = 0; char *tmp_name = NULL;
 
    dbg("%s() called, name is %s\n", __func__, c->name);
 
@@ -308,20 +311,20 @@ base_client_process_name(Client *c)
   /* If window name already exists, rename, adding <%i> to it */
   if (w->head_client)
     {
-      START_CLIENT_LOOP(w,p);
-      
-      if (strncmp(p->name, c->name, strlen(c->name)) == 0
-	  && p != c)
+      stack_enumerate(w, p)
 	{
-	  if (strcmp(p->name, c->name) == 0)
+	  if (strncmp(p->name, c->name, strlen(c->name)) == 0
+	      && p != c)
 	    {
-	      if (!max) max = 1;
-	    } else {
-	      i = atoi(p->name+strlen(c->name)+2);
-	      if (i > max) max = i;
+	      if (strcmp(p->name, c->name) == 0)
+		{
+		  if (!max) max = 1;
+		} else {
+		  i = atoi(p->name+strlen(c->name)+2);
+		  if (i > max) max = i;
+		}
 	    }
 	}
-      END_CLIENT_LOOP(w,p);
       
       if (max)
 	{
@@ -435,7 +438,7 @@ base_client_hide_transients(Client *c)
    if (c == NULL) return;
 
    for(t = c->prev; t != c; t = t->prev)
-     if (t->type == dialog && t->trans == c && t->mapped)
+     if (t->type == MBCLIENT_TYPE_DIALOG && t->trans == c && t->mapped)
        t->hide(t);
 
    comp_engine_client_hide(c->wm, c);
@@ -460,7 +463,7 @@ base_client_show(Client *c)
    {
       switch (t->type)
       {
-	 case dialog:    /* raise any transients */
+	 case MBCLIENT_TYPE_DIALOG:    /* raise any transients */
 	    dbg("%s() Transient found, name: %s mapped: %i\n", __func__, t->name, t->mapped);
 	    if ((t->trans == c || t->trans == NULL) && t->mapped)
 	    {
@@ -479,9 +482,9 @@ base_client_show(Client *c)
 		 t->show(t);
 	    }
 	    /* raise any toolbar transients */
-	    else if (c->type != toolbar
+	    else if (c->type != MBCLIENT_TYPE_TOOLBAR
 		     && t->trans != NULL
-		     && t->trans->type == toolbar
+		     && t->trans->type == MBCLIENT_TYPE_TOOLBAR
 		     && client_get_state(t->trans) == NormalState)
 	       t->show(t);
 	    break;
@@ -506,6 +509,7 @@ base_client_show(Client *c)
 void /* cb for this needed, or let wm handle it */
 base_client_destroy(Client *c)
 {
+
   int i = 0;
    /* Free its memory + remove from list */
 
@@ -519,7 +523,7 @@ base_client_destroy(Client *c)
    for(t = c->prev; t != c; t = prev_client)
      {
        prev_client = t->prev;
-       if (t->type == dialog && t->trans == c)
+       if (t->type == MBCLIENT_TYPE_DIALOG && t->trans == c)
 	 t->destroy(t);
      }
 
@@ -539,8 +543,10 @@ base_client_destroy(Client *c)
        if (c->next != NULL) c->next->prev = c->prev;
     } else {
       c->wm->head_client = NULL;
-      if (c->type == mainwin) c->wm->main_client = NULL;
+      if (c->type == MBCLIENT_TYPE_APP) c->wm->main_client = NULL;
     }
+
+   stack_remove(c);
 
    if (c->type != MBCLIENT_TYPE_OVERRIDE)
      {

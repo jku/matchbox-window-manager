@@ -54,7 +54,7 @@ dialog_client_new(Wm *w, Window win, Client *trans)
 
    if (!c) return NULL;
 
-   c->type = dialog;
+   c->type = MBCLIENT_TYPE_DIALOG;
    
    c->reparent     = &dialog_client_reparent;
    c->move_resize  = &dialog_client_move_resize;
@@ -72,11 +72,12 @@ dialog_client_new(Wm *w, Window win, Client *trans)
        /* 
         * Dont let dialogs be transient for other dialogs.
         */
-       if (trans->type != mainwin)
+       if (trans->type != MBCLIENT_TYPE_APP)
 	 c->trans = trans->trans;
        else
 	 c->trans = trans;	 
      }
+   else c->flags |= CLIENT_IS_TRANSIENT_FOR_ROOT;
 
    dialog_client_check_for_state_hints(c);
 
@@ -232,10 +233,87 @@ dialog_client_title_height(Client *c)
    return theme_frame_defined_height_get(c->wm->mbtheme, FRAME_DIALOG);
 }
 
+
 void
 dialog_client_show(Client *c)
 {
+  Wm     *w = c->wm;
+  Client *highest_client = NULL, *p = NULL;
+  MBList *transient_list = NULL, *list_item = NULL;
+
   dbg("%s() called for %s\n", __func__, c->name);
+
+  if (!c->mapped)
+    {
+      XMapSubwindows(c->wm->dpy, c->frame);
+      XMapWindow(c->wm->dpy, c->frame);
+    }
+
+  /* 
+   *  We just need to get the order right in respect 
+   *  to other dialogs transient to the same app or 
+   *  transient to root.
+   *  This order *should* be kept the same by other 
+   *  stack operations ( eg wm_activate client ).
+   */
+
+  if (c->trans)
+    {
+      /* Were transient for something 
+       * - so recursives find the highest transient for this app
+       * - raise ourselves above 
+       */
+
+      Client *lowest_trans = c->trans;
+
+      while (lowest_trans->trans != NULL) 
+	lowest_trans = lowest_trans->trans;
+
+      highest_client = client_get_highest_transient(lowest_trans);
+
+      if (c->mapped && highest_client == c)
+	{
+	  /* if were already at the top, logic below will actually
+	     move us below the transient.
+	  */
+	  dbg("%s() %s already highest and mapped .. leaving\n", 
+	      __func__, c->name);
+	}
+      else
+	{
+	  if (highest_client == NULL || highest_client == c)
+	    {
+	      dbg("%s() raising %s above c->trans: %s\n", __func__, 
+		  c->name, c->trans->name);
+	      stack_move_above_client(c, c->trans);
+	    }
+	  else
+	    {
+	      dbg("%s() raising %s above highest_client: %s\n", 
+		  __func__, c->name, highest_client->name);
+	      stack_move_above_client(c, highest_client);
+	    }
+	}
+    }
+  else
+    stack_move_top(c);
+
+  /* Now move any transients for use above */
+
+  client_get_transient_list(&transient_list, c);
+ 
+  highest_client = c;
+
+  list_enumerate(transient_list, list_item)
+    {
+      stack_move_above_client((Client *)list_item->data, highest_client);
+      highest_client = (Client *)list_item->data;
+    }
+
+  list_destroy(&transient_list);
+
+
+#if 0
 
   /* XXX paint before map so dialog gets shape 
          can probably be more optimised / experimental at the moment. 
@@ -288,7 +366,10 @@ dialog_client_show(Client *c)
     }
 #endif
 
+#endif
+
   c->mapped = True;
+
 }
 
 void
@@ -403,13 +484,12 @@ dialog_get_available_area(Client *c,
       Client *p = NULL;
       Bool    have_toolbar = False;
 
-      START_CLIENT_LOOP(w, p)
+     stack_enumerate(w, p)
       {
-	if (p->type == toolbar && p->mapped 
+	if (p->type == MBCLIENT_TYPE_TOOLBAR && p->mapped 
 	    && !(p->flags & CLIENT_IS_MINIMIZED))
 	  { have_toolbar = True; break; }
       }
-      END_CLIENT_LOOP(w, p);
 
       *y      = wm_get_offsets_size(w, NORTH, NULL, True);
 
@@ -787,6 +867,7 @@ dialog_client_redraw(Client *c, Bool use_cache)
 void
 dialog_client_button_press(Client *c, XButtonEvent *e)
 {
+  Wm *w = c->wm;
   int offset_north = dialog_client_title_height(c);
   int offset_south = 0, offset_west = 0, offset_east = 0;
 
@@ -809,7 +890,9 @@ dialog_client_button_press(Client *c, XButtonEvent *e)
       case -1: 		 /* Cancelled  */
 	 break;
       case 0:
-	 dialog_client_drag(c);     /* Not on button */
+	if (w->config->dialog_stratergy == WM_DIALOGS_STRATERGY_STATIC)
+	  break; 		/* no dragging, raising */
+	dialog_client_drag(c);  /* Not on button */
 	 break;
    }
 }
@@ -1011,12 +1094,15 @@ dialog_client_drag(Client *c) /* drag box */
 	
 	XUngrabPointer(c->wm->dpy, CurrentTime);
 	XUngrabServer(c->wm->dpy);
+	wm_activate_client(c);
 	return;
       }
     }
 
   XUngrabPointer(c->wm->dpy, CurrentTime);
   XUngrabServer(c->wm->dpy);
+
+
   client_deliver_config(c);
 }
 

@@ -30,7 +30,7 @@ toolbar_client_new(Wm *w, Window win)
        return main_client_new(w, win);
      }
 
-   c->type = toolbar;
+   c->type = MBCLIENT_TYPE_TOOLBAR;
    
    c->configure    = &toolbar_client_configure;
    c->reparent     = &toolbar_client_reparent;
@@ -51,46 +51,50 @@ toolbar_client_new(Wm *w, Window win)
 void
 toolbar_client_configure(Client *c)
 {
+  Wm *w = c->wm;
+
   if (c->flags & CLIENT_IS_MINIMIZED)
     return;
 
-  c->y = c->wm->dpy_height - wm_get_offsets_size(c->wm, SOUTH, c, True)
+  c->y = w->dpy_height - wm_get_offsets_size(w, SOUTH, c, True)
     - c->height;
   c->x = toolbar_win_offset(c) 
-    + wm_get_offsets_size(c->wm, WEST,  NULL, False);
-  c->width = c->wm->dpy_width - toolbar_win_offset(c)
-    - wm_get_offsets_size(c->wm, WEST,  NULL, False)
-    - wm_get_offsets_size(c->wm, EAST,  NULL, False);
+    + wm_get_offsets_size(w, WEST,  NULL, False);
+  c->width = w->dpy_width - toolbar_win_offset(c)
+    - wm_get_offsets_size(w, WEST,  NULL, False)
+    - wm_get_offsets_size(w, EAST,  NULL, False);
 
 }
 
 void
 toolbar_client_move_resize(Client *c)
 {
-   int max_offset = theme_frame_defined_width_get(c->wm->mbtheme, 
-						   FRAME_UTILITY_MAX);
-   int min_offset = theme_frame_defined_height_get(c->wm->mbtheme, 
-						    FRAME_UTILITY_MIN);
-   int offset = toolbar_win_offset(c);
+  Wm *w = c->wm;
 
-   base_client_move_resize(c);
+  int max_offset = theme_frame_defined_width_get(w->mbtheme, 
+						 FRAME_UTILITY_MAX);
+  int min_offset = theme_frame_defined_height_get(w->mbtheme, 
+						  FRAME_UTILITY_MIN);
+  int offset = toolbar_win_offset(c);
+   
+  base_client_move_resize(c);
 
-   if (!(c->flags & CLIENT_IS_MINIMIZED))
-   {
-     if (c->flags & CLIENT_TITLE_HIDDEN_FLAG) max_offset = 0;
-
-      XResizeWindow(c->wm->dpy, c->window, c->width, c->height);
-      XMoveResizeWindow(c->wm->dpy, c->frame, c->x - max_offset,
+  if (!(c->flags & CLIENT_IS_MINIMIZED))
+    {
+      if (c->flags & CLIENT_TITLE_HIDDEN_FLAG) max_offset = 0;
+      
+      XResizeWindow(w->dpy, c->window, c->width, c->height);
+      XMoveResizeWindow(w->dpy, c->frame, c->x - max_offset,
 		  c->y, c->width + max_offset, c->height );
-      XMoveResizeWindow(c->wm->dpy, c->title_frame, 0,
+      XMoveResizeWindow(w->dpy, c->title_frame, 0,
 		  0, max_offset , c->height );
    } else {
 
      if (min_offset)
        {
-	 XMoveResizeWindow(c->wm->dpy, c->frame, c->x,
+	 XMoveResizeWindow(w->dpy, c->frame, c->x,
 			   c->y, c->width + max_offset, offset );
-	 XMoveResizeWindow(c->wm->dpy, c->title_frame, 0,
+	 XMoveResizeWindow(w->dpy, c->title_frame, 0,
 			   0, c->width + max_offset , min_offset );
        }
    }      
@@ -136,10 +140,11 @@ toolbar_client_reparent(Client *c)
 void
 toolbar_client_show(Client *c)
 {
+  Wm   *w = c->wm;
   long win_state; 
 
 #ifdef STANDALONE
-   XFreePixmap(c->wm->dpy, c->backing);
+   XFreePixmap(w->dpy, c->backing);
    c->backing = None;
 #else
    if (c->backing != NULL) 
@@ -149,8 +154,8 @@ toolbar_client_show(Client *c)
 
    c->mapped = True;
 
-  if (c->wm->main_client 
-      && (c->wm->main_client->flags & CLIENT_FULLSCREEN_FLAG))
+  if (w->main_client  		/* XXX NEEDED ANYMORE ? */
+      && (w->main_client->flags & CLIENT_FULLSCREEN_FLAG))
     main_client_manage_toolbars_for_fullscreen(c, True);
 
    win_state = client_get_state(c);
@@ -159,7 +164,7 @@ toolbar_client_show(Client *c)
    if (win_state == WithdrawnState)
      {
        client_set_state(c,NormalState);
-       wm_restack(c->wm, c, - c->height);
+       wm_update_layout(c->wm, c, - c->height);
      } 
    else if (win_state == IconicState) /* minimised, set maximised */
      {
@@ -168,13 +173,13 @@ toolbar_client_show(Client *c)
        /* Make sure desktop flag is unset */
        c->flags &= ~CLIENT_IS_MINIMIZED;
 
-       wm_restack(c->wm, c, -(c->height - toolbar_win_offset(c)));
+       wm_update_layout(c->wm, c, -(c->height - toolbar_win_offset(c)));
 
        c->y = c->y - ( c->height - toolbar_win_offset(c));
        if (c->flags & CLIENT_TITLE_HIDDEN_FLAG)
 	 c->x = wm_get_offsets_size(c->wm, WEST,  NULL, False);
        else
-	 c->x = theme_frame_defined_width_get(c->wm->mbtheme,
+	 c->x = theme_frame_defined_width_get(w->mbtheme,
 					      FRAME_UTILITY_MAX )
 	   + wm_get_offsets_size(c->wm, WEST,  NULL, False);
      } 
@@ -184,25 +189,30 @@ toolbar_client_show(Client *c)
    client_buttons_delete_all(c);   
 
    toolbar_client_move_resize(c);
-   
-   XMapRaised(c->wm->dpy, c->frame);
-   XMapRaised(c->wm->dpy, c->title_frame);
-   XMapRaised(c->wm->dpy, c->window); 
+
+   stack_move_above_extended(c, NULL, 
+			     MBCLIENT_TYPE_APP|MBCLIENT_TYPE_DESKTOP, 
+			     0);
+
+   XMapSubwindows(w->dpy, c->frame);
+   XMapWindow(w->dpy, c->frame);
 
    if (client_want_focus(c))
    {
       dbg("client wants focus");
-      XSetInputFocus(c->wm->dpy, c->window,
+      XSetInputFocus(w->dpy, c->window,
 		     RevertToPointerRoot, CurrentTime);
-      c->wm->focused_client = c;
+      w->focused_client = c;
    } 
 
    base_client_show(c);
 
+#if 0
    /* make sure any dialog clients are raised above */
    /* move / resize any dialogs */
-   if (c->wm->main_client &&   !(c->wm->flags & DESKTOP_RAISED_FLAG)) 
-     base_client_show(c->wm->main_client);
+   if (w->main_client &&   !(w->flags & DESKTOP_RAISED_FLAG)) 
+     base_client_show(w->main_client);
+#endif
 }
 
 void
@@ -238,7 +248,7 @@ toolbar_client_hide(Client *c)
 
    dbg("hiding toolbar y is now %i", c->y);
 
-   wm_restack(c->wm, c, c->height - toolbar_win_offset(c));
+   wm_update_layout(c->wm, c, c->height - toolbar_win_offset(c));
 }
 
 void
@@ -256,12 +266,12 @@ toolbar_client_destroy(Client *c)
 					    FRAME_UTILITY_MAX )
       || (c->flags & CLIENT_TITLE_HIDDEN_FLAG) )
     {
-      wm_restack(w, c, c->height);
+      wm_update_layout(w, c, c->height);
     } 
   else 
     {
-      wm_restack(w, c, theme_frame_defined_height_get(c->wm->mbtheme,
-						      FRAME_UTILITY_MIN));
+      wm_update_layout(w, c, theme_frame_defined_height_get(c->wm->mbtheme,
+							   FRAME_UTILITY_MIN));
     }
   
   base_client_destroy(c);     

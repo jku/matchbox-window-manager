@@ -1,3 +1,74 @@
+2004-10-28  <mallum@handhelds.org>
+
+	* src/base_client.c: (base_client_new), (base_client_process_name),
+	(base_client_hide_transients), (base_client_show),
+	(base_client_destroy):
+	* src/client_common.c: (client_set_state), (client_get_state),
+	(client_deliver_config), (client_deliver_wm_protocol),
+	(client_deliver_message), (client_obliterate),
+	(client_deliver_delete), (client_want_focus),
+	(client_get_transient_list), (client_get_highest_transient),
+	(client_init_backing), (client_init_backing_mask),
+	(client_button_new), (client_button_remove),
+	(client_buttons_delete_all), (client_get_button_from_event),
+	(client_get_button_list_item_from_event), (client_button_do_ops):
+	* src/client_common.h:
+	* src/desktop_client.c: (desktop_client_new),
+	(desktop_client_show), (desktop_client_unmap),
+	(desktop_client_destroy):
+	* src/dialog_client.c: (dialog_client_new), (dialog_client_show),
+	(dialog_get_available_area), (dialog_client_button_press),
+	(dialog_client_drag):
+	* src/dockbar_client.c: (dockbar_client_new),
+	(dockbar_client_configure), (dockbar_client_move_resize),
+	(dockbar_client_show), (dockbar_client_hide),
+	(dockbar_client_destroy):
+	* src/ewmh.c: (ewmh_handle_root_message), (ewmh_update_lists),
+	(ewmh_update_rects), (ewmh_state_check),
+	(ewmh_set_allowed_actions), (ewmh_set_active),
+	(ewmh_hung_app_check), (ewmh_get_utf8_prop),
+	(ewmh_get_icon_prop_data):
+	* src/list.h:
+	* src/main_client.c: (main_client_new),
+	(main_client_check_for_single),
+	(main_client_manage_toolbars_for_fullscreen),
+	(main_client_configure), (main_client_title_height),
+	(main_client_reparent), (main_client_move_resize),
+	(main_client_toggle_fullscreen), (main_client_redraw),
+	(main_client_button_press), (main_client_toggle_title_bar),
+	(main_client_iconize), (main_client_show), (main_client_unmap),
+	(main_client_destroy):
+	* src/mbtheme.c: (theme_frame_button_paint),
+	(theme_frame_menu_get_dimentions), (theme_frame_menu_paint),
+	(mbtheme_new), (mbtheme_switch):
+	* src/select_client.c: (select_client_new),
+	(select_client_event_loop):
+	* src/stack.c: (stack_add_below_client), (stack_add_above_client),
+	(stack_remove), (stack_update_transients),
+	(stack_move_above_extended), (stack_move_below_client),
+	(stack_move_above_client), (stack_move_type_above_client),
+	(stack_move_type_below_client), (stack_move_transients_to_top),
+	(stack_get_window_list), (stack_cycle_forward),
+	(stack_cycle_backward), (stack_get_highest), (stack_get_lowest),
+	(stack_get_above), (stack_get_below), (stack_dump), (main):
+	* src/stack.h:
+	* src/structs.h:
+	* src/toolbar_client.c: (toolbar_client_new),
+	(toolbar_client_configure), (toolbar_client_move_resize),
+	(toolbar_client_show), (toolbar_client_hide),
+	(toolbar_client_destroy):
+	* src/wm.c: (wm_new), (wm_usage), (wm_load_config),
+	(wm_find_client), (wm_handle_button_event), (wm_handle_keypress),
+	(wm_handle_configure_notify), (wm_handle_configure_request),
+	(wm_handle_unmap_event), (wm_handle_client_message),
+	(wm_handle_property_change), (wm_make_new_client),
+	(wm_remove_client), (wm_update_layout), (wm_activate_client),
+	(wm_get_visible_main_client), (wm_get_offsets_size),
+	(wm_toggle_desktop), (wm_get_desktop), (wm_sn_monitor_event_func):
+	* src/wm.h:
+	Much restructing of WM stacking. Is not 100% stable yet.  
+	Many --enable options probably broken. 
+
 2004-10-20  mallum,,,  <mallum@handhelds.org>
 
 	* src/Makefile.am:

@@ -145,68 +145,72 @@ ewmh_handle_root_message(Wm *w, XClientMessageEvent *e)
    dbg("%s() called\n", __func__);
 
    if (e->message_type == w->atoms[_NET_ACTIVE_WINDOW])
-   {
-      dbg("%s() got active window message for win %li", __func__, e->window);
-      if ((c = wm_find_client(w, e->window, WINDOW)) != NULL)
-	{
-	  wm_activate_client(c);
-	}
-	
-      return 1;
-   } else if (e->message_type == w->atoms[_NET_CLOSE_WINDOW]) {
-	 if ((c = wm_find_client(w, e->window, WINDOW)) != NULL)
-	    client_deliver_delete(c);
-	 return 1;
-   } else if (e->message_type == w->atoms[WM_PROTOCOLS]
-	      && e->data.l[0] == w->atoms[_NET_WM_PING]) {
-     if ((c = wm_find_client(w, e->data.l[1], WINDOW)) != NULL)
-       {
-	 dbg("%s() pong from %s\n", __func__, c->name);
+     {
+       dbg("%s() got active window message for win %li", __func__, e->window);
+       if ((c = wm_find_client(w, e->window, WINDOW)) != NULL)
+	 wm_activate_client(c);
+       return 1;
+     } 
+   else if (e->message_type == w->atoms[_NET_CLOSE_WINDOW]) 
+     {
+       if ((c = wm_find_client(w, e->window, WINDOW)) != NULL)
+	 client_deliver_delete(c);
+       return 1;
+     } 
+   else if (e->message_type == w->atoms[WM_PROTOCOLS]
+	    && e->data.l[0] == w->atoms[_NET_WM_PING]) 
+     {
+       if ((c = wm_find_client(w, e->data.l[1], WINDOW)) != NULL)
+	 {
+	   dbg("%s() pong from %s\n", __func__, c->name);
 
-	 /* We got a response to a ping. stop pinging it now
-            until close button is pressed again. 
-          */
-	 if (c->pings_pending > 0) 
-	   {
-	     c->pings_pending = -1;
-	     c->wm->n_active_ping_clients--;
-	   }
-       }
-   } else if (e->message_type == w->atoms[WINDOW_STATE]) {
-     if (e->data.l[1] == w->atoms[WINDOW_STATE_FULLSCREEN]
-	 && ((c = wm_find_client(w, e->window, WINDOW)) != NULL)
-	 && c->type == mainwin)
-       {
-	 dbg("got EWMH fullscreen state change\n");
-	 switch (e->data.l[0])
-	   {
-	   case _NET_WM_STATE_REMOVE:
-	     if (c->flags & CLIENT_FULLSCREEN_FLAG)
+	   /* We got a response to a ping. stop pinging it now
+	      until close button is pressed again. 
+	   */
+	   if (c->pings_pending > 0) 
+	     {
+	       c->pings_pending = -1;
+	       c->wm->n_active_ping_clients--;
+	     }
+	 }
+     } 
+   else if (e->message_type == w->atoms[WINDOW_STATE]) 
+     {
+       if (e->data.l[1] == w->atoms[WINDOW_STATE_FULLSCREEN]
+	   && ((c = wm_find_client(w, e->window, WINDOW)) != NULL)
+	   && c->type == MBCLIENT_TYPE_APP)
+	 {
+	   dbg("got EWMH fullscreen state change\n");
+	   switch (e->data.l[0])
+	     {
+	     case _NET_WM_STATE_REMOVE:
+	       if (c->flags & CLIENT_FULLSCREEN_FLAG)
+		 main_client_toggle_fullscreen(c);
+	       break;
+	     case _NET_WM_STATE_ADD:
+	       if (!(c->flags & CLIENT_FULLSCREEN_FLAG))
+		 main_client_toggle_fullscreen(c);
+	       break;
+	     case _NET_WM_STATE_TOGGLE:
 	       main_client_toggle_fullscreen(c);
-	     break;
-	   case _NET_WM_STATE_ADD:
-	     if (!(c->flags & CLIENT_FULLSCREEN_FLAG))
-	       main_client_toggle_fullscreen(c);
-	     break;
-	   case _NET_WM_STATE_TOGGLE:
-	     main_client_toggle_fullscreen(c);
-	     break;
-	   }
-       }
-     return 1;
-
-   } else if (e->message_type == w->atoms[_NET_SHOW_DESKTOP]
-	      && wm_get_desktop(w) ) {
-     dbg("%s() got desktop message\n", __func__);
-     if (e->data.l[0] == 1)
-       { 			/* Show the desktop, if not shown */
-	 if (!(w->flags & DESKTOP_RAISED_FLAG))
-	   wm_toggle_desktop(w);
-       } else {                 /* Hide the desktop, if shown */
-	 if (w->flags & DESKTOP_RAISED_FLAG)
-	   wm_toggle_desktop(w);
-       }
-   } else { ; }
+	       break;
+	     }
+	 }
+       return 1;
+     } 
+   else if (e->message_type == w->atoms[_NET_SHOW_DESKTOP]
+	    && wm_get_desktop(w) ) 
+     {
+       dbg("%s() got desktop message\n", __func__);
+       if (e->data.l[0] == 1)
+	 { 			/* Show the desktop, if not shown */
+	   if (!(w->flags & DESKTOP_RAISED_FLAG))
+	     wm_toggle_desktop(w);
+	 } else {                 /* Hide the desktop, if shown */
+	   if (w->flags & DESKTOP_RAISED_FLAG)
+	     wm_toggle_desktop(w);
+	 }
+     }
    
    return 0;
 }
@@ -221,10 +225,12 @@ ewmh_update(Wm *w)
 void
 ewmh_update_lists(Wm *w)
 {
-   Client *c = NULL;
-   Window  *wins = NULL;
-   int num = 0, cnt = 0;
+   Client        *c = NULL;
+   Window        *wins = NULL;
+   int            cnt = 0;
    unsigned long  val[1];
+
+   dbg("%s(): called %i\n", __func__, n_stack_items(w)); 
 
 #ifdef USE_LIBSN
    unsigned char *bin_map_str = NULL; 
@@ -291,43 +297,34 @@ ewmh_update_lists(Wm *w)
 
 #endif
 
-   if (w->head_client)
-   {
-     dbg("%s(): updating ewmh list props\n", __func__ ) ;   
+  /* Root window client win lists */
 
-     START_CLIENT_LOOP(w,c);
-     {
-       num++;
-     }
-     END_CLIENT_LOOP(w,c);
+   if (!stack_empty(w))
+   {
+     dbg("%s(): updating ewmh list props %i items\n", 
+	 __func__, n_stack_items(w) ) ;   
+
+     wins = malloc(sizeof(Window)*n_stack_items(w));
      
-     wins = malloc(sizeof(Window)*num);
-     
-     START_CLIENT_LOOP(w,c);
-     {
+     stack_enumerate(w,c)
        wins[cnt++] = c->window;
-     }
-     END_CLIENT_LOOP(w,c);
   
      XChangeProperty(w->dpy, w->root, w->atoms[_NET_CLIENT_LIST] ,
 		     XA_WINDOW, 32, PropModeReplace,
-		     (unsigned char *)wins, num);
+		     (unsigned char *)wins, n_stack_items(w));
   
      XChangeProperty(w->dpy, w->root, w->atoms[_NET_CLIENT_LIST_STACKING] ,
 		     XA_WINDOW, 32, PropModeReplace,
-		     (unsigned char *)wins, num);
+		     (unsigned char *)wins, n_stack_items(w));
    }
 
-   /* Desktop */
-   if (w->flags & DESKTOP_RAISED_FLAG)
-     val[0] = 1;
-   else
-     val[0] = 0;
+   /* Desktop showing hint */
+
+   val[0] = (w->flags & DESKTOP_RAISED_FLAG) ? 1 : 0;
 
    XChangeProperty(w->dpy, w->root, w->atoms[_NET_SHOW_DESKTOP],
 		   XA_CARDINAL, 32, PropModeReplace, 
 		   (unsigned char *)val, 1);
-
   if (wins)
     free(wins);
 }
@@ -349,6 +346,7 @@ ewmh_update_rects(Wm *w)
   if (w->flags & DESKTOP_DECOR_FLAG)
     {
       /* Desktop is decorated, needs to know frame border sizes  */
+
       val[0] += theme_frame_defined_width_get(w->mbtheme, 
 						   FRAME_MAIN_WEST );
       val[2] -= theme_frame_defined_width_get(w->mbtheme, 
@@ -393,11 +391,8 @@ ewmh_state_check(Client *c, Atom atom_state_wanted)
 {
    unsigned long n;
    unsigned long extra;
-   int format;
-   int status;
-   int i;
-   Atom realType;
-   Atom * value = NULL;
+   int           format, status, i;
+   Atom          realType, *value = NULL;
 
    status = XGetWindowProperty(c->wm->dpy, c->window,
 			       c->wm->atoms[WINDOW_STATE],
@@ -417,7 +412,9 @@ ewmh_state_check(Client *c, Atom atom_state_wanted)
 	 }
      }
 
-   if (value) XFree(value);
+   if (value) 
+     XFree(value);
+
    return False;
 }
 
@@ -431,10 +428,10 @@ ewmh_set_allowed_actions(Wm *w, Client *c)
     0, 0
   }; 
 
-  if (c->type == mainwin)
+  if (c->type == MBCLIENT_TYPE_APP)
     actions[num_actions++] = w->atoms[_NET_WM_ACTION_FULLSCREEN];
 
-  if (c->type == dock || c->type == dialog)
+  if (c->type == MBCLIENT_TYPE_PANEL || c->type == MBCLIENT_TYPE_DIALOG)
     actions[num_actions++] = w->atoms[_NET_WM_ACTION_MOVE];
 
   XChangeProperty(w->dpy, c->window, w->atoms[_NET_WM_ALLOWED_ACTIONS],
@@ -445,21 +442,13 @@ ewmh_set_allowed_actions(Wm *w, Client *c)
 void 
 ewmh_set_active(Wm *w)
 {
-  Client *c;
+  Client              *c;
   static unsigned long last_active; 
-  unsigned long  val[1];
+  unsigned long        val[1] = { 0 };
 
-  if ((w->flags & DESKTOP_RAISED_FLAG) && (c = wm_get_desktop(w)) != NULL)
-    { 
-      val[0] = c->window; 
-      dbg("%s() setting desktop ( %li ) as active\n", __func__, c->window );
-    }
-  else if (w->main_client)
-    { 
-      val[0] = w->main_client->window; 
-    }
-  else val[0] = 0;
-   
+  if ((c = wm_get_visible_main_client(w)) != NULL)
+    val[0] = c->window;
+
   if (last_active == val[0]) 	/* avoid the roundtrip if pos */
     return;
 
@@ -486,12 +475,12 @@ ewmh_hung_app_check(Wm *w)
 
   dbg("%s() called\n", __func__ );
 
-  START_CLIENT_LOOP(w, c)
+  stack_enumerate(w, c)
     {
       if (c->has_ping_protocol && c->pings_pending != -1)
 	{
 	  XEvent e;
-
+	  
 	  c->pings_pending++;
 
 	  dbg("%s() pinging %s\n", __func__, c->name);
@@ -515,7 +504,6 @@ ewmh_hung_app_check(Wm *w)
 	    }
 	}
     }
-  END_CLIENT_LOOP(w, c);
 
 #endif
 }
@@ -585,12 +573,10 @@ static void set_supported(Wm *w) /*  */
 unsigned char *
 ewmh_get_utf8_prop(Wm *w, Window win, Atom req_atom)
 {
-  Atom type;
-  int format;
-  long bytes_after;
+  Atom           type;
+  int            format, result;
+  long           bytes_after, n_items;
   unsigned char *str = NULL;
-  long n_items;
-  int result;
 
   result =  XGetWindowProperty (w->dpy, win, req_atom,
 				0, 1024L,
@@ -626,12 +612,10 @@ ewmh_get_utf8_prop(Wm *w, Window win, Atom req_atom)
 int*
 ewmh_get_icon_prop_data(Wm *w, Window win)
 {
-  Atom type;
-  int format;
-  long bytes_after;
+  Atom           type;
+  int            format, result;
+  long           bytes_after, n_items;
   unsigned char *data = NULL;
-  long n_items;
-  int result;
 
   result =  XGetWindowProperty (w->dpy, win, w->atoms[_NET_WM_ICON],
 				0, 100000L,
@@ -696,7 +680,7 @@ static void set_compliant(Wm *w) /* lets clients know were compliant (ish) */
    XStoreName(w->dpy, win, app_name);   
 }
 
-/* UTF 8 - borrowed from glib */
+/* UTF8 - borrowed from glib. XXX fontconfig may actually provide these calls*/
 
 #define UTF8_COMPUTE(Char, Mask, Len)                                         \
   if (Char < 128)                                                             \

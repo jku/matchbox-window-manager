@@ -17,6 +17,7 @@
 #define _WM_H_
 
 #include "structs.h"
+#include "stack.h"
 #include "base_client.h"
 #include "main_client.h"
 #include "toolbar_client.h"
@@ -113,7 +114,7 @@ void
 wm_lowlight(Wm *w, Client *c);
 
 void 
-wm_restack(Wm *w, Client *c, signed int amount);
+wm_update_layout(Wm *w, Client *c, signed int amount);
 
 int 
 wm_get_offsets_size(Wm*     w, 

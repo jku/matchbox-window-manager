@@ -18,6 +18,8 @@
 
 #include "structs.h"
 
+typedef struct list_item MBList; 
+
 struct list_item
 {
   char* name;
@@ -25,6 +27,8 @@ struct list_item
   void* data;
   struct list_item* next;
 };
+
+#define list_enumerate(l,i) for((i)=(l);(i);(i)=(i)->next)
 
 #define list_get_tail(l) while ((l)->next != NULL) (l)=(l)->next; 
 

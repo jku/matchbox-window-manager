@@ -294,7 +294,8 @@ theme_frame_button_paint(MBTheme *theme,
 		  mb_pixbuf_img_get_width(theme->img_caches[frame_type]),
 		  mb_pixbuf_img_get_height(theme->img_caches[frame_type]));
 
-	      if (c->type == mainwin || c->type == toolbar )
+	      if (c->type == MBCLIENT_TYPE_APP 
+		  || c->type == MBCLIENT_TYPE_TOOLBAR )
 		{
 		  img_backing = mb_pixbuf_img_rgb_new(theme->wm->pb, 
 						      button_w, button_h);
@@ -840,9 +841,12 @@ theme_frame_menu_get_dimentions(MBTheme* theme, int *w, int *h)
   if (frame == NULL) return False; 
   if (frame->font == NULL) return False;
 
-  START_CLIENT_LOOP(theme->wm, p);   
+  stack_enumerate(theme->wm, p)
   {
-    if ((p->type == mainwin || p->type == desktop) && p->name)
+    if ((p->type == MBCLIENT_TYPE_APP 
+	 || p->type == MBCLIENT_TYPE_DESKTOP) 
+	&& p->name && p->mapped
+	&& p != wm_get_visible_main_client(theme->wm))
       {
 	int this_width = mb_font_get_txt_width (frame->font,
 						(unsigned char *)p->name, 
@@ -857,7 +861,7 @@ theme_frame_menu_get_dimentions(MBTheme* theme, int *w, int *h)
 	if (this_width > width) width = this_width;
       }
    }
-  END_CLIENT_LOOP(theme->wm, p);
+
 
   if (!height) return False;
     
@@ -1035,6 +1039,7 @@ theme_frame_menu_highlight_entry(Client         *c,
 void
 theme_frame_menu_paint(MBTheme* theme, Client *c)
 {
+  Wm             *w = c->wm;
   Client         *p;
   MBThemeFrame   *frame;
   MBPixbufImage  *img;
@@ -1065,27 +1070,29 @@ theme_frame_menu_paint(MBTheme* theme, Client *c)
   /* render icons */
   item_current_y = frame->border_n;
 
-  START_CLIENT_LOOP(c->wm,p)
-    if (p->type == mainwin && p->name && !(p->flags & CLIENT_IS_DESKTOP_FLAG)
-	&& client_get_state(p) == NormalState )
+  stack_enumerate(c->wm, p)
+    if (p->type == MBCLIENT_TYPE_APP 
+	&& p->name && !(p->flags & CLIENT_IS_DESKTOP_FLAG)
+	&& p->mapped /* client_get_state(p) == NormalState */
+	&& p != wm_get_visible_main_client(w))
       {
 	theme_frame_icon_paint(theme, p, img, 
 			       frame->border_w + MENU_ENTRY_PADDING/2, 
 			       item_current_y  + icon_offset);
 	item_current_y += item_h;
       }
-  END_CLIENT_LOOP(c->wm,p)
 
-  START_CLIENT_LOOP(c->wm,p)
-      if (p->type == mainwin && p->name && !(p->flags & CLIENT_IS_DESKTOP_FLAG)
-	  && client_get_state(p) == IconicState )
+  stack_enumerate(c->wm, p)
+      if (p->type == MBCLIENT_TYPE_APP 
+	  && p->name && !(p->flags & CLIENT_IS_DESKTOP_FLAG)
+	  && !p->mapped /* client_get_state(p) == IconicState */
+	  && p != wm_get_visible_main_client(w))
       {
 	theme_frame_icon_paint(theme, p, img, 
 			       frame->border_w + MENU_ENTRY_PADDING/2, 
 			       item_current_y + icon_offset); 
 	item_current_y += item_h;
       }
-   END_CLIENT_LOOP(c->wm,p);
 
    if ((p = wm_get_desktop(c->wm)) != NULL) 
      {
@@ -1115,9 +1122,11 @@ theme_frame_menu_paint(MBTheme* theme, Client *c)
   item_x = MENU_ENTRY_PADDING + c->wm->config->use_icons + frame->border_w;
   item_text_w = c->width - (frame->border_e + frame->border_w);
 
-  START_CLIENT_LOOP(c->wm, p)
-    if (p->type == mainwin && p->name && !(p->flags & CLIENT_IS_DESKTOP_FLAG)
-	&& client_get_state(p) == NormalState )
+  stack_enumerate(c->wm, p)
+    if (p->type == MBCLIENT_TYPE_APP 
+	&& p->name && !(p->flags & CLIENT_IS_DESKTOP_FLAG)
+	&& p->mapped /* client_get_state(p) == NormalState */
+	&& p != wm_get_visible_main_client(w))
       {
 	_theme_frame_menu_paint_text_entry(theme, font, color, 
 					   c, p, item_x, item_current_y);
@@ -1132,11 +1141,12 @@ theme_frame_menu_paint(MBTheme* theme, Client *c)
 
 	item_current_y += item_h;
       }
-  END_CLIENT_LOOP(c->wm,p)
     
-    START_CLIENT_LOOP(c->wm,p)
-    if (p->type == mainwin && p->name && !(p->flags & CLIENT_IS_DESKTOP_FLAG)
-	&& client_get_state(p) == IconicState )
+  stack_enumerate(c->wm, p)
+    if (p->type == MBCLIENT_TYPE_APP 
+	&& p->name && !(p->flags & CLIENT_IS_DESKTOP_FLAG)
+	&& !p->mapped /* client_get_state(p) == IconicState */
+	&& p != wm_get_visible_main_client(w))
       {
 	_theme_frame_menu_paint_text_entry(theme, font, color, 
 					   c, p, item_x, item_current_y);
@@ -1151,7 +1161,6 @@ theme_frame_menu_paint(MBTheme* theme, Client *c)
 
 	item_current_y += item_h;
       }
-  END_CLIENT_LOOP(c->wm,p);
   
   if ((p = wm_get_desktop(c->wm)) != NULL) 
     {
@@ -2104,31 +2113,34 @@ parse_shadow_tag (MBTheme *theme,
 MBTheme *
 mbtheme_new (Wm *w)
 {
-   XGCValues gv;
-   MBTheme *t = (MBTheme *)malloc(sizeof(MBTheme));
-   memset(t, 0, sizeof(MBTheme));
+  XGCValues gv;
+  MBTheme *t = (MBTheme *)malloc(sizeof(MBTheme));
+  memset(t, 0, sizeof(MBTheme));
 
-   gv.graphics_exposures = False;
-   gv.function           = GXcopy;
-   t->gc = XCreateGC(w->dpy, w->root, GCGraphicsExposures|GCFunction, &gv);
 
-   gv.function       = GXinvert;
-   gv.subwindow_mode = IncludeInferiors;
-   gv.line_width     = 1;
-   t->band_gc = XCreateGC(w->dpy, w->root, 
-			  GCFunction|GCSubwindowMode|GCLineWidth, &gv);
-   t->mask_gc = None;
-   t->wm = w;
+  gv.graphics_exposures = False;
+  gv.function           = GXcopy;
+  t->gc = XCreateGC(w->dpy, w->root, GCGraphicsExposures|GCFunction, &gv);
 
-   t->frames   = NULL;
-   t->images   = NULL;
-   t->pictures = NULL;
-   t->colors   = NULL;
-   t->fonts    = NULL;
-
-   t->have_toolbar_panel = False;
-   
-   return t;
+  XSetForeground(w->dpy, t->gc, w->grey_col.pixel); 
+  
+  gv.function       = GXinvert;
+  gv.subwindow_mode = IncludeInferiors;
+  gv.line_width     = 1;
+  t->band_gc = XCreateGC(w->dpy, w->root, 
+			 GCFunction|GCSubwindowMode|GCLineWidth, &gv);
+  t->mask_gc = None;
+  t->wm = w;
+  
+  t->frames   = NULL;
+  t->images   = NULL;
+  t->pictures = NULL;
+  t->colors   = NULL;
+  t->fonts    = NULL;
+  
+  t->have_toolbar_panel = False;
+  
+  return t;
 }
 
 void
@@ -2243,11 +2255,11 @@ mbtheme_switch (Wm   *w,
 
   if (w->head_client)
     {
-      START_CLIENT_LOOP(w, p);   
+      stack_enumerate(c->wm, p)
       {
 	client_buttons_delete_all(p);
 
-	if (p->type == dialog)
+	if (p->type == MBCLIENT_TYPE_DIALOG)
 	  {
 	    XRectangle rect;
 	    Region     xregion;
@@ -2281,7 +2293,6 @@ mbtheme_switch (Wm   *w,
 	p->move_resize(p);
 	p->redraw(p, False);
       }
-      END_CLIENT_LOOP(w, p);
     }
 
   /* fix if desktop is shown */
@@ -2290,7 +2301,7 @@ mbtheme_switch (Wm   *w,
       Client *found = wm_find_client(w, win_active, WINDOW);
       if (found)
 	{
-	  if (found->type == desktop)
+	  if (found->type == MBCLIENT_TYPE_DESKTOP)
 	    {
 	      w->flags &= ~DESKTOP_RAISED_FLAG; /* Clear desktop flag */
 	      wm_toggle_desktop(w);

@@ -98,9 +98,12 @@
 
 /* Simple Macros  */
 
+/*
 #define START_CLIENT_LOOP(w,c) (c) = (w)->head_client; do {
 #define END_CLIENT_LOOP(w,c)   } while (((c) = (c)->next) \
 				        && ((c) != (w)->head_client) );
+*/
+
 #define MBMAX(x,y) ((x>y)?(x):(y))
 
 #ifdef DEBUG
@@ -225,13 +228,14 @@ enum {
 
 typedef enum 
 { 
-  dialog,
-  toolbar,
-  dock,
-  menu,
-  mainwin,
-  desktop,
-  MBCLIENT_TYPE_OVERRIDE
+  MBCLIENT_TYPE_DIALOG    = (1<<1),
+  MBCLIENT_TYPE_TOOLBAR   = (1<<2),
+  MBCLIENT_TYPE_PANEL     = (1<<3),
+  MBCLIENT_TYPE_TASK_MENU = (1<<4),
+  MBCLIENT_TYPE_APP       = (1<<5),
+  MBCLIENT_TYPE_DESKTOP   = (1<<6),
+  MBCLIENT_TYPE_OVERRIDE  = (1<<7),
+  MBCLIENT_TYPE_ANY       = (1<<8)
 
 } MBClientTypeEnum;
 
@@ -283,6 +287,7 @@ typedef struct _mb_client_button
 #define CLIENT_DOCK_TITLEBAR_SHOW_ON_DESKTOP (1<<20)
 #define CLIENT_IS_MINIMIZED    (1<<23) /* used by toolbars */
 #define CLIENT_TOOLBARS_MOVED_FOR_FULLSCREEN (1<<24)
+#define CLIENT_IS_TRANSIENT_FOR_ROOT (1<<25)
 
 /* Main Client structure */
 
@@ -381,6 +386,10 @@ typedef struct _client
   struct _wm       *wm;
   struct _client   *prev, *next;
 
+  /* New */
+
+  struct _client   *above, *below;
+
   /* Client methods */
   
   void (* reparent)( struct _client* c );
@@ -393,6 +402,10 @@ typedef struct _client
   void (* show)( struct _client* c );
   void (* iconize)( struct _client* c );
   void (* destroy)( struct _client* c );
+
+  /* new */
+  void (* raise)( struct _client* c );
+  void (* unmap)( struct _client* c );
    
 } Client;
 
@@ -442,6 +455,7 @@ typedef struct _kbdconfig
 
 enum {
   WM_DIALOGS_STRATERGY_CONSTRAINED,
+  WM_DIALOGS_STRATERGY_STATIC,
   WM_DIALOGS_STRATERGY_CONSTRAINED_HORIZ,
   WM_DIALOGS_STRATERGY_FREE,
 };
@@ -548,6 +562,8 @@ typedef struct _wm
 
   Client           *stack_top, *stack_bottom;
   int               stack_n_items;     
+  Client           *stack_top_app; 
+  Client           *client_desktop;
 
   /*******************/
 
@@ -565,6 +581,7 @@ typedef struct _wm
   Pixmap            generic_icon, generic_icon_mask; 
 
   Client           *have_titlebar_panel;
+  XColor            grey_col; 	/* Used for window backgrounds.*/
 
   /* Extra data need for various compile time opts */
 

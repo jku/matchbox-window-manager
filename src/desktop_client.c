@@ -20,6 +20,7 @@ Client*
 desktop_client_new(Wm *w, Window win)
 {
    Client *c = NULL; 
+
    if (w->flags & DESKTOP_DECOR_FLAG)
      {
        c = main_client_new(w, win);
@@ -29,17 +30,17 @@ desktop_client_new(Wm *w, Window win)
      }
 
    c = base_client_new(w, win); 
-   c->type         = desktop;
+   c->type         = MBCLIENT_TYPE_DESKTOP;
    c->configure    = &desktop_client_configure;
    c->reparent     = &desktop_client_reparent;
    c->move_resize  = &desktop_client_move_resize;
    c->show         = &desktop_client_show;
    c->destroy      = &desktop_client_destroy;
 
-   if (w->main_client && (c->wm->flags & SINGLE_FLAG))
-   {
-      main_client_redraw(c->wm->main_client, False);
-   }
+   if (w->stack_top_app && (w->flags & SINGLE_FLAG))
+     main_client_redraw(w->stack_top_app, False);
+
+   w->client_desktop = c;
 
    return c;
 }
@@ -70,24 +71,63 @@ desktop_client_configure(Client *c)
 void
 desktop_client_show(Client *c)
 {
-  base_client_show(c);
-  wm_toggle_desktop(c->wm);
+  Wm *w = c->wm;
+  Client *cur;
+
+  // base_client_show(c);
+  // wm_toggle_desktop(c->wm);
+  
+  // stack_move_above_extended(c, NULL, mainwin, 0);
+
+   stack_move_top(c);
+
+   stack_enumerate_transients(w,cur,c)
+     c->show(cur);
+
+   /* All clients use the above move to base */
+
+   if (!c->mapped)
+     {
+       XMapSubwindows(w->dpy, c->frame);
+       XMapWindow(w->dpy, c->frame);
+     }
+
+  c->mapped = True;
+
+}
+
+void
+desktop_client_unmap(Client *c)
+{
+   Wm     *w = c->wm;
+
+   dbg("%s called for %s\n", __func__, c->name);
+
+   XUnmapWindow(w->dpy, c->frame); 
+
+   c->mapped = False;
+
+   if (w->stack_top_app)
+     {
+       /* Needed to make sure app window task menu button gets updated */
+       if (w->stack_top_app == stack_get_below(w->stack_top_app, MBCLIENT_TYPE_APP))
+	 main_client_redraw(w->stack_top_app, False);
+
+       wm_activate_client(w->stack_top_app);   
+     }
+
+   w->flags &= ~DESKTOP_RAISED_FLAG;
 }
 
 void
 desktop_client_destroy(Client *c)
 {
-   Wm *w = c->wm;
+   Wm     *w = c->wm;
 
-   base_client_destroy(c); 
+  desktop_client_unmap(c);
 
-   /* Below is need to make sure app window task menu button gets updated */
-   if (w->main_client 
-       &&  w->main_client == client_get_prev(w->main_client, mainwin))
-   {
-     main_client_redraw(w->main_client, False);
-   }
+  base_client_destroy(c); 
 
-   /* Make sure desktop flag is unset */
-   w->flags &= ~DESKTOP_RAISED_FLAG;
+  w->client_desktop = NULL;
 }
+
