@@ -32,7 +32,7 @@
 /* Border size for DIALOG_DRAG_RESTRAIN */
 #define DIALOG_DRAG_RESTRAIN_BDR 16
 
-/* Hide the dialog ( just show border ) when dragging ? */
+/* Hide the dialog ( just show border ) when dragging  */
 #define DIALOG_WANT_HIDDEN_DRAG  1
 
 
@@ -683,7 +683,21 @@ dialog_client_drag(Client *c) /* drag box */
   /* Let the comp know theres gonna be damage in out old position.
    * XXX Must be a better way need to figure it out.    
    */
-  comp_engine_client_show(c->wm, c); 
+
+#if (DIALOG_WANT_HIDDEN_DRAG) 	/* hide the dialog on drag */
+
+#ifdef USE_COMPOSITE
+
+  comp_engine_client_hide(c->wm, c);
+  comp_engine_render(c->wm, c->wm->all_damage);
+
+#endif
+
+#else
+
+ comp_engine_client_show(c->wm, c); 
+
+#endif
 
   c->flags |= CLIENT_IS_MOVING;
 
@@ -704,6 +718,7 @@ dialog_client_drag(Client *c) /* drag box */
   else 
 #endif
     XUnmapWindow(c->wm->dpy, c->frame);
+
 
   XFlush(c->wm->dpy);
 
