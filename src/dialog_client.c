@@ -318,7 +318,7 @@ dialog_client_reparent(Client *c)
   attr.border_pixel      = 0;
   attr.event_mask        = ChildMask|ButtonPressMask|ExposureMask;
   
-  attr.colormap          = c->cmap; /* Not used - needed ? */
+  attr.colormap          = c->cmap; /* Needed for argb wins */
   
   dbg("%s() want lowlight : wm:%i , client:%i\n", __func__,
       c->wm->config->dialog_shade, (c->flags & CLIENT_IS_MODAL_FLAG));
@@ -351,7 +351,7 @@ dialog_client_reparent(Client *c)
 				     CopyFromParent,
 #endif
 				     CWOverrideRedirect|CWEventMask
-				     |CWBackPixel|CWBorderPixel/*|CWColormap*/, 
+				     |CWBackPixel|CWBorderPixel|CWColormap, 
 				     &attr);
      }
 

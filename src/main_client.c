@@ -582,7 +582,8 @@ void main_client_button_press(Client *c, XButtonEvent *e)
 	    * For now its just the custom type. May make sense to
             * Add more.
 	   */
-	   if (button_item && button_item->id == BUTTON_ACTION_CUSTOM)
+	   if ((button_item && button_item->id == BUTTON_ACTION_CUSTOM)
+	       || (button_item && button_item->id == BUTTON_ACTION_MIN))
 	     return;
 	 }
      }
