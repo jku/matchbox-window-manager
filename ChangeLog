@@ -1,3 +1,10 @@
+2004-06-03  Matthew Allum,,,  <mallum@handhelds.org>
+
+	* src/dialog_client.c: (dialog_client_drag):
+	Call Xsync so dialog hidden drag background gets updated ok
+	* src/mbtheme.c: (theme_frame_paint):
+	Dont dont image/char substitution for dialog titles
+
 2004-06-01  Matthew Allum,,,  <mallum@handhelds.org>
 
 	* src/wm.c: (wm_handle_configure_request):

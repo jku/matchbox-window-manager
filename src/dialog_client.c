@@ -771,7 +771,7 @@ dialog_client_drag(Client *c) /* drag box */
   c->ignore_unmap++;
 #endif
 
-
+  XSync(c->wm->dpy, False);
     
   for (;;) 
     {

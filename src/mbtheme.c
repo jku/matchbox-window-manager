@@ -694,6 +694,7 @@ theme_frame_paint( MBTheme *theme,
    if (layer_label 
        && c->name 
        && !(c->flags & CLIENT_BORDERS_ONLY_FLAG)
+       && c->type != dialog
        && theme->subst_img
        /* && strchr(c->name, (int)theme->subst_char) */)
      {
