@@ -289,9 +289,9 @@ ewmh_update_lists(Wm *w)
 	  if (current_cycle->xid != None)
 	    {
 	      char str_tmp[256] = "";
-	      sprintf(str_tmp, "%s=%li|", 
-		      current_cycle->bin_name, 
-		      current_cycle->xid);
+	      snprintf(str_tmp, 256, "%s=%li|", 
+		       current_cycle->bin_name, 
+		       current_cycle->xid);
 	      
 	      strcat(bin_map_str, str_tmp);
 	      

@@ -52,7 +52,7 @@ fork_exec(char *cmd)
   switch (fork())
     {
     case 0:
-      execlp ("/bin/sh", "sh", "-c", cmd, NULL);
+      execlp ("/bin/sh", "sh", "-c", cmd, (char *)NULL);
       fprintf (stderr, "Exec failed.\n");
       exit (0);
       break;

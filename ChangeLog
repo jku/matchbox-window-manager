@@ -1,3 +1,17 @@
+2005-03-30  mallum,,,  <mallum@openedhand.com>
+
+	* src/base_client.c: (base_client_new), (base_client_process_name):
+	* src/ewmh.c: (ewmh_update_lists):
+	* src/mbtheme.c: (mbtheme_init):
+	* src/misc.c: (fork_exec):
+	* src/wm.c: (wm_sn_exec):
+	Fixes via Andreas Gunnarsson for bugs 117-121. Includes mainly
+	potential overflow fixes + warnings on openBSD. 
+
+	* src/toolbar_client_alt.c: (toolbar_client_new),
+	(toolbar_client_move_resize):
+	Extra debug statements
+
 2005-03-16  mallum,,,  <mallum@openedhand.com>
 
 	* src/base_client.h:

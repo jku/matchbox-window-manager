@@ -2588,7 +2588,7 @@ wm_sn_exec(Wm *w, char* name, char* bin_name, char *desc)
       break;
     case 0:
       sn_launcher_context_setup_child_process (context);
-      execlp(bin_name, bin_name, NULL);
+      execlp(bin_name, bin_name, (char *)NULL);
       fprintf (stderr, "Failed to exec %s \n", bin_name);
       _exit (1);
       break;

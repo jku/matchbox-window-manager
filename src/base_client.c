@@ -284,6 +284,7 @@ base_client_new(Wm *w, Window win)
 
    if (misc_untrap_xerrors()) 	/* An X error occured */
      {				/* Likely client died */
+       dbg("%s() looks like client just died on us\n", __func__);
        c->frame = None;
        base_client_destroy(c);
        return NULL;
@@ -367,8 +368,12 @@ base_client_process_name(Client *c)
       
       if (max)
 	{
-	  tmp_name = alloca(sizeof(char) * (strlen(c->name) + 7));
-	  sprintf(tmp_name, "%s <%i>", c->name, ++max);
+	  int tmp_name_sz;
+	  
+	  tmp_name_sz = strlen(c->name) + 7;;
+	  tmp_name    = alloca(tmp_name_sz);
+	  snprintf(tmp_name, tmp_name_sz, "%s <%i>", c->name, ++max);
+
 	  free(c->name);
 
 	  XStoreName(w->dpy, c->window, tmp_name);

@@ -2443,10 +2443,15 @@ mbtheme_init (Wm   *w,
   Nlist *n;
 
   XMLParser *parser = xml_parser_new();
-  
+
   char theme_filename[255] = DEFAULTTHEME;
   char *theme_path = NULL;
-  char orig_wd[255];
+
+#ifndef MAXPATHLEN
+#define MAXPATHLEN 256
+#endif
+
+  char orig_wd[MAXPATHLEN];
   
   if (theme_name != NULL) { 
     if (theme_name[0] == '/')
@@ -2472,7 +2477,7 @@ mbtheme_init (Wm   *w,
       strncpy(theme_filename, DEFAULTTHEME, 255);
     }
   
-  if (getcwd(orig_wd, 255) == (char *)NULL)
+  if (getcwd(orig_wd, MAXPATHLEN) == (char *)NULL)
     {
       fprintf(stderr, "matchbox: cant get current directory\n");
       exit(1);

@@ -31,7 +31,9 @@ Client*
 toolbar_client_new(Wm *w, Window win)
 {
   Window trans_win;
-  Client *c = base_client_new(w, win), *trans_client = NULL; 
+  Client *c = NULL, *trans_client = NULL; 
+
+  c = base_client_new(w, win);
 
   if (!c) return NULL;
 
@@ -170,6 +172,9 @@ toolbar_client_move_resize(Client *c)
   Wm *w = c->wm;
 
   base_client_move_resize(c);
+
+  dbg("%s() called setting size +%i+%i,%ix%i\n", 
+      __func__, c->x, c->y, c->width, c->height);
 
   XResizeWindow(w->dpy, c->window, c->width, c->height);
   XMoveResizeWindow(w->dpy, c->frame, c->x, c->y, c->width, c->height );
