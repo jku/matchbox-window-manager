@@ -1,6 +1,6 @@
 SUBDIRS = themes schemas 
 
-defaultsdir = $(pkgdatadir)
+defaultsdir = $(datadir)/matchbox
 
 if WANT_STANDALONE
 defaults_DATA =

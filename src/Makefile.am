@@ -8,7 +8,7 @@ standalone_src  = mbtheme.c mbtheme.h xml.c xml.h
 endif
 
 PREFIXDIR  = $(prefix)
-PKGDATADIR = $(pkgdatadir)
+PKGDATADIR = $(datadir)/matchbox
 DATADIR    = $(datadir)
 
 bin_PROGRAMS = matchbox-window-manager matchbox-remote
