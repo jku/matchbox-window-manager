@@ -1144,7 +1144,12 @@ dialog_client_set_focus_next(Client *c)
   Wm *w = c->wm; 
 
   if (c->next_focused_client && c != c->next_focused_client)
-    client_set_focus(c->next_focused_client); 
+    {
+      if (w->focused_client == c)
+	w->focused_client = NULL;
+
+      client_set_focus(c->next_focused_client); 
+    }
   else
     {
       if (w->focused_client == c)
