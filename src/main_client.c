@@ -84,14 +84,22 @@ main_client_manage_toolbars_for_fullscreen(Client *c, Bool main_client_showing)
 
   stack_enumerate(w, p)
     {
-      if (p->type == MBCLIENT_TYPE_DIALOG 
-	  && p->flags & CLIENT_TB_ALT_TRANS_FOR_APP
-	  && p->trans == c)
+      if (p->type == MBCLIENT_TYPE_DIALOG)
 	{
-	  toolbar_client_configure(p);
-	  toolbar_client_move_resize(p);
+	  if (p->flags & CLIENT_TB_ALT_TRANS_FOR_APP 
+	      && p->trans == c)
+	    {
+	      toolbar_client_configure(p);
+	      toolbar_client_move_resize(p);
 
-	  return p->height;
+	      return p->height;
+	    }
+	  else if (p->flags & CLIENT_TB_ALT_TRANS_FOR_DIALOG)
+	    {
+	      toolbar_client_configure(p);
+	      toolbar_client_move_resize(p);
+	      return 0;
+	    }
 	}
     }
 

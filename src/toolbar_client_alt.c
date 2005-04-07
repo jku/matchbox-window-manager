@@ -92,7 +92,8 @@ toolbar_win_offset(Client *c)
 void
 toolbar_client_configure(Client *c)
 {
-  Wm *w = c->wm;
+  Wm     *w = c->wm;
+  Client *main_client = NULL;
 
   dbg("%s() called\n", __func__);
 
@@ -122,6 +123,21 @@ toolbar_client_configure(Client *c)
     - wm_get_offsets_size(w, WEST,  NULL, False)
     - wm_get_offsets_size(w, EAST,  NULL, False);
 
+  /*
+   * Though not transient for app, there could be a fullscreened
+   * app win below us, in which case the input win needs to cover
+   * any vertical panels. 
+   */
+  if ((main_client = wm_get_visible_main_client(w)) != NULL)
+    {
+      if (main_client->flags & CLIENT_FULLSCREEN_FLAG)
+	{
+	  c->x      = 0;
+	  c->y      = w->dpy_height - c->height;
+	  c->width  = w->dpy_width;
+	}
+    }
+
   if (c->flags & CLIENT_TB_ALT_TRANS_FOR_DIALOG)
     {
       Client *dialog_client = c->trans;
@@ -131,7 +147,7 @@ toolbar_client_configure(Client *c)
       if (dialog_client)
 	{
 	  /*
-	   *  Move transient dialog out of the way.  
+	   *  Move transient dialog out of the way of toolbar.  
 	   */
 	  Bool tmp_mapped = c->mapped;
 
@@ -163,7 +179,6 @@ toolbar_client_configure(Client *c)
 	  
 	}
     }
-
 }
 
 void

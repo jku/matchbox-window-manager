@@ -1,3 +1,13 @@
+2005-04-07  mallum,,,  <mallum@openedhand.com>
+
+	* src/dialog_client.c: (dialog_get_available_area):
+	* src/main_client.c: (main_client_manage_toolbars_for_fullscreen):
+	* src/toolbar_client_alt.c: (toolbar_client_configure):
+	Make sure alt input trans for dialog but on top of fullscreen
+	app get resized correctly on fullscreen toggle.
+	Make sure dialogs get positioned correctly for fullscreen with
+	alt input.
+
 2005-03-30  mallum,,,  <mallum@openedhand.com>
 
 	* src/base_client.c: (base_client_new), (base_client_process_name):

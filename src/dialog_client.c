@@ -451,9 +451,21 @@ dialog_get_available_area(Client *c,
            * XXX: should we check is this dialog is trans for it or trans for
            *      root ?
 	  */
+
 	  *height = w->dpy_height - *y;
 	  *x = 0;
 	  *width  = w->dpy_width;
+
+	  /* This mainly for alt toolbars so dialogs get positioned ok
+	   * for fullscreen.    
+           * Note the above wm_get_offsets calls with NORTH, not SOUTH,
+           * this is what below is basically doing. 
+	  */
+	  if (p != NULL && have_toolbar)
+	    *height -=  p->height;
+
+	  dbg("%s() height is %i, y is %i\n", __func__, *height, *y);
+
 	}
       else
 	{
