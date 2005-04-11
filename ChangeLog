@@ -1,3 +1,8 @@
+2005-04-11  mallum,,,  <mallum@openedhand.com>
+
+	* configure.ac:
+	Bump up version to 0.9.4
+
 2005-04-07  mallum,,,  <mallum@openedhand.com>
 
 	* src/dialog_client.c: (dialog_client_set_focus_next):
