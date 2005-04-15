@@ -158,6 +158,9 @@ fi
 if test x$enable_standalone = xyes || test x$enable_standalone_xft = xyes; then
 
   AC_PATH_XTRA
+  if test x"$no_x" = x"yes"; then
+     AC_MSG_ERROR([*** Required X11 Headers and libraries not found.***])
+  fi
 
   LIBMB_CFLAGS="$XLIBS_CLAGS $XFT_CFLAGS"
   LIBMB_LIBS="$X_LIBS $XFT_LIBS -lX11 -lXext"

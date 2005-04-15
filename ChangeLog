@@ -1,3 +1,10 @@
+2005-04-16  mallum,,,  <mallum@openedhand.com>
+
+	* configure.ac:
+	Throw an error if AC_PATH_XTRA comes up empty
+
+2005-04-11 Relased 0.9.4 
+
 2005-04-11  mallum,,,  <mallum@openedhand.com>
 
 	* configure.ac:
