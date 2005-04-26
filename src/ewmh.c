@@ -154,7 +154,31 @@ ewmh_handle_root_message(Wm *w, XClientMessageEvent *e)
      {
        dbg("%s() got active window message for win %li", __func__, e->window);
        if ((c = wm_find_client(w, e->window, WINDOW)) != NULL)
-	 wm_activate_client(c);
+	 {
+	   if (c->type == MBCLIENT_TYPE_DIALOG
+	       && c->trans != NULL)
+	     {
+	       /* 
+                * If an attempt has been made to activate a hidden
+                * dialog, activate its parent app first.
+                *
+                * Note this is mainly to work with some task selectors
+                * ( eg the gnome one, which activates top dialog ).
+                *
+                * XXX wm_activate_client() should probably do this.
+	       */
+
+	       Client *parent = c->trans;
+
+	       while (parent->trans != NULL)
+		 parent = parent->trans;
+
+	       if (parent != wm_get_visible_main_client(w))
+		 wm_activate_client(parent);
+	     }
+
+	   wm_activate_client(c);
+	 }
        return 1;
      } 
    else if (e->message_type == w->atoms[_NET_CLOSE_WINDOW]) 

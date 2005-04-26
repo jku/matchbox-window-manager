@@ -1,5 +1,12 @@
 2005-04-26  mallum,,,  <mallum@openedhand.com>
 
+	* src/ewmh.c: (ewmh_handle_root_message):
+	Fix for activate client message being sent to an non topped
+        app dialog window and no effect happerning. 
+        Makes GNOME task selector work nicer with MB.
+
+2005-04-26  mallum,,,  <mallum@openedhand.com>
+
 	* src/mbtheme.c: (theme_frame_icon_paint):
 	Fix potential segv if app sets ewmh icon smaller than 16x16
 
