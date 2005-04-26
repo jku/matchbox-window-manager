@@ -149,7 +149,7 @@ void theme_frame_icon_paint(MBTheme *t, Client *c,
   if (img->width != 16 || img->height != 16) 
     {
       MBPixbufImage *tmp_img;
-      tmp_img = mb_pixbuf_img_scale_down(t->wm->pb, img, 16, 16); 
+      tmp_img = mb_pixbuf_img_scale(t->wm->pb, img, 16, 16); 
       mb_pixbuf_img_free(t->wm->pb, img);
       img = tmp_img;
     }

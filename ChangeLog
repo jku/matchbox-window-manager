@@ -1,5 +1,10 @@
 2005-04-26  mallum,,,  <mallum@openedhand.com>
 
+	* src/mbtheme.c: (theme_frame_icon_paint):
+	Fix potential segv if app sets ewmh icon smaller than 16x16
+
+2005-04-26  mallum,,,  <mallum@openedhand.com>
+
 	* src/toolbar_client.c: (toolbar_client_move_resize),
 	(toolbar_client_reparent):
 	Fix a couple of toolbar related X Error warnings
