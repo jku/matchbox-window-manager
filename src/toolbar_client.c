@@ -98,16 +98,18 @@ toolbar_client_move_resize(Client *c)
       XResizeWindow(w->dpy, c->window, c->width, c->height);
       XMoveResizeWindow(w->dpy, c->frame, c->x - max_offset,
 		  c->y, c->width + max_offset, c->height );
-      XMoveResizeWindow(w->dpy, client_title_frame(c), 0,
-		  0, max_offset , c->height );
+      if (client_title_frame(c))
+	XMoveResizeWindow(w->dpy, client_title_frame(c), 0,
+			  0, max_offset , c->height );
    } else {
 
      if (min_offset)
        {
 	 XMoveResizeWindow(w->dpy, c->frame, c->x,
 			   c->y, c->width + max_offset, offset );
-	 XMoveResizeWindow(w->dpy, client_title_frame(c), 0,
-			   0, c->width + max_offset , min_offset );
+	 if (client_title_frame(c))
+	   XMoveResizeWindow(w->dpy, client_title_frame(c), 0,
+			     0, c->width + max_offset , min_offset );
        }
    }      
 }
@@ -133,11 +135,12 @@ toolbar_client_reparent(Client *c)
 		  &attr);
   
   attr.background_pixel = w->grey_col.pixel;
-  
-  c->frames_decor[NORTH] =
-    XCreateWindow(w->dpy, c->frame, 0, 0, frm_size, c->height, 0,
-		  CopyFromParent, CopyFromParent, CopyFromParent,
-		  CWOverrideRedirect|CWBackPixel|CWEventMask, &attr);
+
+  if (frm_size)
+    c->frames_decor[NORTH] =
+      XCreateWindow(w->dpy, c->frame, 0, 0, frm_size, c->height, 0,
+		    CopyFromParent, CopyFromParent, CopyFromParent,
+		    CWOverrideRedirect|CWBackPixel|CWEventMask, &attr);
   
   XSetWindowBorderWidth(w->dpy, c->window, 0);
 

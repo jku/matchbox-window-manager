@@ -1,3 +1,9 @@
+2005-04-26  mallum,,,  <mallum@openedhand.com>
+
+	* src/toolbar_client.c: (toolbar_client_move_resize),
+	(toolbar_client_reparent):
+	Fix a couple of toolbar related X Error warnings
+
 2005-04-16  mallum,,,  <mallum@openedhand.com>
 
 	* configure.ac:
