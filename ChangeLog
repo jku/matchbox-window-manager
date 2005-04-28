@@ -1,5 +1,10 @@
 2005-04-28  mallum,,,  <mallum@openedhand.com>
 
+	* src/session.c: (sm_save_yourself_cb):
+	Add some very basic registration info with session manager
+
+2005-04-28  mallum,,,  <mallum@openedhand.com>
+
 	* configure.ac:
 	* src/Makefile.am:
 	* src/session.c:

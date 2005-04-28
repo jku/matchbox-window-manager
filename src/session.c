@@ -32,7 +32,68 @@ sm_save_yourself_cb (SmcConn   smcConn,
 		     int       interactStyle,
 		     Bool      fast)
 {
+  /* Wm *w = (Wm *)clientData; */
+
+  /* XXX This needs much work */
+
+  SmProp      prop1, prop2, prop3, *props[3];
+  SmPropValue prop1val, prop2val, prop3val;
+
+  static int  first_time = 1;
+
   dbg("mark");
+
+  if (first_time)
+    {
+      char userId[20];
+      char hint = SmRestartIfRunning;
+
+      prop1.name      = SmProgram;
+      prop1.type      = SmARRAY8;
+      prop1.num_vals  = 1;
+      prop1.vals      = &prop1val;
+      prop1val.value  = "matchbox-window-manager"; /* Argv[0]; */ 
+      prop1val.length = strlen ("matchbox-window-manager");
+
+      snprintf (userId, 20, "%d", getuid());
+      prop2.name      = SmUserID;
+      prop2.type      = SmARRAY8;
+      prop2.num_vals  = 1;
+      prop2.vals      = &prop2val;
+      prop2val.value  = (SmPointer) userId;
+      prop2val.length = strlen (userId);
+
+      prop3.name      = SmRestartStyleHint;
+      prop3.type      = SmCARD8;
+      prop3.num_vals  = 1;
+      prop3.vals      = &prop3val;
+      prop3val.value  = (SmPointer) &hint;
+      prop3val.length = 1;
+
+      props[0] = &prop1;
+      props[1] = &prop2;
+      props[2] = &prop3;
+
+      SmcSetProperties (smcConn, 3, props);
+
+      first_time = 0;
+    }
+
+  /* XXX Below is obviously wrong and needs work.
+   *
+  */
+
+  prop1.name     = SmRestartCommand;
+  prop1.type     = SmLISTofARRAY8;
+  prop1.vals     = &prop1val;
+  prop1.num_vals = 1;
+  prop1val.value = (SmPointer) "matchbox-window-manager" ;
+  prop1val.length = strlen ("matchbox-window-manager");
+
+  props[0] = &prop1;
+
+  SmcSetProperties (smcConn, 1, props);
+
   SmcSaveYourselfDone (smcConn, True);
 }
 
