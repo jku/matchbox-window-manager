@@ -1,3 +1,16 @@
+2005-04-28  mallum,,,  <mallum@openedhand.com>
+
+	* configure.ac:
+	* src/Makefile.am:
+	* src/session.c:
+	* src/session.h:
+	* src/structs.h:
+	* src/wm.c: (wm_new), (wm_find_client), (wm_event_loop):
+	* src/wm.h:
+	Add basic initial support for connecting to session managers.
+	It currently just connects, should avoid hang when started
+	by gnome-session.
+
 2005-04-26  mallum,,,  <mallum@openedhand.com>
 
 	* src/ewmh.c: (ewmh_handle_root_message):

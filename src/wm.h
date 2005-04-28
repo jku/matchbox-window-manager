@@ -33,6 +33,7 @@
 #include "misc.h"
 #include "ewmh.h"
 #include "composite-engine.h"
+#include "session.h"
 
 #ifdef STANDALONE
 #include "mbtheme-standalone.h"

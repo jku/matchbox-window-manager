@@ -39,6 +39,7 @@ matchbox_window_manager_SOURCES =                        \
                    list.c list.h                         \
 	           stack.c stack.h                       \
 		   composite-engine.c composite-engine.h \
+                   session.c session.h                   \
                    $(standalone_src)
 
 

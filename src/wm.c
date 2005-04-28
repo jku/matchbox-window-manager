@@ -86,6 +86,10 @@ wm_new(int argc, char **argv)
 		    "grey", 
 		    &w->grey_col, &dummy_col);
 
+#ifdef USE_SM
+   sm_connect(w, NULL); 	/* previous_cliend_id */
+#endif
+
 #ifdef USE_GCONF
    g_type_init() ;
 
@@ -657,34 +661,51 @@ wm_find_client(Wm *w, Window win, int mode)
 
 /* Grab an X Event - block but With a timeout */
 static Bool
-get_xevent_timed(Display        *dpy, 
+get_xevent_timed(Wm             *w,
 		 XEvent         *event_return, 
 		 struct timeval *tv)
 {
   if (tv->tv_usec == 0 && tv->tv_sec == 0)
     {
-      XNextEvent(dpy, event_return);
+#ifndef USE_SM
+      XNextEvent(w->dpy, event_return);
       return True;
+#endif
     }
 
-  XFlush(dpy);
+  XFlush(w->dpy);
 
-  if (XPending(dpy) == 0) 
+  if (XPending(w->dpy) == 0) 
     {
-      int fd = ConnectionNumber(dpy);
+      int fd = ConnectionNumber(w->dpy);
       fd_set readset;
       FD_ZERO(&readset);
       FD_SET(fd, &readset);
 
+#ifdef USE_SM
+      if (w->sm_ice_fd != -1)
+	{
+	  FD_SET(w->sm_ice_fd, &readset);
+	  if (w->sm_ice_fd > fd) 
+	    fd = w->sm_ice_fd; 	/* for +1 below */
+	}
+#endif
       if (select(fd+1, &readset, NULL, NULL, tv) == 0) 
 	return False;
-      else {
-	XNextEvent(dpy, event_return);
-	return True;
+      else 
+	{
+#ifdef USE_SM
+	  if ( w->sm_ice_fd != -1 && FD_ISSET(w->sm_ice_fd, &readset) )
+	    {
+	      sm_process_event(w);
+	      return False;
+	    }
+#endif
+	  XNextEvent(w->dpy, event_return);
+	  return True;
       }
-
     } else {
-      XNextEvent(dpy, event_return);
+      XNextEvent(w->dpy, event_return);
       return True;
     }
 }
@@ -785,7 +806,7 @@ wm_event_loop(Wm* w)
 	tvt.tv_sec = 1;
 #endif
 
-      if (get_xevent_timed(w->dpy, &ev, &tvt))
+      if (get_xevent_timed(w, &ev, &tvt))
 	{
 
 	  switch (ev.type) 

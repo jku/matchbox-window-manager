@@ -75,6 +75,10 @@
 #include <X11/extensions/sync.h>
 #endif
 
+#if USE_SM
+#include <X11/SM/SMlib.h>
+#endif
+
 #define GENERIC_ICON        PKGDATADIR "/mbnoapp.xpm"
 
 #ifdef MB_HAVE_PNG
@@ -636,6 +640,11 @@ typedef struct _wm
   Bool              have_xsync;
   int               sync_event_base;
   int               sync_error_base;
+#endif
+
+#if USE_SM
+  int               sm_ice_fd;      
+  IceConn           ice_conn;
 #endif
 
 #ifdef STANDALONE

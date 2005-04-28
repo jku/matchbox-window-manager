@@ -30,7 +30,7 @@ AC_ARG_ENABLE(standalone,
   enable_standalone=$enableval, enable_standalone=no)
 
 AC_ARG_ENABLE(composite,
-  [  --enable-composite            enable composite support.],
+  [  --enable-composite            enable composite support ( EXPERIMENTAL ).],
   enable_composite=$enableval, enable_composite=no)
 
 AC_ARG_ENABLE(startup_notification,
@@ -50,12 +50,16 @@ AC_ARG_WITH(expat-lib,
 	   expat_lib=$withval, expat_lib=yes)
 
 AC_ARG_ENABLE(xsync,
-  [  --enable-xsync                enable XSYNC X extension support ( Experimental )],
+  [  --enable-xsync                enable XSYNC X extension support ( EXPERIMENTAL )],
      enable_xsync=$enableval, enable_xsync=no )
 
 AC_ARG_ENABLE(gconf,
   [  --enable-gconf                enable gconf support],
      enable_gconf=$enableval, enable_gconf=no )
+
+AC_ARG_ENABLE(session,
+  [  --enable-session               enable session manager support],
+     enable_session=$enableval, enable_session=no )
 
 AC_ARG_ENABLE(keyboard,
   [  --disable-keyboard            disable keyboard support [default=no]],
@@ -73,7 +77,7 @@ AC_ARG_ENABLE(xrm,
 		enable_xrm=yes)
 
 AC_ARG_ENABLE(alt_input_wins,
-  [  --enable-alt-input-wins enable alternate managing input windows (EXPERIMENTAL)],
+  [  --enable-alt-input-wins enable alternate managing input windows ],
   enable_alt_input_wins=$enableval, enable_alt_input_wins=no)
 
 
@@ -368,6 +372,23 @@ AM_GCONF_SOURCE_2
 
 AM_CONDITIONAL(ENABLE_SCHEMAS, test x$enable_gconf != xno)
 
+dnl ----- Session Manager ---------------------------------------------------
+
+if test x$enable_session != xno; then
+
+  AC_CHECK_LIB(SM, SmcSaveYourselfDone,
+               [AC_CHECK_HEADERS(X11/SM/SMlib.h,
+                                LIBMB_LIBS="-lSM -lICE $LIBMB_LIBS" found_sm=nn)],
+               , $LIBMB_LIBS)		 
+
+   if test "$found_sm" = "no"; then
+      AC_MSG_ERROR([--enable-session requested and -lSM not found])
+      exit 1
+   fi
+
+   AC_DEFINE(USE_SM, [1], [Has support for session manager connection])
+fi
+
 dnl ----- Xsettings ---------------------------------------------------------
 
 if test x$enable_standalone != xyes && test x$enable_standalone_xft != xyes; then
@@ -484,7 +505,8 @@ echo "
         Building with XSettings:            ${mb_have_xsettings}
         Building with Startup-Notification: ${enable_startup_notification}
         Building with GConf:                ${enable_gconf}
-        Building with composite manager:    ${enable_composite}
+        Building with Session support:      ${enable_session}
+        Building with Composite manager:    ${enable_composite}
 
 
 
