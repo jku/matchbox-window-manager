@@ -113,7 +113,8 @@ ewmh_init(Wm *w)
     "_NET_WM_STATE_ABOVE",
     "WM_TRANSIENT_FOR",
     "_NET_WM_SYNC_REQUEST_COUNTER",
-    "_NET_WM_SYNC_REQUEST"
+    "_NET_WM_SYNC_REQUEST",
+    "_MB_CURRENT_APP_WINDOW"
   };
 
   XInternAtoms (w->dpy, atom_names, ATOM_COUNT,
@@ -509,6 +510,28 @@ ewmh_set_allowed_actions(Wm *w, Client *c)
 void 
 ewmh_set_active(Wm *w)
 {
+
+  static unsigned long last_active; 
+  unsigned long        val[1] = { 0 };
+
+  if (w->focused_client != NULL)
+    val[0] = w->focused_client->window;
+
+  if (last_active == val[0]) 	/* avoid the roundtrip if pos */
+    return;
+
+  last_active = val[0]; 
+
+  dbg("%s() setting %li as active\n", __func__, val[0] );
+
+  XChangeProperty(w->dpy, w->root, w->atoms[_NET_ACTIVE_WINDOW] ,
+		  XA_WINDOW, 32, PropModeReplace,
+		  (unsigned char *)val, 1);
+}
+
+void 
+ewmh_set_current_app_window(Wm *w)
+{
   Client              *c;
   static unsigned long last_active; 
   unsigned long        val[1] = { 0 };
@@ -521,9 +544,7 @@ ewmh_set_active(Wm *w)
 
   last_active = val[0]; 
 
-  dbg("%s() setting %li as active\n", __func__, val[0] );
-
-  XChangeProperty(w->dpy, w->root, w->atoms[_NET_ACTIVE_WINDOW] ,
+  XChangeProperty(w->dpy, w->root, w->atoms[_MB_CURRENT_APP_WINDOW] ,
 		  XA_WINDOW, 32, PropModeReplace,
 		  (unsigned char *)val, 1);
 }

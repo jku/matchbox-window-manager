@@ -1,3 +1,15 @@
+2005-05-05  mallum,,,  <mallum@openedhand.com>
+
+	* src/client_common.c: (client_set_focus):
+	* src/ewmh.c: (ewmh_init), (ewmh_set_active):
+	* src/ewmh.h:
+	* src/structs.h:
+	* src/wm.c: (wm_activate_client):
+	Fix _NET_ACTIVE_WIN to not be set to just app wins.
+	Add _MB_CURRENT_APP_WINDOW to do old behaviour.
+	* src/dialog_client.c: (dialog_client_set_focus_next):
+	Fix focusing when non focused dialog is closed
+
 2005-04-28  mallum,,,  <mallum@openedhand.com>
 
 	* src/session.c: (sm_save_yourself_cb):

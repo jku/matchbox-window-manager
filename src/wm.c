@@ -2290,10 +2290,8 @@ wm_activate_client(Client *c)
 	    }
 	}
 
-      /* We only set active for main clients - this could be wrong, 
-         what about transient for root 'apps' - maybe it should just
-         follow focused client ? */
-      ewmh_set_active(w);
+      /* Set active main client, set focus handles active win hint */
+      ewmh_set_current_app_window(w);
 
     }
   else if (c->type == MBCLIENT_TYPE_DIALOG)

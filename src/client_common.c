@@ -278,6 +278,8 @@ client_set_focus(Client *c)
       dbg("%s() called, setting focus to %s\n", 
 	  __func__, c->name);
 
+      ewmh_set_active(w);
+
       return True;
     }
   

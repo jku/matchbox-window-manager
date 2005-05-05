@@ -1143,6 +1143,10 @@ dialog_client_set_focus_next(Client *c)
 {
   Wm *w = c->wm; 
 
+  /* We dont have focus, therefore dont suggest what to focus next */
+  if (w->focused_client != c)
+    return NULL;
+
   if (c->next_focused_client && c != c->next_focused_client)
     {
       if (w->focused_client == c)

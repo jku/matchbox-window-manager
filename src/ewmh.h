@@ -47,6 +47,9 @@ ewmh_update_rects(Wm *w);
 void 
 ewmh_set_active (Wm *w);
 
+void 
+ewmh_set_current_app_window(Wm *w);
+
 int  
 ewmh_handle_root_message (Wm *w, XClientMessageEvent *e);
 
