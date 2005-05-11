@@ -136,7 +136,7 @@ toolbar_client_reparent(Client *c)
   
   attr.background_pixel = w->grey_col.pixel;
 
-  if (frm_size)
+  if (frm_size && !(c->flags & CLIENT_TITLE_HIDDEN_FLAG))
     c->frames_decor[NORTH] =
       XCreateWindow(w->dpy, c->frame, 0, 0, frm_size, c->height, 0,
 		    CopyFromParent, CopyFromParent, CopyFromParent,

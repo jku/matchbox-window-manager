@@ -1,5 +1,13 @@
 2005-05-11  mallum,,,  <mallum@openedhand.com>
 
+	* src/toolbar_client.c: (toolbar_client_reparent):
+	* src/wm.c: (wm_remove_client), (wm_update_layout):
+	Clear up some more ( final? ) X Errors.
+	Speed up app window resizes caused by horizonal
+	panels/toolbars by avoiding uneeded repaints.
+
+2005-05-11  mallum,,,  <mallum@openedhand.com>
+
 	* data/themes/Default/theme.xml:
 	* data/themes/MBOpus/theme.xml:
 	* data/themes/blondie/theme.xml:

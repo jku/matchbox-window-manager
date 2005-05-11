@@ -1959,7 +1959,7 @@ wm_remove_client(Wm *w, Client *c)
 
   XGrabServer(w->dpy);
 
-  misc_trap_xerrors(); 	/* below likely to genrate errors */
+  misc_trap_xerrors(); 	/* below very likely to genrate X errors */
 
   /* Set win state to withdrawn and reparent to root. 
    * If below is not done - suttle bugs appear with toolkits ( GTK )
@@ -1968,11 +1968,13 @@ wm_remove_client(Wm *w, Client *c)
   XReparentWindow(w->dpy, c->window, w->root, 0, 0); 
   XRemoveFromSaveSet(w->dpy, c->window);
 
+  /* sync here so any (likely) lingering X errors are trapped */
+  XSync(w->dpy, False);
+
   misc_untrap_xerrors();
 
   c->destroy(c);
 
-  XSync(w->dpy, False);
   XUngrabServer(w->dpy);
 }
 
@@ -2110,10 +2112,20 @@ wm_update_layout(Wm         *w,
 		 p->height += change_amount;
 		 p->y      -= change_amount;
 		 p->move_resize(p);
-		 theme_img_cache_clear( w->mbtheme, FRAME_MAIN );
-		 theme_pixmap_cache_clear_all(w->mbtheme);
+		 /* XXX shouldn't be any need to redraw here as 
+                  * width won't have changed so no need to repaint 
+                  * entire toolbar. 
+                  *
+                  * It *could* break on if the side decoration themes
+                  * are somehow a function of height. No themes I know
+                  * of do this and we avoid quite a lot of cpu avoiding
+                  * this.
+                  *
+		  * theme_img_cache_clear( w->mbtheme, FRAME_MAIN );
+		  * theme_pixmap_cache_clear_all(w->mbtheme);
+		  * main_client_redraw(p, False);
+		 */
 		 client_deliver_config(p);
-		 main_client_redraw(p, False); /* force title redraw */
 		 break;
 	       case MBCLIENT_TYPE_PANEL :
 		 if (p->flags & CLIENT_DOCK_NORTH
@@ -2131,6 +2143,8 @@ wm_update_layout(Wm         *w,
        }
      else
        {
+	 /* toolbar changes here */
+
 	 dbg("%s(): restack NORMAL comparing %i <= %i for %s\n",
 	     __func__, p->y, client_changed->y, p->name);
 	 if ( (p->y <= client_changed->y) 
@@ -2143,10 +2157,14 @@ wm_update_layout(Wm         *w,
 	       case MBCLIENT_TYPE_APP :
 		 p->height += change_amount;
 		 p->move_resize(p);
-		 theme_img_cache_clear( w->mbtheme, FRAME_MAIN );
-		 theme_pixmap_cache_clear_all(w->mbtheme);
+		 /*
+		  * See above as to why this is commented out.
+                  *
+                  * theme_img_cache_clear( w->mbtheme, FRAME_MAIN );
+		  * theme_pixmap_cache_clear_all(w->mbtheme);
+		  * main_client_redraw(p, False);
+                  */
 		 client_deliver_config(p);
-		 main_client_redraw(p, False); /* force title redraw */
 		 break;
 	       case MBCLIENT_TYPE_TOOLBAR :
 		 p->y += change_amount;
