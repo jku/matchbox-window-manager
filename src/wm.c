@@ -68,6 +68,10 @@ wm_new(int argc, char **argv)
    w->n_active_ping_clients    = 0;
    w->next_click_is_not_double = True;
 
+#ifdef USE_SM
+   sm_connect(w); 	/* previous_cliend_id */
+#endif
+
    sattr.event_mask =  SubstructureRedirectMask
                        |SubstructureNotifyMask
                        |StructureNotifyMask
@@ -85,10 +89,6 @@ wm_new(int argc, char **argv)
 		    DefaultColormap(w->dpy, w->screen), 
 		    "grey", 
 		    &w->grey_col, &dummy_col);
-
-#ifdef USE_SM
-   sm_connect(w, NULL); 	/* previous_cliend_id */
-#endif
 
 #ifdef USE_GCONF
    g_type_init() ;
@@ -187,6 +187,10 @@ wm_usage(char *progname)
    printf("\t-use_dialog_mode  <free|static|const-horiz>\n");
    printf("\t-use_desktop_mode <decorated|plain>\n");
    printf("\t-force_dialogs    <comma seperated list of window titles>\n");
+#ifdef USE_SM
+   printf("\t--sm-client-id    <session id>\n");
+#endif
+
    /*
    printf("\t-ping_handler     <string>\n");
    */
@@ -273,8 +277,14 @@ wm_usage(char *progname)
    printf("\tXRM support                      no\n");
 #endif
 
+#ifdef USE_SM
+   printf("\tSession support                  yes\n");
+#else
+   printf("\tSession support                  no\n");
+#endif   
+
    printf("\nVisit http://projects.o-hand.com/matchbox for more info.\n");
-   printf("(c) 2004 OpenedHand Ltd\n");
+   printf("(c) 2005 OpenedHand Ltd\n");
    exit(0);
 }
 
@@ -405,6 +415,16 @@ wm_load_config (Wm   *w,
 	  w->config->force_dialogs = argv[i];
 	  continue;
 	}
+
+#ifdef USE_SM
+   if (!strcmp ("--sm-client-id", argv[i]))
+     {
+       if (++i>=*argc) wm_usage (argv[0]);
+       w->config->sm_client_id = strdup(argv[i]);
+       continue;
+     }
+#endif
+
       wm_usage (argv[0]);
    }
 
@@ -427,7 +447,7 @@ wm_load_config (Wm   *w,
    char              *type;
    XrmValue          value;
    
-   static int opTableEntries = 9;
+   static int opTableEntries = 10;
    static XrmOptionDescRec opTable[] = {
       {"-theme",       ".theme",           XrmoptionSepArg, (XPointer) NULL},
       {"-use_titlebar",".titlebar",        XrmoptionSepArg, (XPointer) NULL},
@@ -438,6 +458,7 @@ wm_load_config (Wm   *w,
       {"-use_desktop_mode",".desktop",     XrmoptionSepArg, (XPointer) NULL},
       {"-titlebar_panel",  ".titlebarpanel", XrmoptionSepArg, (XPointer) NULL},
       {"-force_dialogs",  ".forcedialogs", XrmoptionSepArg, (XPointer) NULL},
+      {"--sm-client-id",  ".session",      XrmoptionSepArg, (XPointer) NULL},
    };
 
    XrmInitialize();
@@ -606,6 +627,19 @@ wm_load_config (Wm   *w,
      free(geom);
    }
 #endif
+
+#ifdef USE_SM
+   if (XrmGetResource(rDB, "matchbox.session",
+		      "Matchbox.session",
+		      &type, &value) == True)
+     {
+       w->config->sm_client_id = (char *)malloc(sizeof(char)*(value.size+1));
+       strncpy(w->config->sm_client_id, value.addr, (int) value.size);
+       w->config->sm_client_id[value.size] = '\0';
+       dbg("%s() got sm_client_id: %s ", __func__, w->config->sm_client_id);
+     }
+#endif   
+
 }
 #endif /* NO_XRM */
 
@@ -670,6 +704,8 @@ get_xevent_timed(Wm             *w,
 #ifndef USE_SM
       XNextEvent(w->dpy, event_return);
       return True;
+#else
+      tv->tv_sec = 5;
 #endif
     }
 
@@ -691,7 +727,9 @@ get_xevent_timed(Wm             *w,
 	}
 #endif
       if (select(fd+1, &readset, NULL, NULL, tv) == 0) 
-	return False;
+	{
+	  return False;
+	}
       else 
 	{
 #ifdef USE_SM

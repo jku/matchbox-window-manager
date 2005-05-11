@@ -33,7 +33,7 @@ void
 sm_process_event(Wm *w);
 
 Bool
-sm_connect(Wm *w, char *prev_client_id);
+sm_connect(Wm *w);
 
 #endif /* USE_SM */
 

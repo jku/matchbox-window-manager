@@ -41,7 +41,7 @@ sm_save_yourself_cb (SmcConn   smcConn,
 
   static int  first_time = 1;
 
-  dbg("mark");
+  dbg("%s() session mark\n", __func__);
 
   if (first_time)
     {
@@ -102,25 +102,28 @@ static void
 sm_die_cb (SmcConn   smcConn,
 	   SmPointer clientData)
 {
-  dbg("mark");
+  Wm *w = (Wm*)clientData;
+
+  dbg("%s() session mark\n", __func__);
 
   SmcCloseConnection (smcConn, 0, NULL);
-  /* XtRemoveInput (iceInputId); */
+
+  w->sm_ice_fd = -1;
 }
 
 static void
 sm_save_complete_cb (SmcConn   smcConn,
 		     SmPointer clientData)
 {
-  dbg("mark");
-  ;
+  dbg("%s() session mark\n", __func__);
+
 }
 
 static void
 sm_shutdown_cancelled_cb (SmcConn   smcConn,
 			  SmPointer clientData)
 {
-  dbg("mark");
+  dbg("%s() session mark\n", __func__);
   /*
   if (!sent_save_done)
     {
@@ -133,11 +136,13 @@ sm_shutdown_cancelled_cb (SmcConn   smcConn,
 void
 sm_process_event(Wm *w)
 {
+  dbg("%s() session mark\n", __func__);
+
   IceProcessMessages (w->ice_conn, NULL, NULL);
 }
 
 Bool
-sm_connect(Wm *w, char *prev_client_id)
+sm_connect(Wm *w)
 {
   char          error[256], *mb_client_id;
   unsigned long mask;
@@ -159,13 +164,15 @@ sm_connect(Wm *w, char *prev_client_id)
   callbacks.shutdown_cancelled.callback = sm_shutdown_cancelled_cb;
   callbacks.shutdown_cancelled.client_data = (SmPointer) w;
 
+  w->sm_ice_fd = -1;
+
   smc_conn = SmcOpenConnection ( NULL,   /* use SESSION_MANAGER env */
 				 NULL,
 				 SmProtoMajor,
 				 SmProtoMinor,
 				 mask,
 				 &callbacks,
-				 prev_client_id,
+				 w->config->sm_client_id,
 				 &mb_client_id,
 				 256, error);
 

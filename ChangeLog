@@ -1,3 +1,13 @@
+2005-05-11  mallum,,,  <mallum@openedhand.com>
+
+	* src/session.c: (sm_save_yourself_cb), (sm_die_cb),
+	(sm_shutdown_cancelled_cb), (sm_connect):
+	* src/session.h:
+	* src/structs.h:
+	* src/wm.c: (wm_new), (wm_usage), (wm_load_config),
+	(wm_find_client), (get_xevent_timed):
+	Fix up session support some more.
+
 2005-05-05  mallum,,,  <mallum@openedhand.com>
 
 	* src/client_common.c: (client_set_focus):

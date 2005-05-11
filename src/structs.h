@@ -445,6 +445,7 @@ typedef struct _kbdconfig_entry
   int                      idata;
   struct _kbdconfig_entry *next_entry;
 
+
 } MBConfigKbdEntry;
 
 typedef struct _kbdconfig
@@ -493,6 +494,7 @@ typedef struct _wm_config
   MBConfigKbd *kb;
 
   char        *force_dialogs;
+  char        *sm_client_id;
 } Wm_config;
 
 
