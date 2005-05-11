@@ -36,8 +36,8 @@ sm_save_yourself_cb (SmcConn   smcConn,
 
   /* XXX This needs much work */
 
-  SmProp      prop1, prop2, prop3, *props[3];
-  SmPropValue prop1val, prop2val, prop3val;
+  SmProp      prop1, prop2, prop3, prop4, prop5, prop6, *props[6];
+  SmPropValue prop1val, prop2val, prop3val, prop4val, prop5val, prop6val;
 
   static int  first_time = 1;
 
@@ -45,8 +45,11 @@ sm_save_yourself_cb (SmcConn   smcConn,
 
   if (first_time)
     {
-      char userId[20];
-      char hint = SmRestartIfRunning;
+      char userId[20], pid[20];
+      char hint     = SmRestartImmediately;
+      char priority = 20;
+
+      dbg("%s() session mark\n", __func__);
 
       prop1.name      = SmProgram;
       prop1.type      = SmARRAY8;
@@ -55,7 +58,7 @@ sm_save_yourself_cb (SmcConn   smcConn,
       prop1val.value  = "matchbox-window-manager"; /* Argv[0]; */ 
       prop1val.length = strlen ("matchbox-window-manager");
 
-      snprintf (userId, 20, "%d", getuid());
+      snprintf (userId, 20, "%s", getenv("USER") ? getenv("USER") : "unknown");
       prop2.name      = SmUserID;
       prop2.type      = SmARRAY8;
       prop2.num_vals  = 1;
@@ -70,17 +73,43 @@ sm_save_yourself_cb (SmcConn   smcConn,
       prop3val.value  = (SmPointer) &hint;
       prop3val.length = 1;
 
+      snprintf (pid, 20, "%d", getpid ());
+      prop4.name = SmProcessID;
+      prop4.type = SmARRAY8;
+      prop4.num_vals = 1;
+      prop4.vals = &prop4val;
+      prop4val.value = pid;
+      prop4val.length = strlen (prop4val.value);
+
+      /* Always start in home directory */
+      prop5.name = SmCurrentDirectory;
+      prop5.type = SmARRAY8;
+      prop5.num_vals = 1;
+      prop5.vals = &prop5val;
+      prop5val.value = (char*) ( getenv("HOME") ? getenv("HOME") : "unknown" );
+      prop5val.length = strlen (prop5val.value);
+
+      prop6.name = "_GSM_Priority";
+      prop6.type = SmCARD8;
+      prop6.num_vals = 1;
+      prop6.vals = &prop6val;
+      prop6val.value = &priority;
+      prop6val.length = 1;
+
       props[0] = &prop1;
       props[1] = &prop2;
       props[2] = &prop3;
+      props[3] = &prop4;
+      props[4] = &prop5;
+      props[5] = &prop6;
 
-      SmcSetProperties (smcConn, 3, props);
+      SmcSetProperties (smcConn, 6, props);
 
       first_time = 0;
     }
 
-  /* XXX Below is obviously wrong and needs work.
-   *
+  /* Below is obviously wrong and needs work.
+   * Need to rebuild command line arguments
   */
 
   prop1.name     = SmRestartCommand;

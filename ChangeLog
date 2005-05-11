@@ -1,5 +1,13 @@
 2005-05-11  mallum,,,  <mallum@openedhand.com>
 
+	* configure.ac:
+	minor cleanups, remove xsync enable
+	* src/session.c: (sm_save_yourself_cb):
+	Fix things enough to avoid gnome-session hanging.
+	Support still very basic and incomplete.
+
+2005-05-11  mallum,,,  <mallum@openedhand.com>
+
 	* src/session.c: (sm_save_yourself_cb), (sm_die_cb),
 	(sm_shutdown_cancelled_cb), (sm_connect):
 	* src/session.h:

@@ -30,7 +30,7 @@ AC_ARG_ENABLE(standalone,
   enable_standalone=$enableval, enable_standalone=no)
 
 AC_ARG_ENABLE(composite,
-  [  --enable-composite            enable composite support ( EXPERIMENTAL ).],
+  [  --enable-composite            enable composite support (EXPERIMENTAL).],
   enable_composite=$enableval, enable_composite=no)
 
 AC_ARG_ENABLE(startup_notification,
@@ -49,9 +49,12 @@ AC_ARG_WITH(expat-lib,
   [  --with-expat-lib=DIR          Use Expat library in DIR], 
 	   expat_lib=$withval, expat_lib=yes)
 
-AC_ARG_ENABLE(xsync,
-  [  --enable-xsync                enable XSYNC X extension support ( EXPERIMENTAL )],
-     enable_xsync=$enableval, enable_xsync=no )
+# DISABLE PERMANTLY FOR NOW
+#AC_ARG_ENABLE(xsync,
+#  [  --enable-xsync                enable XSYNC X extension support (EXPERIMENTAL )],
+#     enable_xsync=$enableval, enable_xsync=no )
+
+enable_xsync=no
 
 AC_ARG_ENABLE(gconf,
   [  --enable-gconf                enable gconf support],
