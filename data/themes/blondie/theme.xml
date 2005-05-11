@@ -18,7 +18,7 @@
 <!-- Fonts, alternate fonts can be listed seperated by a '|'   
             The first matched will be used.                   -->
 <font id="titlefont" def="Sans bold 16px" />
-<font id="barfont"   def="Bitstream Vera Sans-5:pixelsize=8|verdana-6:pixelsize=8|5x7|fixed" />
+<font id="barfont"   def="Sans bold 10px" />
 
 <!-- Pixmaps. xpm or png ( if support compiled in ) supported.
      They are expected to be found in the same location as this file -->
@@ -326,7 +326,7 @@
   <button x="0" y="0" w="100%-20" h="100%" 
   action="maximize" options="inputonly"/>
 
-  <button x="-13" y="-14" w="7" h="13" action="close" >
+  <button x="-20" y="0" w="22" h="12" action="close" >
    <active pixmap="close" blend="-80"/>
    <inactive pixmap="close" />
   </button>

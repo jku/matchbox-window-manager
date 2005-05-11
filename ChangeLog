@@ -1,5 +1,13 @@
 2005-05-11  mallum,,,  <mallum@openedhand.com>
 
+	* data/themes/Default/theme.xml:
+	* data/themes/MBOpus/theme.xml:
+	* data/themes/blondie/theme.xml:
+	Tweak+add basic rough toolbar decorations to keep
+	old apps happy that still use decorated toolbars. 
+
+2005-05-11  mallum,,,  <mallum@openedhand.com>
+
 	* configure.ac:
 	minor cleanups, remove xsync enable
 	* src/session.c: (sm_save_yourself_cb):

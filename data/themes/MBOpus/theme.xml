@@ -236,6 +236,56 @@
 
 </frame>
 
+<!-- not much really uses these any more -->
+
+<frame id="utility-max" width="20">
+
+  <layer x="0" y="0" w="100%"  h="100%" 
+   type="plain" color="borderdark" />
+
+  <layer x="1" y="1" w="100%-2"  h="1" 
+   type="plain" color="borderlight" />
+
+  <layer x="1" y="2" w="100%-2"  h="2" 
+   type="plain" color="grad3"/>
+
+  <button x="0" y="0" w="100%" h="100%" action="minimize" options="inputonly"/>
+
+</frame>
+
+<frame id="utility-min" height="20">
+
+  <layer x="0" y="0" w="100%"  h="100%" 
+   type="plain" color="borderdark" />
+
+  <layer x="1" y="1" w="100%-2"  h="1" 
+   type="plain" color="borderlight" />
+
+  <layer x="1" y="2" w="100%-2"  h="2" 
+   type="plain" color="grad3"/>
+
+  <layer x="1" y="1" w="1"  h="100%-1" 
+   type="gradient-vert" startcol="borderlight" endcol="grad3"/>
+
+  <layer x="100%-2" y="1" w="1"  h="100%-2" 
+   type="gradient-vert" startcol="borderlight" endcol="grad3"/>
+
+  <layer x="2" y="19" w="1"  h="1" 
+   type="plain" color="grad3" />
+
+  <layer x="100%-3" y="19" w="1"  h="1" 
+   type="plain" color="grad3" />
+
+  <button x="0" y="0" w="100%-20" h="100%" 
+  action="maximize" options="inputonly"/>
+
+  <button x="-20" y="0" w="16" h="20" action="close" >
+   <active pixmap="closebutton" blend="-100"/>
+   <inactive pixmap="closebutton" />
+  </button>
+
+</frame>
+
 
 <frame id="menu" 
         border_north="2" 
