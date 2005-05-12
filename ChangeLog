@@ -1,3 +1,11 @@
+2005-05-12  mallum,,,  <mallum@openedhand.com>
+
+	* src/matchbox-remote.c: (usage), (main):
+	* src/structs.h:
+	* src/wm.c: (wm_handle_client_message):
+	Add 2 new simple switches to matchbox-remote, one too toggle
+	compositor and one to force reload of key shortcuts.
+
 2005-05-11  mallum,,,  <mallum@openedhand.com>
 
 	* src/toolbar_client.c: (toolbar_client_reparent):

@@ -35,6 +35,8 @@
 #define MB_CMD_PREV          5
 #define MB_CMD_SHOW_EXT_MENU 6
 #define MB_CMD_MISC          7
+#define MB_CMD_COMPOSITE     8
+#define MB_CMB_KEYS_RELOAD   9
 
 #define MB_CMD_PANEL_TOGGLE_VISIBILITY 1
 #define MB_CMD_PANEL_SIZE              2
@@ -211,6 +213,9 @@ usage(char *progname)
    printf("  -menu                    Activate mb-applet-menu-launcher\n");
    printf("  -panel-toggle [panel id] Toogle panel visibility\n");
    printf("  -input-toggle [1|0]      Toggle Input method ( requires input-manager )\n");
+   printf("  -composite-toggle        Toggle Compositing Engine ( if enabled )\n");
+   printf("  -keys-reload             Reload key shortcut config ( if enabled )\n");
+
 
    /*
    printf("  -panel-size <int>\n");
@@ -239,53 +244,59 @@ int main(int argc, char* argv[])
      if (*arg=='-') {
 	switch (arg[1]) 
 	{
-	   case 't' :
-	      if (argv[i+1] != NULL)
-		 mbcommand(MB_CMD_SET_THEME, argv[i+1]);
-	      i++;
-	      break;
-	   case 'r' :
-	      getRootProperty("_MB_THEME", False);
-	      i++;
-	      break;
-	   case 'e':
-	       mbcommand(MB_CMD_EXIT, NULL);
-	       break;
-	   case 'd':
-	      mbcommand(MB_CMD_DESKTOP, NULL);
-	      break;
-	   case 'n':
-	      mbcommand(MB_CMD_NEXT, NULL);
-	      break;
-	   case 'p':
-	     if (!strcmp(arg+1,"panel-toggle"))
-	       {
-		 int panel_id = 0;
-
-		 if (argc > i+1) panel_id = atoi(argv[i+1]);
-		 mbpanelcommand(MB_CMD_PANEL_TOGGLE_VISIBILITY, panel_id);
-	       }
-	     else if (strcmp(arg+1,"prev") == 0 || strlen(arg+1) == 1)
-	       {
-		 mbcommand(MB_CMD_PREV, NULL);
-	       }
-	     else usage(argv[0]);
-	     break;
-	   case 'm':
-	      mbcommand(MB_CMD_SHOW_EXT_MENU, NULL);
-	      break;
-	   case 'x':
-	      mbcommand(MB_CMD_MISC, NULL);
-	      break;
-	   case 'i':
-	      if (argv[i+1] != NULL)
-		send_input_manager_request(atoi(argv[i+1]));
-	      else
-		usage(argv[0]);
-	      break;
-	   default:
-	      usage(argv[0]);
-	      break;
+	case 't' :
+	  if (argv[i+1] != NULL)
+	    mbcommand(MB_CMD_SET_THEME, argv[i+1]);
+	  i++;
+	  break;
+	case 'r' :
+	  getRootProperty("_MB_THEME", False);
+	  i++;
+	  break;
+	case 'e':
+	  mbcommand(MB_CMD_EXIT, NULL);
+	  break;
+	case 'd':
+	  mbcommand(MB_CMD_DESKTOP, NULL);
+	  break;
+	case 'n':
+	  mbcommand(MB_CMD_NEXT, NULL);
+	  break;
+	case 'c':
+	  mbcommand(MB_CMD_COMPOSITE, NULL);
+	  break;
+	case 'k':
+	  mbcommand(MB_CMB_KEYS_RELOAD, NULL);
+	  break;
+	case 'p':
+	  if (!strcmp(arg+1,"panel-toggle"))
+	    {
+	      int panel_id = 0;
+	      
+	      if (argc > i+1) panel_id = atoi(argv[i+1]);
+	      mbpanelcommand(MB_CMD_PANEL_TOGGLE_VISIBILITY, panel_id);
+	    }
+	  else if (strcmp(arg+1,"prev") == 0 || strlen(arg+1) == 1)
+	    {
+	      mbcommand(MB_CMD_PREV, NULL);
+	    }
+	  else usage(argv[0]);
+	  break;
+	case 'm':
+	  mbcommand(MB_CMD_SHOW_EXT_MENU, NULL);
+	  break;
+	case 'x':
+	  mbcommand(MB_CMD_MISC, NULL);
+	  break;
+	case 'i':
+	  if (argv[i+1] != NULL)
+	    send_input_manager_request(atoi(argv[i+1]));
+	  else
+	    usage(argv[0]);
+	  break;
+	default:
+	  usage(argv[0]);
+	  break;
 	}
      }
   }

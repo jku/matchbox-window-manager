@@ -135,14 +135,16 @@
 #define SHADOW_OFFSET_X	(-SHADOW_RADIUS)
 #define SHADOW_OFFSET_Y	(-SHADOW_RADIUS)
 
-/* Defines for MB_COMMAND values */
+/* Defines for MB_COMMAND values, for matchbox-remote */
 
-#define MB_CMD_SET_THEME 1
-#define MB_CMD_EXIT      2
-#define MB_CMD_DESKTOP   3
-#define MB_CMD_NEXT      4
-#define MB_CMD_PREV      5
-#define MB_CMD_MISC      7 	/* spare, used for debugging */
+#define MB_CMD_SET_THEME   1
+#define MB_CMD_EXIT        2
+#define MB_CMD_DESKTOP     3
+#define MB_CMD_NEXT        4
+#define MB_CMD_PREV        5
+#define MB_CMD_MISC        7 	/* spare, used for debugging */
+#define MB_CMD_COMPOSITE   8
+#define MB_CMB_KEYS_RELOAD 9
 
 /* Atoms, if you change these check ewmh_init() first */
 

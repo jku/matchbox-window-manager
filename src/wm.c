@@ -1603,6 +1603,20 @@ wm_handle_client_message(Wm *w, XClientMessageEvent *e)
 	   w->flags ^= DEBUG_COMPOSITE_VISIBLE_FLAG;
 #endif
 	   break;
+#ifndef NO_KBD
+	 case MB_CMB_KEYS_RELOAD:
+	   keys_reinit(w); 
+	   break;
+#endif
+
+#ifdef USE_COMPOSITE
+	 case MB_CMD_COMPOSITE:
+	   if (w->comp_engine_disabled)
+	     comp_engine_reinit(w);
+	   else
+	     comp_engine_deinit(w);
+	   break;
+#endif
 	 }
        return;
      }
