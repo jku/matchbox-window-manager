@@ -176,7 +176,7 @@ wm_new(int argc, char **argv)
 void
 wm_usage(char *progname)
 {
-   printf("usage: %s %s [options ...]\n", progname, VERSION);
+   printf("usage: %s [options ...]\n", progname);
    printf("\t-display          <string> \n");
    printf("\t-theme            <string> \n");
    printf("\t-use_titlebar     <yes|no>\n");
@@ -198,7 +198,7 @@ wm_usage(char *progname)
    printf("\t-titlebar_panel   <x11 geometry>\n");
 #endif
    printf("\n");
-   printf("Compile time options:\n");
+   printf("Compile time features;\n");
 #ifdef DEBUG
    printf("\tdebug build                      yes\n");
 #else
@@ -283,8 +283,10 @@ wm_usage(char *progname)
    printf("\tSession support                  no\n");
 #endif   
 
-   printf("\nVisit http://projects.o-hand.com/matchbox for more info.\n");
-   printf("(c) 2005 OpenedHand Ltd\n");
+   printf("\nmatchbox-window-manager %s \nCopyright (C) 2005 Matthew Allum, OpenedHand Ltd.\n", VERSION);
+   printf("This is free software; see the source for copying conditions.\n");
+   printf("Visit http://projects.o-hand.com/matchbox for more info.\n");
+
    exit(0);
 }
 
