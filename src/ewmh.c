@@ -440,16 +440,19 @@ ewmh_state_set(Client *c)
   /* We need to set ewmh state as some apps need to know when they 
    * return from fullscreen
    */
-
   if (c->flags & CLIENT_FULLSCREEN_FLAG)
     atom_states[n_atom_states++] = w->atoms[WINDOW_STATE_FULLSCREEN];
 
   if  (c->flags & CLIENT_IS_MODAL_FLAG)
     atom_states[n_atom_states++] = w->atoms[WINDOW_STATE_MODAL];
 
-  XChangeProperty(w->dpy, c->window, w->atoms[WINDOW_STATE],
-		  XA_ATOM, 32, PropModeReplace, 
-		  (unsigned char *)atom_states, n_atom_states);
+  /* XXX Should avoid trashing states here we dont handle. 
+   *     Otherwise things like skip taskbar state get trashed. 
+  */
+  if (n_atom_states)
+    XChangeProperty(w->dpy, c->window, w->atoms[WINDOW_STATE],
+		    XA_ATOM, 32, PropModeReplace, 
+		    (unsigned char *)atom_states, n_atom_states);
 }
 
 Bool 

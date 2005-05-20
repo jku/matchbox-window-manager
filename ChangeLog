@@ -1,3 +1,9 @@
+2005-05-20  mallum,,,  <mallum@openedhand.com>
+
+	* src/ewmh.c: (ewmh_state_set):
+	* src/wm.c: (wm_make_new_client):
+	Avoid trashing unsupported state hints.
+
 2005-05-17  mallum,,,  <mallum@openedhand.com>
 
 	* src/wm.c: (wm_usage):

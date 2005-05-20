@@ -1954,7 +1954,7 @@ wm_make_new_client(Wm *w, Window win)
 
    /* Let window know were all done */
 
-   ewmh_state_set(c);
+   ewmh_state_set(c); 		/* XXX This is likely not needed */
 
    client_set_state(c, NormalState);
 
