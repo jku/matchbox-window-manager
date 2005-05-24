@@ -1829,7 +1829,10 @@ wm_make_new_client(Wm *w, Window win)
 
 		   /* check to see if we're a 'menu' dialog  */
 		   if (value[0] == w->atoms[WINDOW_TYPE_MENU])
-		     c->flags |= CLIENT_IS_MENU_DIALOG;
+		     {
+		       dbg("%s() Got menu hint\n", __func__);
+		       c->flags |= CLIENT_IS_MENU_DIALOG;
+		     }
 		 }
 	       else if (value[0] == w->atoms[WINDOW_TYPE_MESSAGE])
 		 {

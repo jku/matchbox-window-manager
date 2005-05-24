@@ -612,12 +612,11 @@ dialog_init_geometry(Client *c)
    * But centered initially if 0,0 ( splash screens ).
    *
    * However for 'menu' dialogs this doesn't apply as a fullscreen
-   * window may want a menu at 0,0
+   * window may want a menu at 0,0, so we dont center them
   */
-  if (c->flags & CLIENT_TITLE_HIDDEN_FLAG 
-      && !(c->flags & CLIENT_IS_MENU_DIALOG))
+  if (c->flags & CLIENT_TITLE_HIDDEN_FLAG)
     {
-      if (c->x == 0 && c->y == 0)
+      if (!(c->flags & CLIENT_IS_MENU_DIALOG) && c->x == 0 && c->y == 0)
 	{
 	  if (c->height < w->dpy_height)
 	    c->y = (w->dpy_height - c->height)/2;
@@ -705,6 +704,11 @@ dialog_client_configure(Client *c)
 {
   dbg("%s() client has border only hint: %s\n",
       __func__, (c->flags & CLIENT_BORDERS_ONLY_FLAG) ? "yes" : "no");
+
+  dbg("%s() client has menu hint: %s\n",
+      __func__, (c->flags & CLIENT_IS_MENU_DIALOG) ? "yes" : "no");
+
+
   dialog_init_geometry(c);
 }
 
