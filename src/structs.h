@@ -292,6 +292,7 @@ typedef struct _mb_client_button
 #define CLIENT_IS_TRANSIENT_FOR_ROOT (1<<25)
 #define CLIENT_HAS_URGENCY_FLAG (1<<26)
 #define CLIENT_HAS_ABOVE_STATE (1<<27)
+#define CLIENT_IS_MENU_DIALOG ( 1<<30)
 
 #ifdef USE_ALT_INPUT_WIN
 #define CLIENT_TB_ALT_TRANS_FOR_DIALOG (1<<28)

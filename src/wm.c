@@ -1820,11 +1820,16 @@ wm_make_new_client(Wm *w, Window win)
 		   if (c == NULL) goto end;
 		   c->flags ^= CLIENT_TITLE_HIDDEN_FLAG;
 		 }
-	       else if (value[0] == w->atoms[WINDOW_TYPE_DIALOG])
+	       else if (value[0] == w->atoms[WINDOW_TYPE_DIALOG]
+			|| value[0] == w->atoms[WINDOW_TYPE_MENU])
 		 {
 		   dbg("%s() got type dialog atom\n", __func__ );
 		   c = dialog_client_new(w, win, NULL);
 		   if (c == NULL) goto end;
+
+		   /* check to see if we're a 'menu' dialog  */
+		   if (value[0] == w->atoms[WINDOW_TYPE_MENU])
+		     c->flags |= CLIENT_IS_MENU_DIALOG;
 		 }
 	       else if (value[0] == w->atoms[WINDOW_TYPE_MESSAGE])
 		 {

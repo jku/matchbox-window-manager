@@ -1,3 +1,11 @@
+2005-05-24  mallum,,,  <mallum@openedhand.com>
+
+	* src/dialog_client.c: (dialog_client_check_for_state_hints),
+	(dialog_init_geometry):
+	* src/structs.h:
+	* src/wm.c: (wm_make_new_client):
+	Dont center 'menu' dialogs if initial position is 0,0
+
 2005-05-20  mallum,,,  <mallum@openedhand.com>
 
 	* src/ewmh.c: (ewmh_state_set):

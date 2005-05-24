@@ -122,6 +122,7 @@ dialog_client_check_for_state_hints(Client *c)
 
   if (ewmh_state_check(c, c->wm->atoms[WINDOW_STATE_ABOVE]))
     c->flags |= CLIENT_HAS_ABOVE_STATE;
+
 }
 
 void
@@ -608,9 +609,13 @@ dialog_init_geometry(Client *c)
     return;
 
   /* Allow decorationless dialogs to position themselves anywhere 
-   * But centered initially if 0,0 
+   * But centered initially if 0,0 ( splash screens ).
+   *
+   * However for 'menu' dialogs this doesn't apply as a fullscreen
+   * window may want a menu at 0,0
   */
-  if (c->flags & CLIENT_TITLE_HIDDEN_FLAG)
+  if (c->flags & CLIENT_TITLE_HIDDEN_FLAG 
+      && !(c->flags & CLIENT_IS_MENU_DIALOG))
     {
       if (c->x == 0 && c->y == 0)
 	{
