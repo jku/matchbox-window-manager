@@ -308,7 +308,8 @@ dialog_client_reparent(Client *c)
 {
   Wm *w = c->wm;
   XSetWindowAttributes attr;
-  
+  unsigned long        attr_mask;  
+
   int offset_north = dialog_client_title_height(c);
   int offset_south = 0, offset_west = 0, offset_east = 0;
   
@@ -318,9 +319,19 @@ dialog_client_reparent(Client *c)
   attr.background_pixel  = w->grey_col.pixel;
   attr.border_pixel      = 0;
   attr.event_mask        = ChildMask|ButtonPressMask|ExposureMask;
-  
-  attr.colormap          = c->cmap; /* Needed for argb wins */
-  
+
+  attr_mask              = CWOverrideRedirect|CWEventMask
+                           |CWBackPixel|CWBorderPixel ;
+
+#ifdef USE_COMPOSITE
+ /* Needed for argb wins, XXX need to figure this out .. */  
+  attr.colormap          = c->cmap;
+
+  if (c->cmap && !w->comp_engine_disabled) 
+    attr_mask = CWOverrideRedirect|CWEventMask
+                |CWBackPixel|CWBorderPixel|CWColormap ;
+#endif
+
   dbg("%s() want lowlight : wm:%i , client:%i\n", __func__,
       c->wm->config->dialog_shade, (c->flags & CLIENT_IS_MODAL_FLAG));
 #ifndef USE_COMPOSITE
@@ -351,8 +362,7 @@ dialog_client_reparent(Client *c)
 				     CopyFromParent, 
 				     CopyFromParent,
 #endif
-				     CWOverrideRedirect|CWEventMask
-				     |CWBackPixel|CWBorderPixel|CWColormap, 
+				     attr_mask,
 				     &attr);
      }
 
