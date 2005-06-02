@@ -1,3 +1,14 @@
+2005-06-02  mallum,,,  <mallum@openedhand.com>
+
+	* configure.ac:
+	* src/dialog_client.c: (dialog_client_show):
+	avoid potential infinite loop from transiant race?  
+
+2005-05-26  mallum,,,  <mallum@openedhand.com>
+
+	* configure.ac:
+	Bump up version to 0.9.5
+
 2005-05-25  mallum,,,  <mallum@openedhand.com>
 
 	* src/dialog_client.c: (dialog_client_reparent):
