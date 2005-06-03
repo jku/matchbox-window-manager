@@ -1,3 +1,8 @@
+2005-06-03  mallum,,,  <mallum@openedhand.com>
+
+	* src/wm.c: (wm_handle_property_change):
+	Dont let windows change transiency to themselves.
+
 2005-06-02  mallum,,,  <mallum@openedhand.com>
 
 	* configure.ac:

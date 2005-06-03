@@ -1689,7 +1689,11 @@ wm_handle_property_change(Wm *w, XPropertyEvent *e)
       if (!misc_untrap_xerrors() && success)
 	if ((new_trans_client = wm_find_client(w, trans_win, WINDOW)) != NULL)
 	  {
-	    c->trans = new_trans_client;
+	    if (new_trans_client == c)
+	      c->trans = NULL; /* dont let wins be trans for themselves*/
+	    else
+	      c->trans = new_trans_client;
+
 	    return;
 	  }
 
