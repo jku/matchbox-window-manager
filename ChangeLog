@@ -1,3 +1,10 @@
+2005-06-06  mallum,,,  <mallum@openedhand.com>
+
+	* src/main_client.c: (main_client_iconize):
+	* src/wm.c: (wm_handle_property_change), (wm_remove_client):
+	Handle windows hiding but not always unmapping there windows.
+	Fixes 'ghost' windows when quicking hiding/showing a GTK win.
+
 2005-06-03  mallum,,,  <mallum@openedhand.com>
 
 	* src/wm.c: (wm_handle_property_change):

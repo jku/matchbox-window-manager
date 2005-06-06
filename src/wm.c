@@ -1731,7 +1731,9 @@ wm_handle_property_change(Wm *w, XPropertyEvent *e)
     {
       dbg("%s() state change, name is %s\n", __func__, c->name);
       if(client_get_state(c) == WithdrawnState)
-	c->destroy(c);
+	{
+	  wm_remove_client(w, c);
+	}
     }
   else if (e->atom == w->atoms[CM_TRANSLUCENCY])
     {
@@ -1995,6 +1997,14 @@ wm_remove_client(Wm *w, Client *c)
   client_set_state(c, WithdrawnState);
   XReparentWindow(w->dpy, c->window, w->root, 0, 0); 
   XRemoveFromSaveSet(w->dpy, c->window);
+
+  /* Below is likely not needed ( window will have already unmapped )
+   * and likely to fire an X error, but we do it anyway to be extra safe.
+   * 
+   * In gtk quickly hiding/showing window repeatadly it can seem gtk does't
+   * always call the unmap and a wierd ghost window is left.
+  */
+  XUnmapWindow(w->dpy, c->window);
 
   /* sync here so any (likely) lingering X errors are trapped */
   XSync(w->dpy, False);

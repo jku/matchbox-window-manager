@@ -737,6 +737,8 @@ main_client_iconize(Client *c)
   Wm *w = c->wm;
   Client *p = NULL;
 
+  dbg("%s() called on %s\n", __func__, c->name);
+
   client_set_state(c, IconicState);
   c->flags |= CLIENT_IS_MINIMIZED;
 
