@@ -240,8 +240,7 @@ dialog_client_show(Client *c)
       int urgent_flag = 0; /* (c->flags & CLIENT_HAS_URGENCY_FLAG) ?
 			      CLIENT_HAS_URGENCY_FLAG : 0; */
 
-      while (lowest_trans->trans != NULL 
-	     && lowest_trans != lowest_trans->trans) 
+      while (lowest_trans->trans != NULL) 
 	lowest_trans = lowest_trans->trans;
 
       highest_client = client_get_highest_transient(lowest_trans, urgent_flag);

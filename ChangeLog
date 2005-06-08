@@ -1,3 +1,8 @@
+2005-06-08  mallum,,,  <mallum@openedhand.com>
+
+	* src/dialog_client.c: (dialog_client_show):
+	Remove old attempted transient infinite loop fix ( 2005-06-02 )
+
 2005-06-06  mallum,,,  <mallum@openedhand.com>
 
 	* src/main_client.c: (main_client_iconize):
