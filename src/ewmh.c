@@ -553,7 +553,7 @@ ewmh_set_current_app_window(Wm *w)
 }
 
 
-#define PING_PENDING_MAX 2
+
 
 void
 ewmh_hung_app_check(Wm *w)
@@ -589,7 +589,7 @@ ewmh_hung_app_check(Wm *w)
 	  e.xclient.data.l[1] = c->window;
 	  XSendEvent(w->dpy, c->window, False, 0, &e);
 
-	  if (c->pings_pending >= PING_PENDING_MAX)
+	  if (c->pings_pending > PING_PENDING_MAX)
 	    {
 	      client_obliterate(c);
 	    }

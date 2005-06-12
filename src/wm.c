@@ -922,8 +922,8 @@ wm_event_loop(Wm* w)
 
 
 #ifndef NO_PING
-	/* check for hung apps every two seconds - they dont last long.. */
-	if (++hung_app_timer > 2 && w->n_active_ping_clients)
+	/* check for hung apps every PING_CHECK_FREQ seconds */
+	if (++hung_app_timer > PING_CHECK_FREQ && w->n_active_ping_clients)
 	  {
 	    hung_app_timer = 0;
 	    ewmh_hung_app_check(w);

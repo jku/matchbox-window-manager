@@ -2272,26 +2272,9 @@ void
 mbtheme_switch (Wm   *w, 
 		char *new_theme_name)
 {
-  Client *c, *p, *orig;
-  Window win_active = None;
-  Bool reset_new_for_desktop_flag = False;
+  Client *p = NULL;
 
   XGrabServer(w->dpy);
-
-  orig = c = p = w->stack_top_app; 
-
-  if (w->stack_top_app)
-    {
-      win_active = w->stack_top_app->window;
-      if (w->stack_top_app->flags & CLIENT_NEW_FOR_DESKTOP)
-	reset_new_for_desktop_flag = True;
-    }
-
-  if (w->flags & DESKTOP_RAISED_FLAG
-      && (orig = wm_get_desktop(w)))
-    {
-      win_active = orig->window;
-    }
 
   /* now the fun part */
   mbtheme_free(w, w->mbtheme);
@@ -2316,6 +2299,8 @@ mbtheme_switch (Wm   *w,
 	}
     }
 
+  /* Now resize ( due to new frames ) + repaint everything */
+
   stack_enumerate(w, p)
     {
       client_buttons_delete_all(p);
@@ -2328,8 +2313,6 @@ mbtheme_switch (Wm   *w,
 	  /*  Old theme may have been shaped and this one not. 
 	   *  Therefore we 'clear' any possible shapes set on 
 	   *  the window frames.  
-	   *  Im not sure if this is the best way to do this but
-	   *  SHAPE docs serverely lacking :(
 	   */
 	  
 	  xregion = XCreateRegion ();
@@ -2356,30 +2339,9 @@ mbtheme_switch (Wm   *w,
       p->redraw(p, False);
     }
     
-
-  /* fix if desktop is shown */
-  if (win_active)
-    {
-      Client *found = wm_find_client(w, win_active, WINDOW);
-      if (found)
-	{
-	  if (found->type == MBCLIENT_TYPE_DESKTOP)
-	    {
-	      w->flags &= ~DESKTOP_RAISED_FLAG; /* Clear desktop flag */
-	      wm_toggle_desktop(w);
-	    } 
-	  else 
-	    {
-	      wm_activate_client(found);
-	      if (reset_new_for_desktop_flag)
-		found->flags |= CLIENT_NEW_FOR_DESKTOP;
-	    }
-	}
-    }
+  XSync(w->dpy, False);
 
   XUngrabServer(w->dpy);
-
-  XSync(w->dpy, False);
 
   comp_engine_render(w, None);
 }

@@ -24,6 +24,12 @@
 #include "structs.h" 
 #include "wm.h"
 
+ /* Number of failed pending pings to kill a ping supporting app on */
+#define PING_PENDING_MAX 2 
+
+ /* Time in seconds between each hung app check */
+#define PING_CHECK_FREQ  2 
+
 /* Non aton defines */
 #define _NET_WM_STATE_REMOVE        0    /* remove/unset property */
 #define _NET_WM_STATE_ADD           1    /* add/set property */
