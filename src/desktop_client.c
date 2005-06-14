@@ -111,6 +111,7 @@ desktop_client_unmap(Client *c)
      }
 
    w->flags &= ~DESKTOP_RAISED_FLAG;
+   ewmh_update_desktop_hint(w);
 }
 
 void

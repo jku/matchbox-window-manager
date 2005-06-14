@@ -188,11 +188,11 @@ dockbar_client_show(Client *c) /*TODO: show and hide share common static func*/
   
   client_set_state(c, NormalState);
 
-   XMapWindow(w->dpy, c->window);
+  XMapWindow(w->dpy, c->window);
 
-   stack_move_client_above_type(c, MBCLIENT_TYPE_APP|MBCLIENT_TYPE_DESKTOP);
+  stack_move_client_above_type(c, MBCLIENT_TYPE_APP|MBCLIENT_TYPE_DESKTOP);
 
-   XUngrabServer(w->dpy);
+  XUngrabServer(w->dpy);
 }
 
 void

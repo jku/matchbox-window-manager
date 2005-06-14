@@ -654,6 +654,11 @@ wm_init_existing(Wm *w)
    XWindowAttributes attr;
    Client *c;
    
+   /* set blank hints */
+   ewmh_update_rects(w); 
+   ewmh_update_lists(w); 
+   ewmh_update_desktop_hint(w);
+
    XQueryTree(w->dpy, w->root, &dummyw1, &dummyw2, &wins, &nwins);
    for (i = 0; i < nwins; i++) {
       XGetWindowAttributes(w->dpy, wins[i], &attr);
@@ -2257,10 +2262,11 @@ wm_update_layout(Wm         *w,
        }
    }
 
+ ewmh_update_rects(w);
+
  XSync(w->dpy, False);
  XUngrabServer(w->dpy);
 
- ewmh_update_rects(w);
 }
 
 
@@ -2303,6 +2309,7 @@ wm_activate_client(Client *c)
 {
   Wm     *w;
   Client *client_to_focus = c;
+  Bool    set_desktop_show_hint = False;
 
   if (c == NULL) return; /* its possible for this to happen :( */
 
@@ -2368,6 +2375,9 @@ wm_activate_client(Client *c)
 	  dbg("%s() clearing desktop flag\n", __func__);
 	  w->flags &= ~DESKTOP_RAISED_FLAG;
 	  w->stack_top_app = c;      
+
+	  set_desktop_show_hint = True;
+
 	}
       else
 	{
@@ -2382,6 +2392,9 @@ wm_activate_client(Client *c)
 	    {
 	      stack_move_above_client(w->have_titlebar_panel, NULL);
 	    }
+
+	  set_desktop_show_hint = True;
+
 	}
 
       /* Set active main client, set focus handles active win hint */
@@ -2440,7 +2453,10 @@ wm_activate_client(Client *c)
       stack_move_above_client(c, NULL);
     }
 
-  ewmh_update(w);
+  ewmh_update_lists(w);
+
+  if (set_desktop_show_hint) 
+    ewmh_update_desktop_hint(w);
 
   client_set_focus(client_to_focus); /* set focus if needed and ewmh active */
 
@@ -2558,6 +2574,8 @@ wm_toggle_desktop(Wm *w)
        dbg("%s() showing desktop\n", __func__);
        wm_activate_client(wm_get_desktop(w));
      }
+
+
 }
 
 void

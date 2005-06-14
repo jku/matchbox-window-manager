@@ -529,8 +529,6 @@ base_client_destroy(Client *c)
      {
        client_buttons_delete_all(c);
        
-       ewmh_update(w);
-
        if (c->frame && c->frame != c->window) 
 	 {
 	   XDestroySubwindows(w->dpy, c->frame);

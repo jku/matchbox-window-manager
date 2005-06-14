@@ -2338,6 +2338,8 @@ mbtheme_switch (Wm   *w,
       p->move_resize(p);
       p->redraw(p, False);
     }
+
+  ewmh_update_rects(w); /* theme *could* affect this */
     
   XSync(w->dpy, False);
 

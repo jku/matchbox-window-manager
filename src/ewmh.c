@@ -266,20 +266,13 @@ ewmh_handle_root_message(Wm *w, XClientMessageEvent *e)
 }
 
 void
-ewmh_update(Wm *w)
-{
-  ewmh_update_lists(w);
-  ewmh_update_rects(w);
-}
-
-void
 ewmh_update_lists(Wm *w)
 {
    Client        *c = NULL;
    Window        *wins = NULL;
    int            cnt = 0;
    unsigned long  val[1];
-
+   
    dbg("%s(): called %i\n", __func__, n_stack_items(w)); 
 
 #ifdef USE_LIBSN
@@ -384,15 +377,20 @@ ewmh_update_lists(Wm *w)
 		     (unsigned char *)wins, n_stack_items(w));
    }
 
+  if (wins)
+    free(wins);
+}
+
+void
+ewmh_update_desktop_hint(Wm *w)
+{
    /* Desktop showing hint */
 
-   val[0] = (w->flags & DESKTOP_RAISED_FLAG) ? 1 : 0;
+   int val = (w->flags & DESKTOP_RAISED_FLAG) ? 1 : 0;
 
    XChangeProperty(w->dpy, w->root, w->atoms[_NET_SHOW_DESKTOP],
 		   XA_CARDINAL, 32, PropModeReplace, 
-		   (unsigned char *)val, 1);
-  if (wins)
-    free(wins);
+		   (unsigned char *)&val, 1);
 }
 
 void

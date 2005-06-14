@@ -1,3 +1,15 @@
+2005-06-14  mallum,,,  <mallum@openedhand.com>
+
+	* src/base_client.c: (base_client_destroy):
+	* src/desktop_client.c: (desktop_client_unmap):
+	* src/dockbar_client.c: (dockbar_client_show):
+	* src/ewmh.c: (ewmh_handle_root_message):
+	* src/ewmh.h:
+	* src/mbtheme.c: (mbtheme_switch):
+	* src/wm.c: (wm_init_existing), (wm_update_layout),
+	(wm_activate_client), (wm_toggle_desktop):
+	Less aggresive root window property updating.
+
 2005-06-12  mallum,,,  <mallum@openedhand.com>
 
 	* src/ewmh.c: (ewmh_set_current_app_window), (ewmh_hung_app_check):

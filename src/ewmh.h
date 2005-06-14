@@ -41,11 +41,11 @@ ewmh_init (Wm *w);
 void 
 ewmh_init_props (Wm *w);
 
-void 
-ewmh_update (Wm *w);
-
 void
 ewmh_update_lists(Wm *w);
+
+void
+ewmh_update_desktop_hint(Wm *w);
 
 void
 ewmh_update_rects(Wm *w);
