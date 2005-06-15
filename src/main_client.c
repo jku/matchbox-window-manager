@@ -784,9 +784,18 @@ main_client_show(Client *c)
      {
        if (c->flags & CLIENT_IS_MINIMIZED)
 	 {
+	   Client *p = NULL;
+
+	   /* Reset state from Iconized */
 	   client_set_state(c, NormalState);
 	   c->flags &= ~CLIENT_IS_MINIMIZED;
+
+	   /* Make sure any dialogs are shown too */
+	   stack_enumerate(w, p)
+	     if (p->trans == c)
+	       p->show(p);
 	 }
+
        XMapSubwindows(w->dpy, c->frame);
        XMapWindow(w->dpy, c->frame);
      }

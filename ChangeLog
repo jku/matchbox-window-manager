@@ -1,3 +1,9 @@
+2005-06-15  mallum,,,  <mallum@openedhand.com>
+
+	* src/dialog_client.c: (dialog_client_show):
+	* src/main_client.c: (main_client_show):
+	Make sure de iconizing a client de-iconizes transients too.
+
 2005-06-14  mallum,,,  <mallum@openedhand.com>
 
 	* src/base_client.c: (base_client_destroy):

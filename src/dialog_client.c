@@ -218,9 +218,23 @@ dialog_client_show(Client *c)
 
   if (!c->mapped)
     {
+      if (c->flags & CLIENT_IS_MINIMIZED)
+	{
+	  Client *p = NULL;
+
+	  client_set_state(c, NormalState);
+	  c->flags &= ~CLIENT_IS_MINIMIZED;
+
+	   /* Make sure any transients are un minimized too */
+	   stack_enumerate(w, p)
+	     if (p->trans == c)
+	       p->show(p);
+	}
+
       XMapSubwindows(w->dpy, c->frame);
       XMapWindow(w->dpy, c->frame);
     }
+
 
   /* 
    *  We just need to get the order right in respect 
@@ -286,7 +300,6 @@ dialog_client_show(Client *c)
 
   list_destroy(&transient_list);
 
-
   /* Insurance below */
 
   if (wm_get_visible_main_client(w))
@@ -300,7 +313,6 @@ dialog_client_show(Client *c)
   stack_move_transients_to_top(w, NULL, CLIENT_HAS_URGENCY_FLAG);
 
   c->mapped = True;
-
 }
 
 void
