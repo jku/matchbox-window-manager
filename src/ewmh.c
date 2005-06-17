@@ -271,7 +271,6 @@ ewmh_update_lists(Wm *w)
    Client        *c = NULL;
    Window        *wins = NULL;
    int            cnt = 0;
-   unsigned long  val[1];
    
    dbg("%s(): called %i\n", __func__, n_stack_items(w)); 
 
@@ -589,7 +588,36 @@ ewmh_hung_app_check(Wm *w)
 
 	  if (c->pings_pending > PING_PENDING_MAX)
 	    {
-	      client_obliterate(c);
+	      if (w->config->ping_handler && c->pid)
+		{
+		  /* fire off external binary to handle hung app 
+                   * if env var is set. 
+		  */
+
+		  int   len;
+		  char *buf = NULL;
+
+		  len = strlen(w->config->ping_handler) + 32;
+		  buf = malloc(len);
+
+		  if (buf)
+		    {
+		      snprintf(buf, len-1, "%s %i %li",
+			       w->config->ping_handler,
+			       c->pid,
+			       c->window);
+		  
+		      fork_exec(buf);
+
+		      free(buf);
+		    }
+
+		  /* dont ping any more */
+		  c->pings_pending = -1;
+		  w->n_active_ping_clients--;
+		}
+	      else
+		client_obliterate(c);
 	    }
 	}
     }

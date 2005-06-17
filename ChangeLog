@@ -1,3 +1,11 @@
+2005-06-17  mallum,,,  <mallum@openedhand.com>
+
+	* src/ewmh.c: (ewmh_update_lists), (ewmh_hung_app_check):
+	* src/wm.c: (wm_usage), (wm_load_config):
+	Fix compiler warning. 
+        If set, use env 'MB_HUNG_APP_HANDLER' pointing at executable
+	to handle hung applications rather than default killer.
+
 2005-06-15  mallum,,,  <mallum@openedhand.com>
 
 	* src/dialog_client.c: (dialog_client_show):

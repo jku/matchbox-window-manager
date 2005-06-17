@@ -191,9 +191,6 @@ wm_usage(char *progname)
    printf("\t--sm-client-id    <session id>\n");
 #endif
 
-   /*
-   printf("\t-ping_handler     <string>\n");
-   */
 #ifdef STANDALONE
    printf("\t-titlebar_panel   <x11 geometry>\n");
 #endif
@@ -311,7 +308,7 @@ wm_load_config (Wm   *w,
    w->config->no_cursor        = False;
    w->config->dialog_shade     = False;   
    w->config->dialog_stratergy = WM_DIALOGS_STRATERGY_CONSTRAINED;
-   w->config->ping_handler     = NULL;
+   w->config->ping_handler     = getenv("MB_HUNG_APP_HANDLER");
 
 #ifdef USE_COMPOSITE
    w->config->dialog_shade = True;
@@ -482,7 +479,7 @@ wm_load_config (Wm   *w,
    w->config->no_cursor        = False;
    w->config->dialog_shade     = False;   
    w->config->dialog_stratergy = WM_DIALOGS_STRATERGY_CONSTRAINED;
-   w->config->ping_handler     = NULL;
+   w->config->ping_handler     = getenv("MB_HUNG_APP_HANDLER");
 
    if (XrmGetResource(rDB, "matchbox.display",
 		      "Matchbox.Display",
