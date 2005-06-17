@@ -1,5 +1,10 @@
 2005-06-17  mallum,,,  <mallum@openedhand.com>
 
+	* src/wm.c: (wm_handle_property_change):
+	Avoid potential recursive for self tranciency changes.
+
+2005-06-17  mallum,,,  <mallum@openedhand.com>
+
 	* src/ewmh.c: (ewmh_update_lists), (ewmh_hung_app_check):
 	* src/wm.c: (wm_usage), (wm_load_config):
 	Fix compiler warning. 
