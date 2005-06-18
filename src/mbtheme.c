@@ -111,7 +111,7 @@ lookup_frame_type(char *name)
       return frame_lookup[i].id;
   return -1;
 }
-
+ 
 void theme_frame_icon_paint(MBTheme *t, Client *c, 
 			    MBPixbufImage *img_dest, 
 			    int x, int y)
@@ -864,7 +864,8 @@ theme_frame_menu_get_dimentions(MBTheme* theme, int *w, int *h)
   stack_enumerate(theme->wm, p)
   {
     if ((p->type == MBCLIENT_TYPE_APP || p->type == MBCLIENT_TYPE_DESKTOP) 
-	&& p->name && p->mapped
+	&& p->name 
+	/* && p->mapped */  /* Include iconsized clients in sizing */
 	&& p != wm_get_visible_main_client(theme->wm))
       {
 	int this_width = mb_font_get_txt_width (frame->font,
@@ -1091,7 +1092,7 @@ theme_frame_menu_paint(MBTheme* theme, Client *c)
       p = (Client*)item->data;
       if (p->type == MBCLIENT_TYPE_APP 
 	  && p->name && !(p->flags & CLIENT_IS_DESKTOP_FLAG)
-	  && p->mapped
+	  && p->mapped 
 	  && p != wm_get_visible_main_client(w))
 	{
 	  theme_frame_icon_paint(theme, p, img, 

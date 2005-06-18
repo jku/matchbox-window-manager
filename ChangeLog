@@ -1,3 +1,8 @@
+2005-06-19  mallum,,,  <mallum@openedhand.com>
+
+	* src/mbtheme.c: (theme_frame_menu_get_dimentions)
+	Include iconized clients in select menu sizing.
+
 2005-06-17  mallum,,,  <mallum@openedhand.com>
 
 	* src/wm.c: (wm_handle_property_change):
