@@ -1283,6 +1283,8 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
      {
        /* Dont know any thing about this window. Let it have what it 
         * wants and leave. 
+	* Can be a window initally mapping, thus the trap as it could
+        * of already dissapeared.
         */
        dbg("%s() could find source client %ix%i\n", __func__,
 	   e->width, e->height);
@@ -1292,7 +1294,9 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
        xwc.height  = req_h;
        xwc.sibling = e->above;
        xwc.stack_mode = e->detail;
+       misc_trap_xerrors();
        XConfigureWindow(w->dpy, e->window, e->value_mask, &xwc);
+       misc_untrap_xerrors();
        return;
      }
 
@@ -1805,10 +1809,16 @@ wm_make_new_client(Wm *w, Window win)
      {
        /* Use EWMH Window Type Hint to figure out window type */
 
+       misc_trap_xerrors();
+
        status = XGetWindowProperty(w->dpy, win, w->atoms[WINDOW_TYPE], 
 				   0L, 1000000L, 0, XA_ATOM, 
 				   &realType, &format,
 				   &n, &extra, (unsigned char **) &value);
+
+       if (misc_untrap_xerrors()) /* An X error occured - win deleted ? */
+	 goto end;
+       
        if (status == Success)
 	 {
 	   if (realType == XA_ATOM && format == 32)
