@@ -1,3 +1,10 @@
+2005-06-21  mallum,,,  <mallum@openedhand.com>
+
+	* src/main_client.c: (main_client_button_press):
+	Send PING even when close button is 'blocked' by modal dialog
+	* src/wm.c: (wm_handle_property_change):
+	print debug warning if client sets tranciency to itself
+
 2005-06-20  mallum,,,  <mallum@openedhand.com>
 
 	* src/wm.c: (wm_handle_configure_request), (wm_make_new_client):

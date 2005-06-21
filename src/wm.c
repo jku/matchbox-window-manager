@@ -1704,6 +1704,8 @@ wm_handle_property_change(Wm *w, XPropertyEvent *e)
 	      {
 		if (p == c)
 		  {
+		    dbg("%s() CLIENT WARNING: %s ( %li ) transient for self\n",
+			__func__, c->name, c->window);
 		    c->trans = NULL;
 		    return; 
 		  }

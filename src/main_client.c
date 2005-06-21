@@ -599,7 +599,18 @@ void main_client_button_press(Client *c, XButtonEvent *e)
 	   if ((button_item && button_item->id == BUTTON_ACTION_CUSTOM)
 	       || (button_item && button_item->id == BUTTON_ACTION_MIN)
 	       || (button_item && button_item->id == BUTTON_ACTION_CLOSE))
-	     return;
+	     {
+	       if (button_item->id == BUTTON_ACTION_CLOSE)
+		 {
+		   /* initiate pinging the app anyway for close button */
+		   if (c->has_ping_protocol && c->pings_pending == -1) 
+		     {
+		       c->pings_pending = 0;
+		       w->n_active_ping_clients++;
+		     }
+		 }
+	       return;
+	     }
 	 }
      }
 
