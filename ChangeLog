@@ -1,5 +1,10 @@
 2005-07-28  mallum,,,  <mallum@openedhand.com>
 
+	* src/wm.c: (wm_remove_client):
+	reparent 'removed' win to current pos on root rather than 0,0
+
+2005-07-28  mallum,,,  <mallum@openedhand.com>
+
 	* src/ewmh.c: (ewmh_state_set):
 	Really clear NET_WM_STATE if no states set. 
 
