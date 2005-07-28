@@ -1,3 +1,8 @@
+2005-07-28  mallum,,,  <mallum@openedhand.com>
+
+	* src/ewmh.c: (ewmh_state_set):
+	Really clear NET_WM_STATE if no states set. 
+
 2005-06-21  mallum,,,  <mallum@openedhand.com>
 
 	* src/main_client.c: (main_client_button_press):

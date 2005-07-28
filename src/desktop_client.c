@@ -54,7 +54,7 @@ desktop_client_new(Wm *w, Window win)
 void
 desktop_client_reparent(Client *c)
 {
-   c->frame = c->window;
+  c->frame = c->window;
 }
 
 void

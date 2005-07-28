@@ -450,6 +450,11 @@ ewmh_state_set(Client *c)
     XChangeProperty(w->dpy, c->window, w->atoms[WINDOW_STATE],
 		    XA_ATOM, 32, PropModeReplace, 
 		    (unsigned char *)atom_states, n_atom_states);
+  else
+    XChangeProperty(w->dpy, c->window, w->atoms[WINDOW_STATE],
+		    XA_ATOM, 32, PropModeReplace, 
+		    (unsigned char *)NULL, 0);
+
 }
 
 Bool 

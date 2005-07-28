@@ -300,7 +300,7 @@ main_client_reparent(Client *c)
   XClearWindow(w->dpy, c->frame);
 
   XSetWindowBorderWidth(w->dpy, c->window, 0);
-  XAddToSaveSet(w->dpy, c->window);
+  XAddToSaveSet(w->dpy, c->window); 
   XSelectInput(w->dpy, c->window, ColormapChangeMask|PropertyChangeMask);
   XReparentWindow(w->dpy, c->window, c->frame, offset_west, offset_north);
 }
