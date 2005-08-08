@@ -267,7 +267,7 @@ toolbar_client_hide(Client *c)
   Wm *w = c->wm;
   
   client_set_state(c, WithdrawnState);
-  XReparentWindow(w->dpy, c->window, w->root, 0, 0); 
+  XReparentWindow(w->dpy, c->window, w->root, c->x, c->y); 
   XUnmapWindow(w->dpy, c->window);
   c->destroy(c);
 }

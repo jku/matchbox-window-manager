@@ -1,3 +1,8 @@
+2005-08-08  mallum,,,  <mallum@openedhand.com>
+
+	* src/toolbar_client_alt.c: (toolbar_client_hide):
+	Reparent hidden toolbar wins to current position rather than 0,0
+
 2005-07-28  mallum,,,  <mallum@openedhand.com>
 
 	* src/wm.c: (wm_remove_client):
