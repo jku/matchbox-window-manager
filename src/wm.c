@@ -186,6 +186,7 @@ wm_usage(char *progname)
 #endif
    printf("\t-use_dialog_mode  <free|static|const-horiz>\n");
    printf("\t-use_desktop_mode <decorated|plain>\n");
+   printf("\t-use_super_modal  <yes|no>\n");
    printf("\t-force_dialogs    <comma seperated list of window titles>\n");
 #ifdef USE_SM
    printf("\t--sm-client-id    <session id>\n");
@@ -362,6 +363,13 @@ wm_load_config (Wm   *w,
 	  continue;
 	}
 #endif
+      if (!strcmp ("-use_super_modal", argv[i])) 
+	{
+	  if (++i>=*argc) wm_usage (argv[0]);
+	  if (strcmp(argv[i], "yes") == 0)
+            w->config->super_modal = True;   
+	  continue;
+	}
       if (!strcmp("-use_dialog_mode", argv[i])) 
 	{
 	  if (++i>=*argc) wm_usage (argv[0]);
@@ -446,7 +454,7 @@ wm_load_config (Wm   *w,
    char              *type;
    XrmValue          value;
    
-   static int opTableEntries = 10;
+   static int opTableEntries = 11;
    static XrmOptionDescRec opTable[] = {
       {"-theme",       ".theme",           XrmoptionSepArg, (XPointer) NULL},
       {"-use_titlebar",".titlebar",        XrmoptionSepArg, (XPointer) NULL},
@@ -458,6 +466,7 @@ wm_load_config (Wm   *w,
       {"-titlebar_panel",  ".titlebarpanel", XrmoptionSepArg, (XPointer) NULL},
       {"-force_dialogs",  ".forcedialogs", XrmoptionSepArg, (XPointer) NULL},
       {"--sm-client-id",  ".session",      XrmoptionSepArg, (XPointer) NULL},
+      {"-use_super_modal", ".supermodal",  XrmoptionSepArg, (XPointer) NULL},
    };
 
    XrmInitialize();
@@ -550,6 +559,17 @@ wm_load_config (Wm   *w,
 	   w->config->no_cursor = True;
 	 }
      }   
+
+   if (XrmGetResource(rDB, "matchbox.supermodal", "Matchbox.Supermodal",
+		      &type, &value) == True)
+   {
+      if(strncmp(value.addr, "yes", (int) value.size) == 0)
+      {
+	 dbg("%s() TURNING SUPER MODAL ON\n", __func__);
+	 w->config->super_modal = True;
+      }
+   }
+
 
    /* 
     *  Composite matchbox always uses lowlighting 

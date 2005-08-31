@@ -388,6 +388,7 @@ dialog_client_reparent(Client *c)
      }
 
    if (c->flags & CLIENT_IS_MODAL_FLAG
+       && w->config->super_modal
        && c->trans == NULL )	/* modal for device. XXX check recursive ? */
      {
        /* Create an InputOnly fullscreen window to aid in making 

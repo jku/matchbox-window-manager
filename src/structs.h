@@ -477,6 +477,7 @@ typedef struct _wm_config
   Bool         no_cursor;
   int          dialog_stratergy;
 
+  Bool         super_modal;
   Bool         dialog_shade; 
   int          lowlight_params[4];
 

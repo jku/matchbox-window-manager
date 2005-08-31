@@ -584,32 +584,32 @@ void main_client_button_press(Client *c, XButtonEvent *e)
       return;
    }
 
-   stack_enumerate(w, p)
+   if (w->config->super_modal)
      {
-       if (p->trans == c && (p->flags & CLIENT_IS_MODAL_FLAG))
+       stack_enumerate(w, p)
 	 {
-	   MBList *button_item = client_get_button_list_item_from_event(c, e);
-
-	   /* In the precense of a modal transient dialog ignore 
-	    * certain buttons. 
-	    *
-	    * For now its just the custom type. May make sense to
-            * Add more.
-	   */
-	   if ((button_item && button_item->id == BUTTON_ACTION_CUSTOM)
-	       || (button_item && button_item->id == BUTTON_ACTION_MIN)
-	       || (button_item && button_item->id == BUTTON_ACTION_CLOSE))
+	   if (p->trans == c && (p->flags & CLIENT_IS_MODAL_FLAG))
 	     {
-	       if (button_item->id == BUTTON_ACTION_CLOSE)
+	       MBList *button_item = client_get_button_list_item_from_event(c, e);
+	       /* In the precense of a modal transient dialog ignore 
+		* certain buttons. 
+		*
+		*/
+	       if ((button_item && button_item->id == BUTTON_ACTION_CUSTOM)
+		   || (button_item && button_item->id == BUTTON_ACTION_MIN)
+		   || (button_item && button_item->id == BUTTON_ACTION_CLOSE))
 		 {
-		   /* initiate pinging the app anyway for close button */
-		   if (c->has_ping_protocol && c->pings_pending == -1) 
+		   if (button_item->id == BUTTON_ACTION_CLOSE)
 		     {
-		       c->pings_pending = 0;
-		       w->n_active_ping_clients++;
+		       /* initiate pinging the app anyway for close button */
+		       if (c->has_ping_protocol && c->pings_pending == -1) 
+			 {
+			   c->pings_pending = 0;
+			   w->n_active_ping_clients++;
+			 }
 		     }
+		   return;
 		 }
-	       return;
 	     }
 	 }
      }

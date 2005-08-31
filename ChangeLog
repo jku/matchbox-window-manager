@@ -1,3 +1,12 @@
+2005-08-31  mallum,,,  <mallum@openedhand.com>
+
+	* src/dialog_client.c: (dialog_client_reparent):
+	* src/main_client.c: (main_client_button_press):
+	* src/structs.h:
+	* src/wm.c: (wm_usage), (wm_load_config):
+	Add new -use_super_modal switch to enable previously default
+        maemo 'aggresive' modal handling - blocking wins etc
+
 2005-08-08  mallum,,,  <mallum@openedhand.com>
 
 	* src/toolbar_client_alt.c: (toolbar_client_hide):
