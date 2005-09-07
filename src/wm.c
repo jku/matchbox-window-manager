@@ -2375,10 +2375,21 @@ wm_activate_client(Client *c)
 	 We need to sync extra stuff up when displaying a new one.
        */
 
+      Bool switching_from_to_fullscreen = False;
+
       /* save focus state for transient dialogs of prev showing main win */
 
       if (w->stack_top_app && w->stack_top_app != c)
-	w->stack_top_app->hide(w->stack_top_app); 
+	{
+	  if ( (w->stack_top_app->flags & CLIENT_FULLSCREEN_FLAG
+		&& !(c->flags & CLIENT_FULLSCREEN_FLAG))
+	       || 
+	       ( !(w->stack_top_app->flags & CLIENT_FULLSCREEN_FLAG)
+		&& c->flags & CLIENT_FULLSCREEN_FLAG ) )
+	    switching_from_to_fullscreen = True;
+
+	  w->stack_top_app->hide(w->stack_top_app); 
+	}
 
       /* If this client has a saved dialog focus state, load it */
 
@@ -2442,6 +2453,15 @@ wm_activate_client(Client *c)
 
       /* Set active main client, set focus handles active win hint */
       ewmh_set_current_app_window(w);
+
+#ifdef USE_ALT_INPUT_WIN
+      /* If switching from/to fullscreen, then there could be an 
+       * input window transient for a transient for root dialog and
+       * it therefore needs to be resized ( the IM ).
+      */
+      if (switching_from_to_fullscreen &&  c->type == MBCLIENT_TYPE_APP)
+	  main_client_manage_toolbars_for_fullscreen(c, False);
+#endif
 
     }
   else if (c->type == MBCLIENT_TYPE_DIALOG)

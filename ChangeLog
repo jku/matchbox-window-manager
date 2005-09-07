@@ -1,5 +1,14 @@
 2005-09-07  mallum  <mallum@openedhand.com>
 
+	* src/main_client.c: (main_client_manage_toolbars_for_fullscreen):
+	Add a little more debug.
+	* src/wm.c: (wm_activate_client):
+	Fix for making sure alt input windows get resized correctly when
+        transient for a transient for root window and switching from/to
+	a fullscreen to a non fullscreen app win.
+
+2005-09-07  mallum  <mallum@openedhand.com>
+
 	* src/base_client.c: (base_client_new):
 	Dont try and manage new clients if no memory available.
 	* src/wm.c: (wm_remove_client):

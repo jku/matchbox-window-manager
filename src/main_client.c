@@ -82,6 +82,8 @@ main_client_manage_toolbars_for_fullscreen(Client *c, Bool main_client_showing)
   Wm     *w = c->wm;
   Client *p  = NULL;
 
+  dbg("%s() called\n", __func__);
+
   stack_enumerate(w, p)
     {
       if (p->type == MBCLIENT_TYPE_DIALOG)
@@ -96,6 +98,8 @@ main_client_manage_toolbars_for_fullscreen(Client *c, Bool main_client_showing)
 	    }
 	  else if (p->flags & CLIENT_TB_ALT_TRANS_FOR_DIALOG)
 	    {
+	      dbg("%s() IM trans for dialog found resizing..\n", __func__);
+
 	      toolbar_client_configure(p);
 	      toolbar_client_move_resize(p);
 	      return 0;
