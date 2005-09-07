@@ -37,6 +37,9 @@ base_client_new(Wm *w, Window win)
    dbg("%s() called  \n", __func__);
 
    c = malloc(sizeof(Client));
+
+   if (c == NULL) return NULL;
+
    memset(c, 0, sizeof(Client));
 
    /* Stardard bits */

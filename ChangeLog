@@ -1,3 +1,11 @@
+2005-09-07  mallum  <mallum@openedhand.com>
+
+	* src/base_client.c: (base_client_new):
+	Dont try and manage new clients if no memory available.
+	* src/wm.c: (wm_remove_client):
+	unmap before reparent to root in effort to avoid potential
+	flash.
+
 2005-08-31  mallum,,,  <mallum@openedhand.com>
 
 	* src/dialog_client.c: (dialog_client_reparent):

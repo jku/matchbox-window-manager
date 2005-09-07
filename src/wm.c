@@ -2041,8 +2041,6 @@ wm_remove_client(Wm *w, Client *c)
    * If below is not done - suttle bugs appear with toolkits ( GTK )
    */
   client_set_state(c, WithdrawnState);
-  XReparentWindow(w->dpy, c->window, w->root, c->x, c->y); 
-  XRemoveFromSaveSet(w->dpy, c->window);
 
   /* Below is likely not needed ( window will have already unmapped )
    * and likely to fire an X error, but we do it anyway to be extra safe.
@@ -2051,6 +2049,10 @@ wm_remove_client(Wm *w, Client *c)
    * always call the unmap and a wierd ghost window is left.
   */
   XUnmapWindow(w->dpy, c->window);
+
+  /* Reparent now unmanaged win to root */
+  XReparentWindow(w->dpy, c->window, w->root, c->x, c->y); 
+  XRemoveFromSaveSet(w->dpy, c->window);
 
   /* sync here so any (likely) lingering X errors are trapped */
   XSync(w->dpy, False);
