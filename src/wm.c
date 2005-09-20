@@ -1767,6 +1767,24 @@ wm_handle_property_change(Wm *w, XPropertyEvent *e)
 	  update_titlebar = True;
 	}
     }
+  else  if (e->atom == w->atoms[WM_PROTOCOLS])
+    {
+      int orig_flags = c->flags;
+
+      client_get_wm_protocols(c);
+
+      /* If flags have changed, likely means a WM_CONTEXT_HELP|etc has changed 
+       * and thus titlebar needs a repaint.
+      */
+      if (c->flags != orig_flags)
+	{
+	  /* Buttons will get recreated on demand via repaint */
+	  client_button_remove(c, BUTTON_ACTION_CUSTOM);
+	  client_button_remove(c, BUTTON_ACTION_HELP);
+	  client_button_remove(c, BUTTON_ACTION_ACCEPT);
+	  update_titlebar = True;
+	}
+    }
   else  if (e->atom == w->atoms[WM_CHANGE_STATE])
     {
       dbg("%s() state change, name is %s\n", __func__, c->name);

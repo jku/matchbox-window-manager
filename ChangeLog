@@ -1,3 +1,11 @@
+2005-09-20  mallum  <mallum@openedhand.com>
+
+	* src/base_client.c: (base_client_new):
+	* src/client_common.c: (client_deliver_wm_protocol):
+	* src/client_common.h:
+	* src/wm.c: (wm_handle_property_change):
+	Add support for help/accept/custom buttons being toggled on the fly
+
 2005-09-07  mallum  <mallum@openedhand.com>
 
 	* src/main_client.c: (main_client_manage_toolbars_for_fullscreen):

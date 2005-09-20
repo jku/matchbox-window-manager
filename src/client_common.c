@@ -102,6 +102,62 @@ client_deliver_wm_protocol(Client *c, Atom delivery)
 }
 
 void
+client_get_wm_protocols(Client *c)
+{
+  Atom  *protocols = NULL;
+  int    n = 0, i = 0;
+  Status status;
+  
+   /* Check for 'special' extra button/ping protocols */
+
+  misc_trap_xerrors();
+
+  status = XGetWMProtocols(c->wm->dpy, c->window, &protocols, &n);
+
+  if (status && n && !misc_untrap_xerrors()) 
+    {
+      dbg("%s() checking wm protocols ( %i found )\n", __func__, n);
+
+      for (i=0; i<n; i++)
+	{
+	  if (protocols[i] == c->wm->atoms[_NET_WM_CONTEXT_HELP])
+	    {
+	      dbg("%s() got _NET_WM_CONTEXT_HELP protocol\n", __func__ );
+	      c->flags |= CLIENT_HELP_BUTTON_FLAG;
+	    }
+	  else if (protocols[i] == c->wm->atoms[_NET_WM_CONTEXT_ACCEPT])
+	    {
+	      dbg("%s() got _NET_WM_CONTEXT_ACCEPT protocol\n", __func__ );
+	      c->flags |= CLIENT_ACCEPT_BUTTON_FLAG;
+	    }
+	  else if (protocols[i] == c->wm->atoms[_NET_WM_CONTEXT_CUSTOM])
+	    {
+	      dbg("%s() got _NET_WM_CONTEXT_CUSTOM protocol\n", __func__ );
+	      c->flags |= CLIENT_CUSTOM_BUTTON_FLAG;
+	    }
+#ifndef NO_PNG
+	  else if (protocols[i] == c->wm->atoms[_NET_WM_PING]
+		   && c->host_machine && c->pid)
+	    {
+	      dbg("%s() has PING ewmh\n", __func__);
+	      c->has_ping_protocol = True;
+	    }
+#endif
+#ifdef USE_XSYNC
+	  else if (protocols[i] == c->wm->atoms[_NET_WM_SYNC_REQUEST])
+	    {
+	      c->has_ewmh_sync = True;
+	      dbg("%s() client has _NET_WM_SYNC_REQUEST\n", __func__);
+	    }
+#endif
+	}
+    }
+
+  if (protocols)
+    XFree(protocols);
+}
+
+void
 client_deliver_message(Client       *c, 
 		       Atom          delivery_atom,
 		       unsigned long data0,

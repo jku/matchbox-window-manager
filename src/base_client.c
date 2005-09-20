@@ -26,9 +26,8 @@ base_client_new(Wm *w, Window win)
    XWindowAttributes attr;
 
    Client        *c = NULL;
-   int            i = 0, n = 0, format;
+   int            i = 0, format;
    XWMHints      *wmhints = NULL;
-   Atom          *protocols = NULL;
    XTextProperty  text_prop;
    Atom           type;
    long           bytes_after, n_items, *data = NULL;
@@ -223,52 +222,12 @@ base_client_new(Wm *w, Window win)
 
   if (data) XFree(data);
 
+  client_get_wm_protocols(c);
+
   /* We detect any errors here to check the window hasn't dissapeared half
    * way through. A bit hacky ...
    */
    misc_trap_xerrors();
-
-   /* Check for 'special' extra button/ping protocols */
-
-   if (XGetWMProtocols(c->wm->dpy, c->window, &protocols, &n)) 
-     {
-       dbg("%s() checking wm protocols ( %i found )\n", __func__, n);
-       for (i=0; i<n; i++)
-	 {
-	   if (protocols[i] == c->wm->atoms[_NET_WM_CONTEXT_HELP])
-	     {
-	       dbg("%s() got _NET_WM_CONTEXT_HELP protocol\n", __func__ );
-	       c->flags |= CLIENT_HELP_BUTTON_FLAG;
-	     }
-	   else if (protocols[i] == c->wm->atoms[_NET_WM_CONTEXT_ACCEPT])
-	     {
-	       dbg("%s() got _NET_WM_CONTEXT_ACCEPT protocol\n", __func__ );
-	       c->flags |= CLIENT_ACCEPT_BUTTON_FLAG;
-	     }
-	   else if (protocols[i] == c->wm->atoms[_NET_WM_CONTEXT_CUSTOM])
-	     {
-	       dbg("%s() got _NET_WM_CONTEXT_CUSTOM protocol\n", __func__ );
-	       c->flags |= CLIENT_CUSTOM_BUTTON_FLAG;
-	     }
-#ifndef NO_PNG
-	   else if (protocols[i] == c->wm->atoms[_NET_WM_PING]
-		    && c->host_machine && c->pid)
-	     {
-	       dbg("%s() has PING ewmh\n", __func__);
-	       c->has_ping_protocol = True;
-	     }
-#endif
-#ifdef USE_XSYNC
-	   else if (protocols[i] == c->wm->atoms[_NET_WM_SYNC_REQUEST])
-	     {
-	       c->has_ewmh_sync = True;
-	       dbg("%s() client has _NET_WM_SYNC_REQUEST\n", __func__);
-	     }
-#endif
-	 }
-       XFree(protocols);
-    }
-
 
    /* We dont do workspaces! */
 
@@ -282,9 +241,9 @@ base_client_new(Wm *w, Window win)
    if (w->config->no_cursor && w->blank_curs)
      XDefineCursor(w->dpy, c->window, w->blank_curs);
 
-
    client_set_state(c, WithdrawnState);
 
+   XSync(w->dpy, False);
    if (misc_untrap_xerrors()) 	/* An X error occured */
      {				/* Likely client died */
        dbg("%s() looks like client just died on us\n", __func__);
