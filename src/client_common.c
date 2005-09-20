@@ -118,6 +118,8 @@ client_get_wm_protocols(Client *c)
     {
       dbg("%s() checking wm protocols ( %i found )\n", __func__, n);
 
+      c->flags &= ~(CLIENT_HELP_BUTTON_FLAG|CLIENT_ACCEPT_BUTTON_FLAG|CLIENT_CUSTOM_BUTTON_FLAG);
+
       for (i=0; i<n; i++)
 	{
 	  if (protocols[i] == c->wm->atoms[_NET_WM_CONTEXT_HELP])

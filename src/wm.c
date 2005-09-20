@@ -1771,17 +1771,21 @@ wm_handle_property_change(Wm *w, XPropertyEvent *e)
     {
       int orig_flags = c->flags;
 
+      dbg("%s() WM_PROTOCOLS changed, flags %i\n", __func__, orig_flags);
+
       client_get_wm_protocols(c);
+
+      dbg("%s() WM_PROTOCOLS changed, flags now %i\n", __func__, c->flags);
 
       /* If flags have changed, likely means a WM_CONTEXT_HELP|etc has changed 
        * and thus titlebar needs a repaint.
       */
       if (c->flags != orig_flags)
 	{
+	  dbg("%s() WM_PROTOCOLS changed flags, repainting\n", __func__);
+
 	  /* Buttons will get recreated on demand via repaint */
-	  client_button_remove(c, BUTTON_ACTION_CUSTOM);
-	  client_button_remove(c, BUTTON_ACTION_HELP);
-	  client_button_remove(c, BUTTON_ACTION_ACCEPT);
+	  client_buttons_delete_all(c);
 	  update_titlebar = True;
 	}
     }

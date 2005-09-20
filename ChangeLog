@@ -1,3 +1,9 @@
+2005-09-20  mallum,,,  <mallum@openedhand.com>
+
+	* src/client_common.c: (client_get_wm_protocols):
+	* src/wm.c: (wm_handle_property_change):
+	Fix re-enabling of help/accept/custom buttons
+
 2005-09-20  mallum  <mallum@openedhand.com>
 
 	* src/base_client.c: (base_client_new):
