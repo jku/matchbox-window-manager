@@ -2083,8 +2083,6 @@ wm_remove_client(Wm *w, Client *c)
 
   c->destroy(c);
 
-  ewmh_update_lists(w);
-
   XUngrabServer(w->dpy);
 }
 

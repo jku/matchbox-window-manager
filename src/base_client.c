@@ -521,6 +521,8 @@ base_client_destroy(Client *c)
     XSync(w->dpy, False);
     misc_untrap_xerrors();
 
+    ewmh_update_lists(w); 
+
     free(c);
 }
 

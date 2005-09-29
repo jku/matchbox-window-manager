@@ -1,5 +1,11 @@
 2005-09-29  mallum,,,  <mallum@openedhand.com>
 
+	* src/base_client.c: (base_client_destroy):
+	* src/wm.c: (wm_remove_client):
+	Move previous fix to safer place in code.
+
+2005-09-29  mallum,,,  <mallum@openedhand.com>
+
 	* src/wm.c: (wm_remove_client):
 	Make sure ewmh lists get updated when closing a window.
 	( regression from 2005-06-14 change )
