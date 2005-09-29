@@ -225,6 +225,9 @@ dialog_client_show(Client *c)
 	  client_set_state(c, NormalState);
 	  c->flags &= ~CLIENT_IS_MINIMIZED;
 
+	  if (c->win_modal_blocker)
+	    XMapWindow(w->dpy, c->win_modal_blocker);
+
 	   /* Make sure any transients are un minimized too */
 	   stack_enumerate(w, p)
 	     if (p->trans == c)
@@ -411,8 +414,7 @@ dialog_client_reparent(Client *c)
 
        dbg("%s() created blocked win\n", __func__);
        
-       w->stack_n_items++;
-
+       w->n_modal_blocker_wins++;
      }
 
    XClearWindow(w->dpy, c->frame);
@@ -1207,6 +1209,9 @@ dialog_client_iconize(Client *c)
   c->mapped = False;
   XUnmapWindow(w->dpy, c->frame); 
 
+  if (c->win_modal_blocker)
+    XUnmapWindow(w->dpy, c->win_modal_blocker);
+
   /* Make sure any transients get iconized too */  
   stack_enumerate(w, p)
     if (p->trans == c)
@@ -1228,7 +1233,7 @@ dialog_client_destroy(Client *c)
     {
       Wm *w = c->wm;
       XDestroyWindow(w->dpy, c->win_modal_blocker);
-      w->stack_n_items--;
+       w->n_modal_blocker_wins--;
     }
 
   base_client_destroy(c);

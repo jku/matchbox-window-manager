@@ -563,6 +563,8 @@ typedef struct _wm
 
   MBList           *client_age_list; /* List of clients ordered by age */
 
+  int               n_modal_blocker_wins; /* needed for restack() call */
+
   /*******************/
 
   Wm_config        *config;  

@@ -1,5 +1,14 @@
 2005-09-29  mallum,,,  <mallum@openedhand.com>
 
+	* src/dialog_client.c: (dialog_client_show),
+	(dialog_client_reparent), (dialog_client_iconize),
+	(dialog_client_destroy):
+	* src/stack.c: (stack_get_window_list):
+	* src/structs.h:
+	Fix issues with modal blocker wins breaking stack count. 
+
+2005-09-29  mallum,,,  <mallum@openedhand.com>
+
 	* src/base_client.c: (base_client_destroy):
 	* src/wm.c: (wm_remove_client):
 	Move previous fix to safer place in code.

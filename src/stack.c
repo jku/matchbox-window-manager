@@ -188,7 +188,7 @@ stack_get_window_list(Wm *w)
 
   if (!w->stack_n_items) return NULL;
 
-  win_list = malloc(sizeof(Window)*w->stack_n_items);
+  win_list = malloc(sizeof(Window)*(w->stack_n_items+w->n_modal_blocker_wins));
 
   dbg("%s() called, list is ", __func__);
 
