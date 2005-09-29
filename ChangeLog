@@ -1,3 +1,9 @@
+2005-09-29  mallum,,,  <mallum@openedhand.com>
+
+	* src/wm.c: (wm_remove_client):
+	Make sure ewmh lists get updated when closing a window.
+	( regression from 2005-06-14 change )
+
 2005-09-20  mallum,,,  <mallum@openedhand.com>
 
 	* src/client_common.c: (client_get_wm_protocols):
