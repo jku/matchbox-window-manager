@@ -697,7 +697,7 @@ ewmh_get_utf8_prop(Wm *w, Window win, Atom req_atom)
 {
   Atom           type;
   int            format, result;
-  long           bytes_after, n_items;
+  unsigned long  bytes_after, n_items;
   unsigned char *str = NULL;
 
   misc_trap_xerrors();
@@ -740,7 +740,7 @@ ewmh_get_icon_prop_data(Wm *w, Window win)
 {
   Atom           type;
   int            format, result;
-  long           bytes_after, n_items;
+  unsigned long  bytes_after, n_items;
   unsigned char *data = NULL;
 
   misc_trap_xerrors();

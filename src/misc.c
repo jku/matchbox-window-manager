@@ -153,9 +153,8 @@ mwm_get_decoration_flags(Wm *w, Window win)
 
   Atom type;
   int format;
-  long bytes_after;
   PropMotifWmHints *hints = NULL;
-  long n_items;
+  unsigned long n_items, bytes_after;
 
   if (XGetWindowProperty (w->dpy, win, w->atoms[_MOTIF_WM_HINTS],
                           0, PROP_MOTIF_WM_HINTS_ELEMENTS,

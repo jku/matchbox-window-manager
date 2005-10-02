@@ -131,15 +131,16 @@ void theme_frame_icon_paint(MBTheme *t, Client *c,
     {
       if (c->icon)
 	{
-	  Window win_crap;
-	  int icon_w, icon_h, crap;
-	  XGetGeometry(t->wm->dpy, c->icon, &win_crap, &crap, &crap, 
-		       &icon_w, &icon_h, &crap, &crap);
+	  Window       win_foo;
+	  int          foo;
+	  unsigned int icon_w, icon_h, ufoo;
+	  XGetGeometry(t->wm->dpy, c->icon, &win_foo, &foo, &foo, 
+		       &icon_w, &icon_h, &ufoo, &ufoo);
 	  img = mb_pixbuf_img_new_from_drawable(t->wm->pb, 
 						c->icon, 
 						c->icon_mask, 
 						0, 0, 
-						icon_w, icon_h);
+						(int)icon_w, (int)icon_h);
 	} 
     }
 
@@ -2454,10 +2455,10 @@ mbtheme_init (Wm   *w,
   chdir(theme_path);
 
   XChangeProperty(w->dpy, w->root, w->atoms[_MB_THEME], XA_STRING, 8,
-		  PropModeReplace, theme_path, strlen(theme_path));
+		  PropModeReplace, (unsigned char*)theme_path, strlen(theme_path));
 
   XChangeProperty(w->dpy, w->root, w->atoms[_MB_THEME_NAME], XA_STRING, 8,
-		  PropModeReplace, theme_name, strlen(theme_name));
+		  PropModeReplace, (unsigned char*)theme_name, strlen(theme_name));
 
   free(theme_path);
 

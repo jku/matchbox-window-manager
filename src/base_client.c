@@ -30,7 +30,8 @@ base_client_new(Wm *w, Window win)
    XWMHints      *wmhints = NULL;
    XTextProperty  text_prop;
    Atom           type;
-   long           bytes_after, n_items, *data = NULL;
+   unsigned long  bytes_after, n_items;
+   long          *data = NULL;
    unsigned long  val[1];
 
    dbg("%s() called  \n", __func__);
@@ -61,7 +62,7 @@ base_client_new(Wm *w, Window win)
 
    /* UTF8 Window Name */
 
-   if ((c->name = ewmh_get_utf8_prop(w, win, w->atoms[_NET_WM_NAME])) != NULL)
+   if ((c->name = (char*)ewmh_get_utf8_prop(w, win, w->atoms[_NET_WM_NAME])) != NULL)
      c->name_is_utf8 = True;
 
    /* Basic attributes */

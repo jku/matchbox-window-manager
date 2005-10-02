@@ -1750,7 +1750,7 @@ wm_handle_property_change(Wm *w, XPropertyEvent *e)
 
       misc_trap_xerrors(); 	/* avoid possible X Errors */
 
-      c->name = ewmh_get_utf8_prop(w, c->window, w->atoms[_NET_WM_NAME]);
+      c->name = (char*)ewmh_get_utf8_prop(w, c->window, w->atoms[_NET_WM_NAME]);
 
       if (!misc_untrap_xerrors())
 	{

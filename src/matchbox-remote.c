@@ -135,7 +135,7 @@ mbcommand(int cmd_id, char *data) {
    {
       theme_prop = XInternAtom(dpy, "_MB_THEME", False);
       XChangeProperty(dpy, root, theme_prop, XA_STRING, 8,
-		      PropModeReplace, data, strlen(data));
+		      PropModeReplace, (unsigned char*)data, strlen(data));
    }
 
    if (cmd_id == MB_CMD_DESKTOP)

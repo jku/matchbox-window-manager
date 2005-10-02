@@ -1,3 +1,13 @@
+2005-10-03  mallum  <mallum@openedhand.com>
+
+	* src/base_client.c: (base_client_new):
+	* src/ewmh.c: (ewmh_get_utf8_prop), (ewmh_get_icon_prop_data):
+	* src/matchbox-remote.c: (mbcommand):
+	* src/mbtheme.c: (theme_frame_icon_paint), (mbtheme_init):
+	* src/misc.c: (mwm_get_decoration_flags):
+	* src/wm.c: (wm_handle_property_change):
+	Fix GCC 4 warnings.
+
 2005-09-29  mallum,,,  <mallum@openedhand.com>
 
 	* src/dialog_client.c: (dialog_client_show),
