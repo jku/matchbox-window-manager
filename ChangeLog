@@ -1,3 +1,9 @@
+2005-10-04  mallum  <mallum@openedhand.com>
+
+	* src/dockbar_client.c: (dockbar_client_configure):
+	Small fix for east panels to get correctly positioned after
+	theme switch.
+
 2005-10-03  mallum  <mallum@openedhand.com>
 
 	* src/base_client.c: (base_client_new):

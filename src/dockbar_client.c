@@ -95,7 +95,7 @@ dockbar_client_configure(Client *c)
 
   int n_offset = wm_get_offsets_size(c->wm, NORTH, c, False);
   int s_offset = wm_get_offsets_size(c->wm, SOUTH, c, False);
-  int e_offset = wm_get_offsets_size(c->wm, EAST,  NULL, True);
+  int e_offset = wm_get_offsets_size(c->wm, EAST,  c, True);
   int w_offset = wm_get_offsets_size(c->wm, WEST,  c, True);
    
   /* XXX - we should check for overlapping and if this happens
