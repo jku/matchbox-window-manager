@@ -1833,7 +1833,7 @@ wm_make_new_client(Wm *w, Window win)
    unsigned long n, extra;
    int           format, status;
    Client       *c = NULL, *t = NULL;
-   XWMHints     *wmhints;
+   XWMHints     *wmhints = NULL;
    int           mwm_flags = 0;
 
    XGrabServer(w->dpy);
@@ -1963,6 +1963,7 @@ wm_make_new_client(Wm *w, Window win)
 		     break; 
 		   }
 	    }
+	    if (wmhints) XFree(wmhints);
 	 }
       }
 

@@ -1,3 +1,8 @@
+2005-10-10  mallum  <mallum@openedhand.com>
+
+	* src/wm.c: (wm_make_new_client):
+	Fix potential XGetWMHints leak
+
 2005-10-04  mallum  <mallum@openedhand.com>
 
 	* src/dockbar_client.c: (dockbar_client_configure):
