@@ -226,7 +226,10 @@ dialog_client_show(Client *c)
 	  c->flags &= ~CLIENT_IS_MINIMIZED;
 
 	  if (c->win_modal_blocker)
-	    XMapWindow(w->dpy, c->win_modal_blocker);
+	    {
+	      XMapWindow(w->dpy, c->win_modal_blocker);
+	      dbg("%s() blocker win mapped for '%s'\n", __func__, c->name);
+	    }
 
 	   /* Make sure any transients are un minimized too */
 	   stack_enumerate(w, p)
@@ -412,7 +415,7 @@ dialog_client_reparent(Client *c)
 
        XMapWindow(w->dpy, c->win_modal_blocker);
 
-       dbg("%s() created blocked win\n", __func__);
+       dbg("%s() created and mapped blocker win for '%s'\n", __func__, c->name);
        
        w->n_modal_blocker_wins++;
      }
@@ -1210,7 +1213,10 @@ dialog_client_iconize(Client *c)
   XUnmapWindow(w->dpy, c->frame); 
 
   if (c->win_modal_blocker)
-    XUnmapWindow(w->dpy, c->win_modal_blocker);
+    {
+      XUnmapWindow(w->dpy, c->win_modal_blocker);
+      dbg("%s() blocker win unmapped for '%s'\n", __func__, c->name);
+    }
 
   /* Make sure any transients get iconized too */  
   stack_enumerate(w, p)
@@ -1234,6 +1240,7 @@ dialog_client_destroy(Client *c)
       Wm *w = c->wm;
       XDestroyWindow(w->dpy, c->win_modal_blocker);
        w->n_modal_blocker_wins--;
+       dbg("%s() blocker win destroyed for '%s'\n", __func__, c->name);
     }
 
   base_client_destroy(c);
