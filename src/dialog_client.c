@@ -413,7 +413,8 @@ dialog_client_reparent(Client *c)
 					    CWOverrideRedirect|CWEventMask,
 					    &attr);
 
-       XMapWindow(w->dpy, c->win_modal_blocker);
+       /* Map is show() or gets stacked above dialog */
+       /* XMapWindow(w->dpy, c->win_modal_blocker); */
 
        dbg("%s() created and mapped blocker win for '%s'\n", __func__, c->name);
        

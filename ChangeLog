@@ -1,3 +1,8 @@
+2005-10-17  Matthew Allum  <mallum@openedhand.com>
+
+	* src/dialog_client.c: (dialog_client_reparent):
+	Dont map the blocker wins on reparenting, wait for show()
+
 2005-10-14  Matthew Allum  <mallum@openedhand.com>
 
 	* src/dialog_client.c: (dialog_client_show),
