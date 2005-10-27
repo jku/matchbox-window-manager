@@ -225,16 +225,17 @@ dialog_client_show(Client *c)
 	  client_set_state(c, NormalState);
 	  c->flags &= ~CLIENT_IS_MINIMIZED;
 
-	  if (c->win_modal_blocker)
-	    {
-	      XMapWindow(w->dpy, c->win_modal_blocker);
-	      dbg("%s() blocker win mapped for '%s'\n", __func__, c->name);
-	    }
 
 	   /* Make sure any transients are un minimized too */
 	   stack_enumerate(w, p)
 	     if (p->trans == c)
 	       p->show(p);
+	}
+
+      if (c->win_modal_blocker)
+	{
+	  XMapWindow(w->dpy, c->win_modal_blocker);
+	  dbg("%s() blocker win mapped for '%s'\n", __func__, c->name);
 	}
 
       XMapSubwindows(w->dpy, c->frame);
