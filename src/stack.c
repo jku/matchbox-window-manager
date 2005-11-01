@@ -195,10 +195,15 @@ stack_get_window_list(Wm *w)
   stack_enumerate_reverse(w, c)
   {
     dbg("%i:%li, ", i, c->frame);
+
     win_list[i++] = c->frame;
 
     if (c->win_modal_blocker)
-      win_list[i++] = c->win_modal_blocker;
+      {
+	dbg("%i: <blocker>,", i );
+	win_list[i++] = c->win_modal_blocker;
+      }
+
   }
 
   dbg("\n");
@@ -353,7 +358,8 @@ stack_sync_to_display(Wm *w)
   if (win_list)
     {
       misc_trap_xerrors();
-      XRestackWindows(w->dpy, win_list, w->stack_n_items);
+      XRestackWindows(w->dpy, win_list, 
+		      w->stack_n_items + w->n_modal_blocker_wins);
       free(win_list);
       misc_untrap_xerrors();
     }

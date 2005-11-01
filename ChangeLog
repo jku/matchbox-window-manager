@@ -1,3 +1,9 @@
+2005-11-01  Matthew Allum  <mallum@openedhand.com>
+
+	* src/stack.c: (stack_get_window_list), (stack_sync_to_display):
+	XRestackWindows didn't include count of blocker wins in total
+        window count. 
+
 2005-10-27  Matthew Allum  <mallum@openedhand.com>
 
 	* src/dialog_client.c: (dialog_client_show):
