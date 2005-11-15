@@ -255,6 +255,7 @@ dialog_client_show(Client *c)
     {
       /* Were transient for something 
        * - so recursives find the highest transient for this app
+       *   ignoring current client.
        * - raise ourselves above 
        */
       Client *lowest_trans = c->trans;
@@ -264,7 +265,9 @@ dialog_client_show(Client *c)
       while (lowest_trans->trans != NULL) 
 	lowest_trans = lowest_trans->trans;
 
-      highest_client = client_get_highest_transient(lowest_trans, urgent_flag);
+      highest_client = client_get_highest_transient(lowest_trans, 
+						    urgent_flag,
+						    c);
 
       if (c->mapped && highest_client == c)
 	{

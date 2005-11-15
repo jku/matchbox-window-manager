@@ -392,20 +392,72 @@ client_get_transient_list(Wm *w, MBList **list, Client *c)
     }
 }
 
-Client*
-client_get_highest_transient(Client *c, int client_flags)
+static Client*
+client_get_highest_transient_recurse (Client *c, 
+				      int     client_flags, 
+				      Client *ignore,
+				      int    *depth)
 {
   Wm     *w = c->wm;
   Client *p = NULL;
-  Client *highest = c;
+  Client *highest = c, *tmp;
+  int     this_depth = 0, max_depth = 0;
 
+  /* FIXME: its likely this can be combined into
+   * client_get_highest_transient() somehow.. 
+  */
   stack_enumerate(w,p)
     {
-      if (p != c && p->trans && p->trans == c)
+      if (p != c && p->trans && p->trans == c && p != ignore)
 	{
 	  if (client_flags && !(p->flags & client_flags))
 	    continue;
-	  highest = client_get_highest_transient(p, client_flags);
+
+	  this_depth++;
+
+	  tmp = client_get_highest_transient_recurse(p, 
+						     client_flags, 
+						     ignore, 
+						     &this_depth);
+	  if (this_depth > max_depth)
+	    {
+	      max_depth = this_depth;
+	      highest = tmp;
+	    }
+	}
+    }
+
+  *depth += max_depth;
+
+  return highest;
+}
+
+Client*
+client_get_highest_transient(Client *c, int client_flags, Client *ignore)
+{
+  Wm     *w = c->wm;
+  Client *p = NULL;
+  Client *highest = c, *tmp;
+  int     depth = 0, depth_max = 0;
+
+  stack_enumerate(w,p)
+    {
+      if (p != c && p->trans && p->trans == c && p != ignore)
+	{
+	  depth = 0;
+
+	  /* Recurse for each directly transient client, getting the depth 
+	   * for any extra matchbox children.
+	  */
+	  tmp = client_get_highest_transient_recurse (p, 
+						      client_flags,
+						      ignore,
+						      &depth);
+	  if (depth >= depth_max)
+	    {
+	      highest = tmp;
+	      depth_max = depth;
+	    }
 	}
     }
 

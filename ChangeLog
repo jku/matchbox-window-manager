@@ -1,3 +1,10 @@
+2005-11-15  Matthew Allum  <mallum@openedhand.com>
+
+	* src/client_common.c: (client_get_transient_list):
+	* src/client_common.h:
+	* src/dialog_client.c: (dialog_client_show):
+	Stacking fixes for multiple groups of transient for transient dialogs.
+
 2005-11-01  Matthew Allum  <mallum@openedhand.com>
 
 	* src/stack.c: (stack_get_window_list), (stack_sync_to_display):

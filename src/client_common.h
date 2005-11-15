@@ -71,7 +71,7 @@ void
 client_get_transient_list(Wm *w, MBList **list, Client *c);
 
 Client*
-client_get_highest_transient(Client *c, int client_flags);
+client_get_highest_transient(Client *c, int client_flags, Client *ignore);
 
 Client *
 client_get_next (Client* c, MBClientTypeEnum wanted);
