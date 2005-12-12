@@ -225,11 +225,14 @@ dialog_client_show(Client *c)
 	  client_set_state(c, NormalState);
 	  c->flags &= ~CLIENT_IS_MINIMIZED;
 
-
-	   /* Make sure any transients are un minimized too */
-	   stack_enumerate(w, p)
-	     if (p->trans == c)
-	       p->show(p);
+	  /* Make sure any transients are un minimized too */
+	  stack_enumerate(w, p)
+	    if (p->trans == c)
+	      {
+		p->show(p);
+		XMapSubwindows(w->dpy, p->frame);
+		XMapWindow(w->dpy, p->frame);
+	      }
 	}
 
       if (c->win_modal_blocker)
@@ -238,8 +241,15 @@ dialog_client_show(Client *c)
 	  dbg("%s() blocker win mapped for '%s'\n", __func__, c->name);
 	}
 
-      XMapSubwindows(w->dpy, c->frame);
-      XMapWindow(w->dpy, c->frame);
+      /* Set flag below to delay actual mapping of window 
+       * till *after* we've synced the stack. This hacky  
+       * solution avoids problem of dialogs mapping for
+       * clients below and causing flicker.
+       *
+       * Note could still cause issues with transients and remmapping
+       * them if minimised.. 
+      */
+      c->flags |= CLIENT_DELAY_MAPPING;
     }
 
 

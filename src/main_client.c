@@ -808,7 +808,12 @@ main_client_show(Client *c)
 	   /* Make sure any dialogs are shown too */
 	   stack_enumerate(w, p)
 	     if (p->trans == c)
-	       p->show(p);
+	       {
+		 p->show(p);
+		 /* To handle delay mapping.. */
+		 XMapSubwindows(w->dpy, p->frame);
+		 XMapWindow(w->dpy, p->frame);
+	       }
 	 }
 
        XMapSubwindows(w->dpy, c->frame);

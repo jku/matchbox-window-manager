@@ -2521,6 +2521,23 @@ wm_activate_client(Client *c)
 	  */
 	  wm_stack_dialogs_for_transient(w, wm_get_visible_main_client(w));
 	}
+
+      /* Check if this is transient for an app/desktop thats
+       * not currently at the top of the stack. In which case
+       * dont try and focus it.
+      */
+      if (c->trans != NULL) 	/* not trans for root */
+	{
+	  Client *dialog_parent = c->trans;
+
+	  while (dialog_parent->trans != NULL)
+	    dialog_parent = dialog_parent->trans;
+
+	  if ( (dialog_parent->type == MBCLIENT_TYPE_APP
+		|| dialog_parent->type == MBCLIENT_TYPE_DESKTOP)
+	       && wm_get_visible_main_client(w) != dialog_parent)
+	    client_to_focus = NULL;
+	}
     }
 
 
@@ -2544,13 +2561,21 @@ wm_activate_client(Client *c)
   if (set_desktop_show_hint) 
     ewmh_update_desktop_hint(w);
 
-  client_set_focus(client_to_focus); /* set focus if needed and ewmh active */
-
   stack_dump(w);
 
   dbg("%s() now syncing above window stack\n", __func__);
 
   stack_sync_to_display(w);
+
+  if (c->flags & CLIENT_DELAY_MAPPING) /* See dialog show() source */
+    {
+      c->flags &= ~CLIENT_DELAY_MAPPING;
+      XMapSubwindows(w->dpy, c->frame);
+      XMapWindow(w->dpy, c->frame);
+    }
+
+
+  client_set_focus(client_to_focus); /* set focus if needed and ewmh active */
 
   comp_engine_client_show(w, c);
 
