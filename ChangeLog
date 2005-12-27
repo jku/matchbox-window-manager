@@ -1,3 +1,10 @@
+2005-12-27  Matthew Allum  <mallum@openedhand.com>
+
+	* src/client_common.c: (client_set_focus),
+	(client_get_transient_list):
+	* src/dialog_client.c: (dialog_client_show):
+	Add basic support for window grouping. 
+
 2005-12-12  Matthew Allum  <mallum@openedhand.com>
 
 	* src/dialog_client.c: (dialog_client_show):

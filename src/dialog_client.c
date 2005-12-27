@@ -302,6 +302,18 @@ dialog_client_show(Client *c)
 	      stack_move_above_client(c, highest_client);
 	    }
 	}
+
+      if (lowest_trans->win_group)
+	{
+	  Client *visible;
+
+	  visible = wm_get_visible_main_client(w);
+
+	  if (visible 
+	      && visible != lowest_trans 
+	      && visible->win_group == lowest_trans->win_group)
+	    stack_move_above_client(c, visible);
+	}
     }
   else
     stack_move_top(c);

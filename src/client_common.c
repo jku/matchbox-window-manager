@@ -344,6 +344,7 @@ client_set_focus(Client *c)
   return False;
 }
 
+
 void
 client_get_transient_list(Wm *w, MBList **list, Client *c)
 {
@@ -384,13 +385,36 @@ client_get_transient_list(Wm *w, MBList **list, Client *c)
 
 	      while (trans != NULL && trans != c)
 		trans = trans->trans;
-
+	      
 	      if (trans == c)
-		list_add(list, NULL, 0, p);
+		{
+		  list_add(list, NULL, 0, p);
+		}
+	      else if (p->trans 
+		       && c->win_group 
+		       && (c->type == MBCLIENT_TYPE_APP
+			   || c->type == MBCLIENT_TYPE_DESKTOP))
+		{
+		  /* Handle window groups and transiency. 
+		   * App windows with matchbox window groups
+                   * 'share' transients  
+		  */
+		  trans = p->trans;
+
+		  while (trans->trans != NULL)
+		    trans = trans->trans;
+
+		  if ((trans->type == MBCLIENT_TYPE_APP
+		       || trans->type == MBCLIENT_TYPE_DESKTOP)
+		      && trans->win_group == c->win_group) 
+		    list_add(list, NULL, 0, p);
+		}
+
 	    }
 	}
     }
 }
+
 
 static Client*
 client_get_highest_transient_recurse (Client *c, 
