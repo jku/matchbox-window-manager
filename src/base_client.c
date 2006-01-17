@@ -223,6 +223,22 @@ base_client_new(Wm *w, Window win)
 
   if (data) XFree(data);
 
+  /* EWMH User time - only support value being set to 0 */
+
+  if (XGetWindowProperty(w->dpy, win,
+			 w->atoms[_NET_WM_USER_TIME], 
+			 0L, 2L, False,
+			 XA_CARDINAL, 
+			 &type, 
+			 &format,
+			 &n_items, 
+			 &bytes_after,
+			 (unsigned char **) &data) == Success
+      && n_items && data != NULL && *data == 0)
+    c->flags |= CLIENT_NO_FOCUS_ON_MAP;
+
+  if (data) XFree(data);
+
   client_get_wm_protocols(c);
 
   /* We detect any errors here to check the window hasn't dissapeared half

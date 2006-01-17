@@ -216,6 +216,7 @@ enum {
   _NET_WM_SYNC_REQUEST,
   _MB_CURRENT_APP_WINDOW,
   _MB_APP_WINDOW_LIST_STACKING,
+  _NET_WM_USER_TIME,
   ATOM_COUNT
 
 } MBAtomEnum;
@@ -280,20 +281,20 @@ typedef struct _mb_client_button
 #define CLIENT_IS_MODAL_FLAG      (1<<11)
 #define CLIENT_BORDERS_ONLY_FLAG  (1<<12)
 #define CLIENT_IS_MESSAGE_DIALOG  (1<<14)
-#define CLIENT_IS_MESSAGE_DIALOG_HI  (1<<21)
-#define CLIENT_IS_MESSAGE_DIALOG_LO  (1<<22)
 #define CLIENT_IS_DESKTOP_FLAG    (1<<15) /* Used in 'borked' desktop win 
 					     Handling mode :/ */
 #define CLIENT_NEW_FOR_DESKTOP    (1<<16)
 #define CLIENT_DOCK_TITLEBAR   (1<<17)
 #define CLIENT_IS_MOVING       (1<<19) /* Used by comosite engine */
 #define CLIENT_DOCK_TITLEBAR_SHOW_ON_DESKTOP (1<<20)
+#define CLIENT_NO_FOCUS_ON_MAP (1<<21) /* for _NET_WM_USER_TIME = 0 */
 #define CLIENT_IS_MINIMIZED    (1<<23) /* used by toolbars */
 #define CLIENT_TOOLBARS_MOVED_FOR_FULLSCREEN (1<<24)
 #define CLIENT_IS_TRANSIENT_FOR_ROOT (1<<25)
 #define CLIENT_HAS_URGENCY_FLAG (1<<26)
 #define CLIENT_HAS_ABOVE_STATE (1<<27)
 #define CLIENT_IS_MENU_DIALOG ( 1<<30)
+
 #define CLIENT_DELAY_MAPPING  ( 1<<31)
 
 #ifdef USE_ALT_INPUT_WIN

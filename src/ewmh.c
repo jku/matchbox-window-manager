@@ -115,7 +115,9 @@ ewmh_init(Wm *w)
     "_NET_WM_SYNC_REQUEST_COUNTER",
     "_NET_WM_SYNC_REQUEST",
     "_MB_CURRENT_APP_WINDOW",
-    "_MB_APP_WINDOW_LIST_STACKING"
+    "_MB_APP_WINDOW_LIST_STACKING",
+    "_NET_WM_USER_TIME"
+
   };
 
   XInternAtoms (w->dpy, atom_names, ATOM_COUNT,
@@ -543,6 +545,34 @@ ewmh_set_active(Wm *w)
   XChangeProperty(w->dpy, w->root, w->atoms[_NET_ACTIVE_WINDOW] ,
 		  XA_WINDOW, 32, PropModeReplace,
 		  (unsigned char *)val, 1);
+}
+
+int
+ewmh_get_user_time (Client *c)
+{
+  Wm *w = c->wm;
+
+  Atom          real_type; 
+  int           real_format;
+  unsigned long items_read, items_left;
+  int          *data = NULL, result = -1;
+
+  if (XGetWindowProperty(w->dpy, c->window,
+			 w->atoms[_NET_WM_USER_TIME], 
+			 0L, 2L, False,
+			 XA_CARDINAL, 
+			 &real_type, 
+			 &real_format,
+			 &items_read, 
+			 &items_left,
+			 (unsigned char **) &data) == Success
+      && items_read)
+    result = *data;
+
+  if (data)
+    XFree(data);
+
+  return result;
 }
 
 void 

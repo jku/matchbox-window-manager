@@ -1,3 +1,15 @@
+2006-01-17  Matthew Allum  <mallum@openedhand.com>
+
+	* src/base_client.c: (base_client_new):
+	* src/ewmh.c: (ewmh_init), (ewmh_set_active):
+	* src/ewmh.h:
+	* src/main_client.c: (main_client_show):
+	* src/structs.h:
+	Add basic ( set to 0 ) support for _NET_USER_TIME
+	* src/mbtheme.c: (theme_frame_paint),
+	(_theme_frame_menu_paint_text_entry):
+	Fix wierd mb_col leak.
+
 2006-01-05  Matthew Allum  <mallum@openedhand.com>
 
 	* src/ewmh.c: (ewmh_init), (ewmh_update_lists):

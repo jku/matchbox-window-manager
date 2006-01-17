@@ -68,6 +68,9 @@ ewmh_state_set(Client *c);
 Bool 
 ewmh_state_check (Client *c, Atom atom_state_wanted);
 
+int
+ewmh_get_user_time (Client *c);
+
 void 
 ewmh_set_allowed_actions (Wm *w, Client *c);
 

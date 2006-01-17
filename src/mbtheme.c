@@ -815,6 +815,8 @@ theme_frame_paint( MBTheme *theme,
 			     (c->name_is_utf8) ? MB_ENCODING_UTF8 : MB_ENCODING_LATIN,
 			     text_render_opts);
       dbg("%s() rendered text\n", __func__);
+
+      mb_col_unref(layer_label->label->col);
     }
 
   /* Finally put the drawable on the decoration frame background */
@@ -929,6 +931,8 @@ _theme_frame_menu_paint_text_entry(MBTheme      *theme,
 			 (entry->name_is_utf8) ? 
 			    MB_ENCODING_UTF8 : MB_ENCODING_LATIN,
 			 MB_FONT_RENDER_OPTS_CLIP_TRAIL);
+
+  mb_col_unref(color); 	/* set_color refs */
 }
 
 void

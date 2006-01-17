@@ -770,8 +770,13 @@ main_client_show(Client *c)
 {
   Wm     *w = c->wm;
 
-   dbg("%s() called on %s\n", __func__, c->name);
+  Client *visible_app_client = NULL;
+
+  dbg("%s() called on %s\n", __func__, c->name);
    
+  if (c->flags & CLIENT_NO_FOCUS_ON_MAP)
+    visible_app_client = wm_get_visible_main_client(w);
+
    if (w->flags & DESKTOP_RAISED_FLAG) 
      {
        c->flags |= CLIENT_NEW_FOR_DESKTOP;
@@ -792,7 +797,7 @@ main_client_show(Client *c)
       care of painels etc as it can use active client as a 'watermark' 
    */
    stack_move_top(c);
-   
+
    stack_dump(w);
 
    if (!c->mapped)
@@ -816,8 +821,21 @@ main_client_show(Client *c)
 	       }
 	 }
 
-       XMapSubwindows(w->dpy, c->frame);
-       XMapWindow(w->dpy, c->frame);
+       if (c->flags & CLIENT_NO_FOCUS_ON_MAP)
+	 {
+	   if (visible_app_client)
+	     {
+	       stack_move_above_client (c, visible_app_client->below);
+	       c->flags |= CLIENT_DELAY_MAPPING;
+	     }
+	   c->flags &= ~CLIENT_NO_FOCUS_ON_MAP;
+	 }
+
+       if (!(c->flags & CLIENT_DELAY_MAPPING))
+	 {
+	   XMapSubwindows(w->dpy, c->frame);
+	   XMapWindow(w->dpy, c->frame);
+	 }
      }
 
    c->mapped = True;
