@@ -297,11 +297,12 @@ theme_frame_button_paint(MBTheme *theme,
 		{
 		  img_backing = mb_pixbuf_img_rgb_new(pb, button_w, button_h);
 
-		  mb_pixbuf_img_copy(pb, img_backing,
-				     theme->img_caches[frame_type],
-				     button_x, button_y,
-				     button_w, button_h,
-				     0, 0 );
+		  if (!theme->disable_pixbuf_cache)
+		    mb_pixbuf_img_copy(pb, img_backing,
+				       theme->img_caches[frame_type],
+				       button_x, button_y,
+				       button_w, button_h,
+				       0, 0 );
 
 		}
 
@@ -784,7 +785,7 @@ theme_frame_paint( MBTheme *theme,
   
   /* No point caching frame images which dont have buttons */
   
-  if (decor_idx != NORTH)
+  if (decor_idx != NORTH || theme->disable_pixbuf_cache == True)
     theme_img_cache_clear (theme, frame_type);
   
   /* Now paint text onto pixmap */
@@ -2203,6 +2204,9 @@ mbtheme_new (Wm *w)
   
   t->have_toolbar_panel = False;
   
+  if (getenv("MB_NO_THEME_CACHE"))
+    t->disable_pixbuf_cache = True;
+
   return t;
 }
 

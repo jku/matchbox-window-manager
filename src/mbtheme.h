@@ -177,6 +177,9 @@ typedef struct _mbtheme {
 
   Pixmap app_win_pxm_cache[3];
 
+  /* disable cacheing, not recommened */
+  Bool           disable_pixbuf_cache;
+
   struct _wm    *wm;
    
 } MBTheme;
