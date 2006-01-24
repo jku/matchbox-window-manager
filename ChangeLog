@@ -1,3 +1,9 @@
+2006-01-24  Matthew Allum  <mallum@openedhand.com>
+
+	* src/mbtheme.c: (mbtheme_new), (mbtheme_init):
+	Add support for cache attribute in <theme> tags.
+	MB_THEME_ALWAYS_CACHE env var overides. 
+
 2006-01-19  Matthew Allum  <mallum@openedhand.com>
 
 	* src/mbtheme.c: (theme_frame_button_paint), (theme_frame_paint),

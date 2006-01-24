@@ -2204,8 +2204,6 @@ mbtheme_new (Wm *w)
   
   t->have_toolbar_panel = False;
   
-  if (getenv("MB_NO_THEME_CACHE"))
-    t->disable_pixbuf_cache = True;
 
   return t;
 }
@@ -2500,6 +2498,13 @@ mbtheme_init (Wm   *w,
      }       
 
    w->mbtheme = mbtheme_new(w);
+
+   if (get_attr(root_node, "cache") 
+       && !strcasecmp(get_attr(root_node, "cache"), "false"))
+     {
+       if (!getenv("MB_THEME_ALWAYS_CACHE"))
+	 w->mbtheme->disable_pixbuf_cache = True;
+     }
    
    for(n = root_node->kids; n != NULL; n = n->next)
    {
