@@ -1,3 +1,10 @@
+2006-02-03  Matthew Allum  <mallum@openedhand.com>
+
+	* configure.ac:
+	Add a FIXME comment 
+	* src/mbtheme.c: (theme_frame_paint):
+	avoid freeing non existant font color on theme switch.
+
 2006-01-24  Matthew Allum  <mallum@openedhand.com>
 
 	* src/mbtheme.c: (mbtheme_new), (mbtheme_init):

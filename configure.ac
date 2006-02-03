@@ -393,6 +393,7 @@ if test x$enable_session != xno; then
 fi
 
 dnl ----- Xsettings ---------------------------------------------------------
+dnl FIXME FIXME: Avoid craziness with pkg-config and check for xsetting proper
 
 if test x$enable_standalone != xyes && test x$enable_standalone_xft != xyes; then
   AC_MSG_CHECKING([for libmb xsettings support])

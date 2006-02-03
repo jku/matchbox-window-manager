@@ -817,7 +817,9 @@ theme_frame_paint( MBTheme *theme,
 			     text_render_opts);
       dbg("%s() rendered text\n", __func__);
 
+      /* FIXME: we really need an mb_font_unset_color() here..? */
       mb_col_unref(layer_label->label->col);
+      layer_label->label->font->col = NULL;
     }
 
   /* Finally put the drawable on the decoration frame background */
