@@ -1,3 +1,15 @@
+2006-02-05  Matthew Allum  <mallum@openedhand.com>
+
+	* src/dialog_client.c: (dialog_client_get_offsets),
+	(dialog_client_title_height), (dialog_client_redraw):
+	* src/mbtheme-standalone.c: (theme_has_message_decor):
+	* src/mbtheme-standalone.h:
+	* src/mbtheme.c: (theme_has_message_decor), (theme_frame_paint):
+	* src/mbtheme.h:
+	* src/structs.h:
+	Add support for optional alternate custom themeing for border only
+        ( no title bar ) dialogs. 
+
 2006-02-03  Matthew Allum  <mallum@openedhand.com>
 
 	* configure.ac:

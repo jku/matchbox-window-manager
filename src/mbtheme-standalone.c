@@ -963,6 +963,12 @@ theme_has_message_decor( MBTheme *theme )
   return False;
 }
 
+Bool
+theme_has_borders_only_decor( MBTheme *theme )
+{
+  return False;
+}
+
 void
 theme_pixmap_cache_clear_all( MBTheme *theme )
 {

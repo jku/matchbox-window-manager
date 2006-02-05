@@ -224,6 +224,8 @@ theme_frame_menu_highlight_entry(Client *c,
 Bool
 theme_has_message_decor( MBTheme *theme );
 
+Bool
+theme_has_borders_only_decor( MBTheme *theme );
 
 MBTheme* 
 mbtheme_new (Wm            *w);

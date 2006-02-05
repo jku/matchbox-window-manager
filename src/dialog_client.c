@@ -81,6 +81,18 @@ dialog_client_get_offsets(Client *c, int *e, int *s, int *w)
       return;
     }
 
+  if (c->flags & CLIENT_BORDERS_ONLY_FLAG
+      && theme_has_borders_only_decor(c->wm->mbtheme))
+    {
+      *s = theme_frame_defined_height_get(c->wm->mbtheme, 
+					  FRAME_DIALOG_NT_SOUTH);
+      *e = theme_frame_defined_width_get(c->wm->mbtheme, 
+					 FRAME_DIALOG_NT_EAST );
+      *w = theme_frame_defined_width_get(c->wm->mbtheme, 
+					 FRAME_DIALOG_NT_WEST );
+      return;
+    }
+
   if (c->flags & CLIENT_HAS_URGENCY_FLAG
       && theme_has_message_decor(c->wm->mbtheme))
     {
@@ -199,10 +211,14 @@ dialog_client_title_height(Client *c)
       return theme_frame_defined_height_get(c->wm->mbtheme, FRAME_MSG);
     }
   
-  if (c->flags & CLIENT_BORDERS_ONLY_FLAG
-      && theme_has_frame_type_defined(c->wm->mbtheme, FRAME_DIALOG_NORTH))    
-    return theme_frame_defined_height_get(c->wm->mbtheme, FRAME_DIALOG_NORTH);
-  
+  if (c->flags & CLIENT_BORDERS_ONLY_FLAG)
+    {
+      if (theme_has_borders_only_decor (c->wm->mbtheme))
+	return theme_frame_defined_height_get(c->wm->mbtheme, FRAME_DIALOG_NT_NORTH);
+      else if (theme_has_frame_type_defined(c->wm->mbtheme, FRAME_DIALOG_NORTH))
+	return theme_frame_defined_height_get(c->wm->mbtheme, FRAME_DIALOG_NORTH);
+    }  
+
   return theme_frame_defined_height_get(c->wm->mbtheme, FRAME_DIALOG);
 }
 
@@ -807,10 +823,17 @@ dialog_client_redraw(Client *c, Bool use_cache)
       frame_ref_west  = FRAME_MSG_WEST;
       frame_ref_south = FRAME_MSG_SOUTH;
     }
+  else if (c->flags & CLIENT_BORDERS_ONLY_FLAG
+	   && theme_has_borders_only_decor(c->wm->mbtheme))
+    {
+      frame_ref_top   = FRAME_DIALOG_NT_NORTH;
+      frame_ref_east  = FRAME_DIALOG_NT_EAST;
+      frame_ref_west  = FRAME_DIALOG_NT_WEST;
+      frame_ref_south = FRAME_DIALOG_NT_SOUTH;
+    }
 
   dbg("%s() c->width : %i , offset_east : %i, offset_west : %i\n",
       __func__, c->width, offset_east, offset_west );
-
 
   is_shaped = theme_frame_wants_shaped_window( c->wm->mbtheme, frame_ref_top);
 

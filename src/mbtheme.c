@@ -78,6 +78,10 @@ static struct frame_lookup_t
   { "dialog-east",   FRAME_DIALOG_EAST  },
   { "dialog-west",   FRAME_DIALOG_WEST  },
   { "dialog-south",  FRAME_DIALOG_SOUTH },
+  { "dialog-nt-north",  FRAME_DIALOG_NT_NORTH },
+  { "dialog-nt-east",   FRAME_DIALOG_NT_EAST  },
+  { "dialog-nt-west",   FRAME_DIALOG_NT_WEST  },
+  { "dialog-nt-south",  FRAME_DIALOG_NT_SOUTH },
   { "utility-min",   FRAME_UTILITY_MIN  },
   { "utility-max",   FRAME_UTILITY_MAX  },
   { "menu",          FRAME_MENU         },
@@ -385,6 +389,17 @@ theme_has_message_decor( MBTheme *theme )
     return True;
 }
 
+Bool
+theme_has_borders_only_decor( MBTheme *theme )
+{
+  MBThemeFrame *frame = (MBThemeFrame *)list_find_by_id(theme->frames, 
+							FRAME_DIALOG_NT_NORTH);
+  if (frame == NULL) 
+    return False;
+  else
+    return True;
+}
+
 static void
 _theme_paint_gradient(MBTheme*       theme, 
 		      MBThemeLayer*  layer_cur, 
@@ -601,16 +616,19 @@ theme_frame_paint( MBTheme *theme,
     {
     case FRAME_MAIN_SOUTH:
     case FRAME_DIALOG_SOUTH:
+    case FRAME_DIALOG_NT_SOUTH:
     case FRAME_MSG_SOUTH:
       decor_idx = SOUTH;
       break;
     case FRAME_MAIN_EAST: 
     case FRAME_DIALOG_EAST:
+    case FRAME_DIALOG_NT_EAST:
     case FRAME_MSG_EAST:
       decor_idx = EAST;
       break;
     case FRAME_MAIN_WEST: 
     case FRAME_DIALOG_WEST:
+    case FRAME_DIALOG_NT_WEST:
     case FRAME_MSG_WEST:
       decor_idx = WEST;
       break;
@@ -748,7 +766,8 @@ theme_frame_paint( MBTheme *theme,
   
   if (c->backing_masks[MSK_NORTH] != None &&
       ( frame_type == FRAME_MAIN || frame_type == FRAME_DIALOG 
-	|| frame_type == FRAME_MSG || frame_type == FRAME_DIALOG_NORTH)
+	|| frame_type == FRAME_MSG || frame_type == FRAME_DIALOG_NORTH
+	|| frame_type == FRAME_DIALOG_NT_NORTH)
       )
     mb_pixbuf_img_render_to_mask(theme->wm->pb, img, 
 				 c->backing_masks[MSK_NORTH],
@@ -756,7 +775,8 @@ theme_frame_paint( MBTheme *theme,
   
   if (c->backing_masks[MSK_SOUTH] != None  &&
       ( frame_type == FRAME_MAIN_SOUTH || frame_type == FRAME_DIALOG_SOUTH 
-	|| frame_type == FRAME_MSG_SOUTH )
+	|| frame_type == FRAME_MSG_SOUTH 
+	|| frame_type == FRAME_DIALOG_NT_SOUTH)
       )
     mb_pixbuf_img_render_to_mask(theme->wm->pb, img, 
 				 c->backing_masks[MSK_SOUTH],
@@ -764,7 +784,7 @@ theme_frame_paint( MBTheme *theme,
   
   if (c->backing_masks[MSK_EAST] != None  &&
       ( frame_type == FRAME_MAIN_EAST || frame_type == FRAME_DIALOG_EAST 
-	|| frame_type == FRAME_MSG_EAST )
+	|| frame_type == FRAME_MSG_EAST || frame_type == FRAME_DIALOG_NT_EAST)
       )
     mb_pixbuf_img_render_to_mask(theme->wm->pb, img, 
 				 c->backing_masks[MSK_EAST],
@@ -772,7 +792,7 @@ theme_frame_paint( MBTheme *theme,
   
   if (c->backing_masks[MSK_WEST] != None  &&
       ( frame_type == FRAME_MAIN_WEST || frame_type == FRAME_DIALOG_WEST 
-	|| frame_type == FRAME_MSG_WEST )
+	|| frame_type == FRAME_MSG_WEST || frame_type == FRAME_DIALOG_NT_WEST )
       )
     mb_pixbuf_img_render_to_mask(theme->wm->pb, img, 
 				 c->backing_masks[MSK_WEST],
