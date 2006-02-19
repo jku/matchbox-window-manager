@@ -381,6 +381,11 @@ typedef struct _client
 
   Bool              has_ping_protocol;
   int               pings_pending;
+
+  /* below used just for 'aggressive pinging' */
+  int               pings_sent;
+  Bool              ping_handler_called;
+
   char             *host_machine;
   pid_t             pid;
 
@@ -498,6 +503,8 @@ typedef struct _wm_config
   Time         dbl_click_time;
   int          use_icons;
   char        *ping_handler;
+  Bool         ping_aggressive;
+  
   MBConfigKbd *kb;
 
   char        *force_dialogs;

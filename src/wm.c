@@ -310,6 +310,7 @@ wm_load_config (Wm   *w,
    w->config->dialog_shade     = False;   
    w->config->dialog_stratergy = WM_DIALOGS_STRATERGY_CONSTRAINED;
    w->config->ping_handler     = getenv("MB_HUNG_APP_HANDLER");
+   w->config->ping_aggressive = getenv("MB_AGGRESSIVE_PING") ? True : False;
 
 #ifdef USE_COMPOSITE
    w->config->dialog_shade = True;
@@ -489,6 +490,7 @@ wm_load_config (Wm   *w,
    w->config->dialog_shade     = False;   
    w->config->dialog_stratergy = WM_DIALOGS_STRATERGY_CONSTRAINED;
    w->config->ping_handler     = getenv("MB_HUNG_APP_HANDLER");
+   w->config->ping_aggressive  = getenv("MB_AGGRESSIVE_PING") ? True : False;
 
    if (XrmGetResource(rDB, "matchbox.display",
 		      "Matchbox.Display",
@@ -2376,12 +2378,22 @@ wm_activate_client(Client *c)
   Wm     *w;
   Client *client_to_focus = c;
   Bool    set_desktop_show_hint = False;
+#ifndef NO_PING
+  Client *prev_app_client = NULL;
+#endif
 
   if (c == NULL) return; /* its possible for this to happen :( */
 
   w = c->wm;
 
   dbg("%s() called for %s\n", __func__, c->name);
+
+#ifndef NO_PING
+  if (w->config->ping_aggressive)
+    {
+      prev_app_client = wm_get_visible_main_client(w);
+    }
+#endif
 
   XGrabServer(w->dpy);
 
@@ -2390,6 +2402,7 @@ wm_activate_client(Client *c)
 
   dbg("%s() DESKTOP_RAISED_FLAG is %i\n", 
       __func__, (w->flags & DESKTOP_RAISED_FLAG));
+
 
 
   if (c->type == MBCLIENT_TYPE_APP || c->type == MBCLIENT_TYPE_DESKTOP) 
@@ -2578,6 +2591,28 @@ wm_activate_client(Client *c)
   client_set_focus(client_to_focus); /* set focus if needed and ewmh active */
 
   comp_engine_client_show(w, c);
+
+#ifndef NO_PING
+  if (w->config->ping_aggressive)
+    {
+      Client *new_app_client;
+
+      new_app_client = wm_get_visible_main_client(w);
+
+      if (prev_app_client != new_app_client)
+	{
+	  if (new_app_client && new_app_client->type != MBCLIENT_TYPE_DESKTOP)
+	    {
+	      ewmh_ping_client_start (new_app_client);
+	    }
+
+	  if (prev_app_client)
+	    {
+	      ewmh_ping_client_stop (prev_app_client);
+	    }
+	}
+    }
+#endif
 
   XSync(w->dpy, False);	    
 

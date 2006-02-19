@@ -240,8 +240,7 @@ client_deliver_delete(Client *c)
 
   if (c->has_ping_protocol && c->pings_pending == -1) 
     {
-      c->pings_pending = 0;
-      w->n_active_ping_clients++;
+      ewmh_ping_client_start (c);
     }
 
   if (found)

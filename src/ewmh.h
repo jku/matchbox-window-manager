@@ -30,6 +30,9 @@
  /* Time in seconds between each hung app check */
 #define PING_CHECK_FREQ  2 
 
+/* Max num of pings to send to an app - used only when in aggresive mode */
+#define PING_CHECK_DURATION 5
+
 /* Non aton defines */
 #define _NET_WM_STATE_REMOVE        0    /* remove/unset property */
 #define _NET_WM_STATE_ADD           1    /* add/set property */
@@ -73,6 +76,12 @@ ewmh_get_user_time (Client *c);
 
 void 
 ewmh_set_allowed_actions (Wm *w, Client *c);
+
+void
+ewmh_ping_client_start (Client *c);
+
+void
+ewmh_ping_client_stop (Client *c);
 
 void 
 ewmh_hung_app_check (Wm *w);

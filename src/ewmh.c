@@ -199,12 +199,45 @@ ewmh_handle_root_message(Wm *w, XClientMessageEvent *e)
 	   dbg("%s() pong from %s\n", __func__, c->name);
 
 	   /* We got a response to a ping. stop pinging it now
-	      until close button is pressed again. 
+	    * until close button is pressed again. 
 	   */
-	   if (c->pings_pending > 0) 
+	   if (c->ping_handler_called)
 	     {
-	       c->pings_pending = -1;
-	       w->n_active_ping_clients--;
+	       int len;
+	       char *buf;
+	       /* aha! this was thought be be dead but has come
+		* alive again..
+	       */
+	       len = strlen(w->config->ping_handler) + 32;
+	       buf = malloc(len);
+
+	       if (buf)
+		 {
+		   snprintf(buf, len-1, "%s %i %li 1",
+			    w->config->ping_handler,
+			    c->pid,
+			    c->window);
+		   
+		   fork_exec(buf);
+		   
+		   free(buf);
+		 }
+	     }
+
+	   if (w->config->ping_aggressive)
+	     {
+	       if (c->pings_pending >= 0)
+		 c->pings_pending--;
+	     }
+	   else
+	     {
+	       /* Regular pinging, assume 1 reply and the  
+		* app is alive. 
+	       */
+	       if (c->pings_pending > 0) 
+		 {
+		   ewmh_ping_client_stop(c);
+		 }
 	     }
 	 }
      } 
@@ -596,7 +629,40 @@ ewmh_set_current_app_window(Wm *w)
 }
 
 
+void
+ewmh_ping_client_start (Client *c)
+{
+#ifndef NO_PING
+  if (c->has_ping_protocol && c->pings_pending == -1) 
+    {
+      c->pings_pending       = 0;
+      c->pings_sent          = 0;
+      c->ping_handler_called = False;
+      c->wm->n_active_ping_clients++;
 
+      dbg("starting pinging '%s' , active: %i\n", 
+	  c->name, c->wm->n_active_ping_clients);
+    }
+#endif
+}
+
+void
+ewmh_ping_client_stop (Client *c)
+{
+#ifndef NO_PING
+  if (c->has_ping_protocol && c->pings_pending != -1) 
+    {
+      dbg("stopping pinging '%s' , pending: %i\n", 
+	  c->name, c->pings_pending);
+
+      c->pings_pending = -1;
+      c->wm->n_active_ping_clients--;
+
+      dbg("stopping pinging '%s' , active: %i\n", 
+	  c->name, c->wm->n_active_ping_clients);
+    }
+#endif
+}
 
 void
 ewmh_hung_app_check(Wm *w)
@@ -605,7 +671,8 @@ ewmh_hung_app_check(Wm *w)
 
   Client *c = NULL;
 
-  if (stack_empty(w)) return;
+  if (stack_empty(w)) 
+    return;
 
   dbg("%s() called\n", __func__ );
 
@@ -626,11 +693,13 @@ ewmh_hung_app_check(Wm *w)
 	  e.xclient.data.l[0] = w->atoms[_NET_WM_PING];
 
 	  /* To save a load of code bloat, we just set the timestamp
-	     to the client window ID. This could be slightly evil but
-	     makes things much more compact. 
+	   * to the client window ID. This could be slightly evil but
+	   * makes things much more compact. 
 	  */
 	  e.xclient.data.l[1] = c->window;
 	  XSendEvent(w->dpy, c->window, False, 0, &e);
+
+	  c->pings_sent++;
 
 	  if (c->pings_pending > PING_PENDING_MAX)
 	    {
@@ -639,32 +708,41 @@ ewmh_hung_app_check(Wm *w)
 		  /* fire off external binary to handle hung app 
                    * if env var is set. 
 		  */
-
 		  int   len;
 		  char *buf = NULL;
 
-		  len = strlen(w->config->ping_handler) + 32;
-		  buf = malloc(len);
-
-		  if (buf)
+		  if (!c->ping_handler_called)
 		    {
-		      snprintf(buf, len-1, "%s %i %li",
-			       w->config->ping_handler,
-			       c->pid,
-			       c->window);
-		  
-		      fork_exec(buf);
+		      len = strlen(w->config->ping_handler) + 32;
+		      buf = malloc(len);
 
-		      free(buf);
+		      if (buf)
+			{
+			  snprintf(buf, len-1, "%s %i %li",
+				   w->config->ping_handler,
+				   c->pid,
+				   c->window);
+			  
+			  fork_exec(buf);
+			  
+			  free(buf);
+			  c->ping_handler_called = True;
+			}
 		    }
 
 		  /* dont ping any more */
-		  c->pings_pending = -1;
-		  w->n_active_ping_clients--;
+		   if ( !w->config->ping_aggressive )
+		    {
+		      ewmh_ping_client_stop (c);
+		    }
 		}
 	      else
 		client_obliterate(c);
 	    }
+
+	  if (w->config->ping_aggressive 
+	      && c->pings_sent >= PING_CHECK_DURATION)
+	    ewmh_ping_client_stop (c);
 	}
     }
 
