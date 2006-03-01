@@ -319,7 +319,9 @@ dialog_client_show(Client *c)
 	    }
 	}
 
-      if (lowest_trans->win_group)
+      if (lowest_trans->win_group 
+	  && (lowest_trans->type == MBCLIENT_TYPE_DESKTOP
+	      || lowest_trans->type == MBCLIENT_TYPE_APP))
 	{
 	  Client *visible;
 
