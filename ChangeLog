@@ -1,3 +1,8 @@
+2006-03-07  Matthew Allum  <mallum@openedhand.com>
+
+	* configure.ac:
+	Be brave and finally bump up version to 1.0 
+
 2006-03-01  Matthew Allum  <mallum@openedhand.com>
 
 	* src/dialog_client.c: (dialog_client_show):

@@ -1,5 +1,5 @@
 AC_PREREQ(2.53)
-AC_INIT([matchbox-window-manager], 0.9.5, [mallum@handhelds.org])
+AC_INIT([matchbox-window-manager], 1.0, [mallum@handhelds.org])
 AC_CONFIG_SRCDIR([src/wm.c])
 
 AM_INIT_AUTOMAKE()
