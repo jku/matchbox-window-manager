@@ -1234,10 +1234,14 @@ dialog_client_set_focus_next(Client *c)
 
   /* We dont have focus, therefore dont suggest what to focus next */
   if (w->focused_client != c)
-    return NULL;
+    {
+      dbg("%s we dont have focus\n", __func__); 
+      return NULL;
+    }
 
   if (c->next_focused_client && c != c->next_focused_client)
     {
+      dbg("%s setting focus to c->next_focused_client\n", __func__); 
       if (w->focused_client == c)
 	w->focused_client = NULL;
 
@@ -1245,6 +1249,7 @@ dialog_client_set_focus_next(Client *c)
     }
   else
     {
+      dbg("%s setting focus to visibe_main\n", __func__); 
       if (w->focused_client == c)
 	w->focused_client = NULL;
       return wm_get_visible_main_client(w);

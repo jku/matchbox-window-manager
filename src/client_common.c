@@ -323,6 +323,14 @@ client_set_focus(Client *c)
 	  /* Are we both transient for the same thing */
 	  if (trans_new && trans_old && trans_new == trans_old)
 	    c->next_focused_client = w->focused_client;
+
+	  /* Two transient for root dialogs */
+	  if (w->focused_client->type == MBCLIENT_TYPE_DIALOG
+	      && w->focused_client->trans == NULL 
+	      && c->type == MBCLIENT_TYPE_DIALOG
+	      && c->trans == NULL)
+	    c->next_focused_client = w->focused_client;
+	    
 	}
 
       if (misc_untrap_xerrors())
