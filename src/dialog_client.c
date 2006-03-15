@@ -976,6 +976,24 @@ dialog_client_button_press(Client *c, XButtonEvent *e)
   int offset_north = dialog_client_title_height(c);
   int offset_south = 0, offset_west = 0, offset_east = 0;
 
+   if (w->config->super_modal)
+     {
+       Client *p;
+
+       p = client_get_highest_transient(c, CLIENT_IS_MODAL_FLAG, NULL);
+
+       if (p && p != c)
+	 {
+	   MBList *button_item = client_get_button_list_item_from_event(c, e);
+	   /* In the precense of a modal transient dialog ignore 
+	    * certain buttons. 
+	    */
+	   if ((button_item && button_item->id == BUTTON_ACTION_HELP)
+	       || (button_item && button_item->id == BUTTON_ACTION_CLOSE))
+	     return;
+	 }
+     }
+
   dialog_client_get_offsets(c, &offset_east, &offset_south, &offset_west);
 
   switch (client_button_do_ops(c, e, FRAME_DIALOG, 

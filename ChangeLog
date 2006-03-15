@@ -1,3 +1,9 @@
+2006-03-15  Matthew Allum  <mallum@openedhand.com>
+
+	* src/dialog_client.c: (dialog_client_button_press):
+	Stop buttons on lower dialogs working when modal
+	blocker window in place ( When in super modal mode ).
+
 2006-03-10  Matthew Allum  <mallum@openedhand.com>
 
 	* src/client_common.c: (client_set_focus):
