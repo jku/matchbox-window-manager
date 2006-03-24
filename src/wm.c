@@ -1753,21 +1753,19 @@ wm_handle_property_change(Wm *w, XPropertyEvent *e)
       misc_trap_xerrors(); 	/* avoid possible X Errors */
 
       c->name = (char*)ewmh_get_utf8_prop(w, c->window, w->atoms[_NET_WM_NAME]);
+      misc_untrap_xerrors();
 
-      if (!misc_untrap_xerrors())
+      if (c->name)
+	c->name_is_utf8 = True;
+      else
 	{
-	  if (c->name)
-	    c->name_is_utf8 = True;
-	  else
-	    {
-	      c->name_is_utf8 = False;
-	      XFetchName(w->dpy, c->window, (char **)&c->name);
-	    }
-
-	  base_client_process_name(c);
-	  dbg("%s() NET_WM_NAME change, name is %s\n", __func__, c->name);
-	  update_titlebar = True;
+	  c->name_is_utf8 = False;
+	  XFetchName(w->dpy, c->window, (char **)&c->name);
 	}
+
+      base_client_process_name(c);
+      dbg("%s() NET_WM_NAME change, name is %s\n", __func__, c->name);
+      update_titlebar = True;
     }
   else  if (e->atom == w->atoms[WM_PROTOCOLS])
     {

@@ -1,3 +1,8 @@
+2006-03-24  Matthew Allum  <mallum@openedhand.com>
+
+	* src/wm.c: (wm_handle_property_change):
+	Make sure window names changes can end up NULL.
+
 2006-03-15  Matthew Allum  <mallum@openedhand.com>
 
 	* src/dialog_client.c: (dialog_client_button_press):
