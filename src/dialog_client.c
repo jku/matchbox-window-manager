@@ -482,7 +482,7 @@ dialog_client_reparent(Client *c)
 }
 
 /*  Padding between dialog borders and area available */
-#define DIALOG_PADDING 4 
+#define DIALOG_PADDING 0 
 
 /*
  *  dialog_get_available_area()
@@ -708,10 +708,43 @@ dialog_init_geometry(Client *c)
 
   dbg("%s() - \n\t avail_x : %d\n\tavail_y : %d\n\tavail_width : %d"
       "\n\tavail_height %d\n\tbdr_south : %d\n\tbdr_west : %d"
-      "\n\tbdr_east : %d\n\tbdr_north : %d\n",
+      "\n\tbdr_east : %d\n\tbdr_north : %d\n gravity %i\n",
       __func__, 
       avail_x, avail_y, avail_width, avail_height,
-      bdr_south, bdr_west, bdr_east, bdr_north);
+      bdr_south, bdr_west, bdr_east, bdr_north, c->gravity);
+
+  switch (c->gravity)
+    {
+    case NorthGravity:
+      c->y += bdr_north;
+      break;
+    case NorthEastGravity:
+      c->y += bdr_north;
+      c->x -= bdr_east;
+      break;
+    case WestGravity:
+      c->x += bdr_west;
+      break;
+    case EastGravity:
+      c->x -= bdr_east;
+      break;
+    case SouthWestGravity:
+      c->y -= bdr_south;
+      c->x += bdr_west;
+      break;
+    case SouthGravity:
+      c->y -= bdr_south;
+      break;
+    case SouthEastGravity:
+      c->x -= bdr_east;
+      c->y -= bdr_south;
+      break;
+    case CenterGravity:
+    case NorthWestGravity:
+    case StaticGravity:
+    default:
+      break;
+    }
 
   /* Message Dialogs are free to postion/size where ever but can use totally  
    * offscreen request to position to window corners - see below
@@ -748,16 +781,17 @@ dialog_init_geometry(Client *c)
    *   + positioned at 0,0
    *   + positioned offscreen
    */
-  if ( (c->x - bdr_west) <= avail_x 
-       || (c->x + c->width + bdr_east + bdr_west) > (avail_x + avail_width))
+
+  if ( (c->x - bdr_west) < avail_x 
+       || (c->x + c->width + bdr_east) > (avail_x + avail_width))
     {
       dbg("%s() centering x pos\n", __func__);
       c->x = (avail_width  - (c->width + bdr_east + bdr_west))/2 
 	+ bdr_west + avail_x;
     }
 
-  if ( (c->y - bdr_north) <= avail_y
-       || (c->y + c->height + bdr_south + bdr_north) > (avail_y+avail_height))
+  if ( (c->y - bdr_north) < avail_y
+       || (c->y + c->height + bdr_south) > (avail_y+avail_height))
     {
       dbg("%s() centering y pos\n", __func__);
       c->y = (avail_height - (c->height + bdr_south + bdr_north))/2 + avail_y + bdr_north;

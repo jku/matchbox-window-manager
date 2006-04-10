@@ -353,6 +353,7 @@ typedef struct _client
   Colormap	    cmap;
   int		    x, y, width, height;
   int               init_width, init_height;
+  int               gravity;
   XID               win_group;
   Pixmap            icon, icon_mask;
   Bool              mapped;	                 /* Bogus ? */

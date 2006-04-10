@@ -24,6 +24,8 @@ Client*
 base_client_new(Wm *w, Window win)
 {
    XWindowAttributes attr;
+   XSizeHints        sz_hints;
+   long              mask;
 
    Client        *c = NULL;
    int            i = 0, format;
@@ -74,10 +76,10 @@ base_client_new(Wm *w, Window win)
     * Should never happen and likely throw X error to untrap.
     */
 
-   c->x      = attr.x;
-   c->y      = attr.y;
-   c->cmap   = attr.colormap;
-   c->visual = attr.visual;
+   c->x       = attr.x;
+   c->y       = attr.y;
+   c->cmap    = attr.colormap;
+   c->visual  = attr.visual;
 
    if (attr.win_gravity != NorthWestGravity)
      {
@@ -96,6 +98,14 @@ base_client_new(Wm *w, Window win)
 
    if (c->x < 0) c->x = (w->dpy_width + c->x - c->width);
    if (c->y < 0) c->y = (w->dpy_height + c->y - c->height);
+
+   c->gravity = NorthWestGravity;
+
+   if (XGetWMNormalHints(w->dpy, c->window, &sz_hints, &mask))
+     {
+       if (mask & PWinGravity)
+	 c->gravity = sz_hints.win_gravity;
+     }
 
 #if 0
 

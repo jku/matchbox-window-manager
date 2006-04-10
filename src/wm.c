@@ -900,6 +900,8 @@ wm_event_loop(Wm* w)
 	    wm_handle_keypress(w, &ev.xkey); break;
 	  case PropertyNotify:
 	    wm_handle_property_change(w, &ev.xproperty); break;
+	  case GravityNotify:
+	    dbg("**** got gravity event ***"); break;
 #ifndef NO_KBD
 	  case MappingNotify:
 	    dbg("%s() got MappingNotify\n", __func__);
@@ -1454,6 +1456,38 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 	 {
 	   Bool want_fake_configure = False;
 	   
+	   if (req_x == c->x && req_y == c->y 
+	       && req_w != c->width && req_h != c->height)
+	     {
+	       switch (c->gravity)
+		 {
+		 case NorthEastGravity:
+		   req_x = c->x -= (req_w - c->width);
+		   break;
+		 case EastGravity:
+		   req_x = c->x -= (req_w - c->width);
+		   break;
+		 case SouthWestGravity:
+		   req_y = c->y -= (req_h - c->height);
+		   break;
+		 case SouthGravity:
+		   req_y = c->y -= (req_h - c->height);
+		   break;
+		 case SouthEastGravity:
+		   req_x = c->x -= (req_w - c->width);
+		   req_y = c->y -= (req_h - c->height);
+		   break;
+		 case CenterGravity:
+		   /* FIXME */
+		 case NorthWestGravity:
+		 case NorthGravity:
+		 case WestGravity:
+		 case StaticGravity:
+		 default:
+		   break;
+		 }
+	     }
+
 	   dialog_constrain_geometry(c, &req_x, &req_y, &req_w, &req_h);
 
 	   if (c->width == req_w && c->height == req_h)
@@ -1470,6 +1504,8 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 	   xwc.height = c->height = req_h;
 	   xwc.x      = c->x      = req_x;
 	   xwc.y      = c->y      = req_y; 
+
+	   dbg("GRAVITY: x:%i y:%i\n", c->x, c->y);
 
 	   /* ICCCM says if window only moved - not size change,
             * then we send a fake one too.

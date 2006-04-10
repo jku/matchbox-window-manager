@@ -1,3 +1,12 @@
+2006-04-10  Matthew Allum  <mallum@openedhand.com>
+
+	* src/base_client.c: (base_client_new):
+	* src/dialog_client.c: (dialog_client_reparent),
+	(dialog_init_geometry):
+	* src/structs.h:
+	* src/wm.c: (wm_event_loop), (wm_handle_configure_request):
+	Add basic support for window gravity on dialogs.
+
 2006-03-24  Matthew Allum  <mallum@openedhand.com>
 
 	* src/wm.c: (wm_handle_property_change):
