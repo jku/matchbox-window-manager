@@ -1,5 +1,14 @@
 2006-04-12  Matthew Allum  <mallum@openedhand.com>
 
+	* src/toolbar_client_alt.c: (toolbar_client_new),
+	(toolbar_client_configure), (toolbar_client_destroy):
+	Support repositioning dialogs an alt toolbar ( IM ) window
+	is transient for.  
+	* src/wm.c: (wm_handle_configure_request):
+	Correct some debug info. 
+
+2006-04-12  Matthew Allum  <mallum@openedhand.com>
+
 	* src/client_common.c: (client_set_focus):
 	Focus tracking fix moving between dialogs and trans for
 	root dialog. fixs maemo #26095 

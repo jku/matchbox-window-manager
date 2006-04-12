@@ -27,6 +27,8 @@
 
 #ifdef USE_ALT_INPUT_WIN
 
+static int dialog_init_y, dialog_init_height;
+
 Client*
 toolbar_client_new(Wm *w, Window win)
 {
@@ -46,6 +48,8 @@ toolbar_client_new(Wm *w, Window win)
   c->show         = &toolbar_client_show;
   c->move_resize  = &toolbar_client_move_resize;
   c->destroy      = &toolbar_client_destroy;
+
+  dialog_init_y = -1; dialog_init_height = -1;
 
   XGetTransientForHint(w->dpy, win, &trans_win);
 
@@ -154,6 +158,12 @@ toolbar_client_configure(Client *c)
 	  int req_x = dialog_client->x, req_y = dialog_client->y, 
 	    req_w = dialog_client->width, req_h = dialog_client->height;
 	  
+	  if (dialog_init_y < 0)
+	    dialog_init_y = dialog_client->y; 
+
+	  if (dialog_init_height < 0)
+	    dialog_init_height = dialog_client->height;
+
 	  c->mapped = True; 	/* Hack Hack */
 	  c->type = MBCLIENT_TYPE_TOOLBAR; 
 
@@ -301,6 +311,29 @@ toolbar_client_destroy(Client *c)
 	  app_client->redraw(app_client, False);
 
 	  misc_untrap_xerrors();
+	}
+    }
+  else if (c->flags & CLIENT_TB_ALT_TRANS_FOR_DIALOG)
+    {
+      Client *dialog_client = c->trans;
+
+      /* Reset dialog to old position */
+      if (dialog_client
+	  && (dialog_init_y != dialog_client->y 
+	      || dialog_init_height != dialog_client->height))
+	{
+	  int req_x = dialog_client->x, req_y = dialog_init_y, 
+	    req_w = dialog_client->width, req_h = dialog_init_height;
+
+	  if (dialog_constrain_geometry(dialog_client, 
+					&req_x, &req_y, 
+					&req_w, &req_h))
+	    {
+	      dialog_client->x = req_x; dialog_client->y = req_y; 
+	      dialog_client->width = req_w; dialog_client->height = req_h;
+	      dialog_client->move_resize(dialog_client);
+	      client_deliver_config(dialog_client);
+	    }
 	}
     }
 

@@ -1334,8 +1334,8 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 
    dbg("%s() for win %s - have w: %i vs %i, h: %i" 
        "vs %i, x: %i vs %i, y: %i vs %i,\n", 
-       __func__, c->name, c->height, req_h, c->width, 
-       req_w, c->x, req_x, req_y, e->y );
+       __func__, c->name, c->width, req_w,
+       c->height, req_h,  c->x, req_x, c->y, req_y );
 
    /* Deal with raising - needs work, not sure if anything really
     * relies on this / or how it fits with mb. 
