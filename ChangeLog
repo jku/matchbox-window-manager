@@ -1,3 +1,9 @@
+2006-04-12  Matthew Allum  <mallum@openedhand.com>
+
+	* src/client_common.c: (client_set_focus):
+	Focus tracking fix moving between dialogs and trans for
+	root dialog. fixs maemo #26095 
+
 2006-04-10  Matthew Allum  <mallum@openedhand.com>
 
 	* src/base_client.c: (base_client_new):
