@@ -601,6 +601,9 @@ theme_frame_paint( MBTheme *theme,
   MBDrawable       *drawable = NULL;
   MBPixbuf         *pixbuf = w->pb;
 
+  if (dw == 0 || dh == 0)
+    return False;
+
   frame = (MBThemeFrame *)list_find_by_id(theme->frames, frame_type);
 
   if (frame == NULL) return False;
