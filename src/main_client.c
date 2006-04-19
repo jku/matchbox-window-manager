@@ -381,6 +381,9 @@ main_client_toggle_fullscreen(Client *c)
 {
   c->flags ^= CLIENT_FULLSCREEN_FLAG;
 
+  ewmh_state_set(c); /* Let win know it fullscreen state has changed, it
+		        could be waiting on this to adjust ui */
+
   main_client_configure(c);
   main_client_move_resize(c);
 
@@ -390,9 +393,6 @@ main_client_toggle_fullscreen(Client *c)
       client_buttons_delete_all(c);    
       c->redraw(c, False);
     }
-
-  ewmh_state_set(c); /* Let win know it fullscreen state has changed, it
-		        could be waiting on this to adjust ui */
 
   wm_activate_client(c); /* Reactivate, stacking order slightly different  */
 
