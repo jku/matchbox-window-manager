@@ -716,28 +716,28 @@ dialog_init_geometry(Client *c)
   switch (c->gravity)
     {
     case NorthGravity:
-      c->y += bdr_north;
+      c->y += (bdr_north + avail_y);
       break;
     case NorthEastGravity:
-      c->y += bdr_north;
-      c->x -= bdr_east;
+      c->y += (bdr_north + avail_y);
+      c->x -= (bdr_east + (w->dpy_width - (avail_x + avail_width)));
       break;
     case WestGravity:
-      c->x += bdr_west;
+      c->x += (bdr_west + avail_x);
       break;
     case EastGravity:
-      c->x -= bdr_east;
+      c->x -= (bdr_east + (w->dpy_width - (avail_x + avail_width)));
       break;
     case SouthWestGravity:
-      c->y -= bdr_south;
-      c->x += bdr_west;
+      c->y -= (bdr_south + (w->dpy_height - (avail_y + avail_height)));
+      c->x += (bdr_west + avail_x);
       break;
     case SouthGravity:
-      c->y -= bdr_south;
+      c->y -= (bdr_south + (w->dpy_height - (avail_y + avail_height)));
       break;
     case SouthEastGravity:
-      c->x -= bdr_east;
-      c->y -= bdr_south;
+      c->x -= (bdr_east + (w->dpy_width - (avail_x + avail_width)));
+      c->y -= (bdr_south + (w->dpy_height - (avail_y + avail_height)));
       break;
     case CenterGravity:
     case NorthWestGravity:
