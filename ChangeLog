@@ -1,3 +1,8 @@
+2006-05-08  Matthew Allum  <mallum@openedhand.com>
+
+	* src/client_common.c: (client_get_highest_transient):
+	Honour client_flags in initial loop. should fix maemo #25281
+
 2006-04-19  Matthew Allum  <mallum@openedhand.com>
 
 	* src/main_client.c: (main_client_toggle_fullscreen):

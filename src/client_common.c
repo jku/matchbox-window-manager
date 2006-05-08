@@ -476,6 +476,9 @@ client_get_highest_transient(Client *c, int client_flags, Client *ignore)
 	{
 	  depth = 0;
 
+	  if (client_flags && !(p->flags & client_flags))
+	    continue;
+
 	  /* Recurse for each directly transient client, getting the depth 
 	   * for any extra matchbox children.
 	  */
