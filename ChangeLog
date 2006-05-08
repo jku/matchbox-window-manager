@@ -1,5 +1,11 @@
 2006-05-08  Matthew Allum  <mallum@openedhand.com>
 
+	* src/toolbar_client_alt.c: (toolbar_client_new),
+	(toolbar_client_configure), (toolbar_client_destroy):
+	Only remember size of affected dialogs for reseting, not position.
+
+2006-05-08  Matthew Allum  <mallum@openedhand.com>
+
 	* src/client_common.c: (client_get_highest_transient):
 	Honour client_flags in initial loop. should fix maemo #25281
 
