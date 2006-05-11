@@ -396,9 +396,10 @@ main_client_toggle_fullscreen(Client *c)
 
   wm_activate_client(c); /* Reactivate, stacking order slightly different  */
 
-  /* start pinging for this change of state */
-  if (c->wm->config->ping_aggressive)
-    ewmh_ping_client_start (c);
+  /* No need to ping here anymore
+   * if (c->wm->config->ping_aggressive)
+   *   ewmh_ping_client_start (c);
+   */ 
 }
 
 

@@ -2635,11 +2635,14 @@ wm_activate_client(Client *c)
 
       if (prev_app_client != new_app_client)
 	{
-	  if (new_app_client && new_app_client->type != MBCLIENT_TYPE_DESKTOP)
-	    {
-	      ewmh_ping_client_start (new_app_client);
-	    }
-
+	  /* Only stop pings here now, activates via NET_ACTIVE
+           *
+	   * if (new_app_client 
+	   *    && new_app_client->type != MBCLIENT_TYPE_DESKTOP)
+	   *  {
+	   *   ewmh_ping_client_start (new_app_client);
+	   *  }
+	  */
 	  if (prev_app_client)
 	    {
 	      ewmh_ping_client_stop (prev_app_client);

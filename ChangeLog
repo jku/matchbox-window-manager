@@ -1,3 +1,12 @@
+2006-05-11  Matthew Allum  <mallum@openedhand.com>
+
+	* src/ewmh.c: (ewmh_handle_root_message):
+	* src/main_client.c: (main_client_toggle_fullscreen):
+	* src/wm.c: (wm_activate_client):
+	Make aggresive pinging a little less aggressive;
+	 - No pinging on fullscreen toggles.
+	 - Only ping on NET_ACTIVE message.
+
 2006-05-08  Matthew Allum  <mallum@openedhand.com>
 
 	* src/toolbar_client_alt.c: (toolbar_client_new),
