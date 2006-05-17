@@ -317,7 +317,7 @@ toolbar_client_destroy(Client *c)
       /* Reset dialog to old size - *no* repositioning currently */
       if (dialog_client && (dialog_init_height != dialog_client->height))
 	{
-	  dialog_client->height = req_h;
+	  dialog_client->height = dialog_init_height;
 	  dialog_client->move_resize(dialog_client);
 	  client_deliver_config(dialog_client);
 	}

@@ -1,6 +1,11 @@
 2006-05-17  Matthew Allum  <mallum@openedhand.com>
 
 	* src/toolbar_client_alt.c: (toolbar_client_destroy):
+	Fix typo snafu with previous commit. 
+
+2006-05-17  Matthew Allum  <mallum@openedhand.com>
+
+	* src/toolbar_client_alt.c: (toolbar_client_destroy):
 	Just change affected dialog height back to original
 	size. Dont try and do anything clever with positioning. 
 
