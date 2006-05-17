@@ -314,21 +314,12 @@ toolbar_client_destroy(Client *c)
     {
       Client *dialog_client = c->trans;
 
-      /* Reset dialog to old position */
+      /* Reset dialog to old size - *no* repositioning currently */
       if (dialog_client && (dialog_init_height != dialog_client->height))
 	{
-	  int req_x = dialog_client->x, req_y = dialog_client->y, 
-	    req_w = dialog_client->width, req_h = dialog_init_height;
-
-	  if (dialog_constrain_geometry(dialog_client, 
-					&req_x, &req_y, 
-					&req_w, &req_h))
-	    {
-	      dialog_client->x = req_x; dialog_client->y = req_y; 
-	      dialog_client->width = req_w; dialog_client->height = req_h;
-	      dialog_client->move_resize(dialog_client);
-	      client_deliver_config(dialog_client);
-	    }
+	  dialog_client->height = req_h;
+	  dialog_client->move_resize(dialog_client);
+	  client_deliver_config(dialog_client);
 	}
     }
 
