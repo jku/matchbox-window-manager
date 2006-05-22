@@ -178,6 +178,8 @@ toolbar_client_configure(Client *c)
 	      dialog_client->x = req_x; dialog_client->y = req_y; 
 	      dialog_client->width = req_w; dialog_client->height = req_h;
 	      dialog_client->move_resize(dialog_client);
+	      /* Force a redraw to be safe */
+	      dialog_client->redraw(dialog_client, False);
 	      client_deliver_config(dialog_client);
 	    }
 
