@@ -321,6 +321,7 @@ toolbar_client_destroy(Client *c)
 	{
 	  dialog_client->height = dialog_init_height;
 	  dialog_client->move_resize(dialog_client);
+	  dialog_client->redraw(dialog_client, False);
 	  client_deliver_config(dialog_client);
 	}
     }

@@ -1,3 +1,8 @@
+2006-05-23  Matthew Allum  <mallum@openedhand.com>
+
+	* src/toolbar_client_alt.c: (toolbar_client_destroy):
+	Add repaint to removal also.
+
 2006-05-22  Matthew Allum  <mallum@openedhand.com>
 
 	* src/toolbar_client_alt.c: (toolbar_client_configure):
