@@ -180,13 +180,17 @@ toolbar_client_show(Client *c)
 
        wm_update_layout(c->wm, c, -(c->height - toolbar_win_offset(c)));
 
-       c->y = c->y - ( c->height - toolbar_win_offset(c));
        if (c->flags & CLIENT_TITLE_HIDDEN_FLAG)
-	 c->x = wm_get_offsets_size(c->wm, WEST,  NULL, False);
+	 {
+	   c->x = wm_get_offsets_size(c->wm, WEST,  NULL, False);
+	 }
        else
-	 c->x = theme_frame_defined_width_get(w->mbtheme,
-					      FRAME_UTILITY_MAX )
-	   + wm_get_offsets_size(c->wm, WEST,  NULL, False);
+	 {
+	   c->x = theme_frame_defined_width_get(w->mbtheme,
+						FRAME_UTILITY_MAX )
+	     + wm_get_offsets_size(c->wm, WEST,  NULL, False);
+	   c->y = c->y - ( c->height - toolbar_win_offset(c));
+	 }
 
        /* destroy buttons so they get recreated ok */   
        client_buttons_delete_all(c);   
@@ -218,12 +222,20 @@ toolbar_client_hide(Client *c)
   c->ignore_unmap++;
   XUnmapWindow(w->dpy, c->window);
   
-  client_buttons_delete_all(c);   
+  if (c->flags & CLIENT_TITLE_HIDDEN_FLAG)
+    {
+      XUnmapWindow(w->dpy, c->frame);
+    }
+  else
+    {
+      client_buttons_delete_all(c);   
   
-  c->x = wm_get_offsets_size(c->wm, WEST,  NULL, False);
+      c->x = wm_get_offsets_size(c->wm, WEST,  NULL, False);
   
-  c->y = c->y +(c->height - theme_frame_defined_height_get(c->wm->mbtheme,
-							   FRAME_UTILITY_MIN));
+      c->y = c->y + c->height 
+               - theme_frame_defined_height_get(c->wm->mbtheme, FRAME_UTILITY_MIN);
+    }
+
   toolbar_client_move_resize(c);
 
   toolbar_client_redraw(c, False);
@@ -318,17 +330,20 @@ toolbar_client_button_press(Client *c, XButtonEvent *e)
 int
 toolbar_win_offset(Client *c)
 {
+  if (c->flags & CLIENT_TITLE_HIDDEN_FLAG) 
+    {
+      dbg("return 0\n");
+      return 0;
+    }
+
    if (c->flags & CLIENT_IS_MINIMIZED)
-   {
-      return theme_frame_defined_height_get(c->wm->mbtheme, 
-					    FRAME_UTILITY_MIN);
-   } else {
-
-     if (c->flags & CLIENT_TITLE_HIDDEN_FLAG) return 0;
-
-     return theme_frame_defined_width_get(c->wm->mbtheme, 
-					  FRAME_UTILITY_MAX);
-   }
+     {
+       return theme_frame_defined_height_get(c->wm->mbtheme, 
+					     FRAME_UTILITY_MIN);
+     } else {
+       return theme_frame_defined_width_get(c->wm->mbtheme, 
+					    FRAME_UTILITY_MAX);
+     }
 }
 
 void

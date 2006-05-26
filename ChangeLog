@@ -1,3 +1,10 @@
+2006-05-26  Matthew Allum  <mallum@openedhand.com>
+
+	* src/toolbar_client.c: (toolbar_client_show),
+	(toolbar_client_hide), (toolbar_client_button_press):
+	Fix for iconizing toolbar windows and there position.
+	Fixes MB bug #95
+
 2006-05-23  Matthew Allum  <mallum@openedhand.com>
 
 	* src/toolbar_client_alt.c: (toolbar_client_destroy):
