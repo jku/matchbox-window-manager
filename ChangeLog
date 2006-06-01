@@ -1,3 +1,11 @@
+2006-06-01  Matthew Allum  <mallum@openedhand.com>
+
+	* src/ewmh.c: (ewmh_hung_app_check):
+	Call XSync() so ping is sent immediatly to be double safe. 
+
+	* src/wm.c: (wm_event_loop):
+	correctly honur PING_INTERVAL, not PING_INTERVAL+1
+
 2006-05-26  Matthew Allum  <mallum@openedhand.com>
 
 	* src/toolbar_client.c: (toolbar_client_show),

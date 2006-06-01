@@ -700,6 +700,7 @@ ewmh_hung_app_check(Wm *w)
 	  */
 	  e.xclient.data.l[1] = c->window;
 	  XSendEvent(w->dpy, c->window, False, 0, &e);
+	  XSync(w->dpy, False);
 
 	  c->pings_sent++;
 
