@@ -1,3 +1,9 @@
+2006-06-06  Matthew Allum  <mallum@openedhand.com>
+
+	* src/base_client.c: (base_client_destroy):
+        Be more careful removing alt ( maemo ) input methods
+        when transient to removed dialog / application.
+
 2006-06-01  Matthew Allum  <mallum@openedhand.com>
 
 	* src/ewmh.c: (ewmh_hung_app_check):

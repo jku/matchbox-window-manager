@@ -464,13 +464,13 @@ base_client_destroy(Client *c)
 {
   Wm *w = c->wm;
   int i = 0;
-  Client *p = NULL;
+  Client *p = NULL, *input_method = NULL;
    /* Free its memory + remove from list */
 
    dbg("%s() called\n", __func__);
 
 
-   /* Update focus list and anythink that is transient for this */
+   /* Update focus list and anything that is transient for this */
    stack_enumerate(w, p)
      {
        if (p->next_focused_client == c)
@@ -485,7 +485,14 @@ base_client_destroy(Client *c)
 #ifdef USE_ALT_INPUT_WIN
 	 {
 	   if (p->flags & (CLIENT_TB_ALT_TRANS_FOR_DIALOG|CLIENT_TB_ALT_TRANS_FOR_APP))
-	     p->hide(p);
+	     {
+	       /* alt input methods ( maemo ) are special cased and 
+                * we need to focibly remove them. We do this later
+                * ( see below ) to be safer with tranciencys and
+                *  no removing in middle of enumeration. 
+	       */
+	       input_method = p;
+	     }
 	   else
 	     p->trans = c->trans;
 	 }
@@ -551,6 +558,18 @@ base_client_destroy(Client *c)
     ewmh_update_lists(w); 
 
     free(c);
+
+#ifdef USE_ALT_INPUT_WIN
+    if (input_method)
+      {
+	 /* were now gone */
+	input_method->trans = NULL;
+	/* Hide will destroy the client */
+	input_method->hide(input_method);
+      }
+#endif
+
+
 }
 
 
