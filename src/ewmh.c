@@ -181,7 +181,9 @@ ewmh_handle_root_message(Wm *w, XClientMessageEvent *e)
 		 wm_activate_client(parent);
 	     }
 	   /* Likely activated by a TN so start pinging if aggresive setup */
-	   if (w->config->ping_aggressive && c->type == MBCLIENT_TYPE_APP)
+	   if (w->config->ping_aggressive 
+	       && c->type == MBCLIENT_TYPE_APP
+	       && c != wm_get_visible_main_client(w))
 	     ewmh_ping_client_start (c);
 	   wm_activate_client(c);
 	 }
