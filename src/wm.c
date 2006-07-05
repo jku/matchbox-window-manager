@@ -2411,7 +2411,7 @@ wm_activate_client(Client *c)
 {
   Wm     *w;
   Client *client_to_focus = c;
-  Bool    set_desktop_show_hint = False;
+  Bool    set_desktop_show_hint = False, set_current_app_active_hint = False;
 #ifndef NO_PING
   Client *prev_app_client = NULL;
 #endif
@@ -2436,7 +2436,6 @@ wm_activate_client(Client *c)
 
   dbg("%s() DESKTOP_RAISED_FLAG is %i\n", 
       __func__, (w->flags & DESKTOP_RAISED_FLAG));
-
 
 
   if (c->type == MBCLIENT_TYPE_APP || c->type == MBCLIENT_TYPE_DESKTOP) 
@@ -2522,8 +2521,8 @@ wm_activate_client(Client *c)
 	}
 
       /* Set active main client, set focus handles active win hint */
-      ewmh_set_current_app_window(w);
-
+      set_current_app_active_hint = True;
+     
 #ifdef USE_ALT_INPUT_WIN
       /* If switching from/to fullscreen, then there could be an 
        * input window transient for a transient for root dialog and
@@ -2621,8 +2620,10 @@ wm_activate_client(Client *c)
       XMapWindow(w->dpy, c->frame);
     }
 
-
   client_set_focus(client_to_focus); /* set focus if needed and ewmh active */
+
+  if (set_current_app_active_hint)
+    ewmh_set_current_app_window(w);
 
   comp_engine_client_show(w, c);
 
