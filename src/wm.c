@@ -1056,7 +1056,7 @@ wm_handle_keypress(Wm *w, XKeyEvent *e)
    
    while (entry != NULL)
      {
-       if (XKeycodeToKeysym(w->dpy,e->keycode,0) == entry->key
+       if (XKeycodeToKeysym(w->dpy, e->keycode, entry->index) == entry->key
 	   && e->state == entry->ModifierMask )
 	{
 	  switch (entry->action) 

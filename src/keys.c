@@ -43,12 +43,27 @@ keys_keysym_needs_shift(Wm *w, KeySym keysym)
   return False;
 }
 
+static KeySym
+keys_keysym_get_shifted (Wm *w, KeySym keysym)
+{
+  int    min_kc, max_kc, keycode;
+  KeySym k;
+
+  XDisplayKeycodes (w->dpy, &min_kc, &max_kc);
+
+  for (keycode = min_kc; keycode <= max_kc; keycode++)
+    if ((k = XKeycodeToKeysym (w->dpy, keycode, 0)) == keysym)
+      return XKeycodeToKeysym (w->dpy, keycode, 1);
+
+  return NoSymbol;
+}
+
 Bool
 keys_add_entry(Wm *w, char *keystr, int action, int idata, char *sdata)
 {
   char *p = keystr;
   char *q;
-  int i = 0, mask = 0;
+  int i = 0, mask = 0, index = 0;
   char *keydef = NULL;
   Bool want_shift = False;
   KeySym ks;
@@ -123,8 +138,6 @@ keys_add_entry(Wm *w, char *keystr, int action, int idata, char *sdata)
 
   if (!keydef) return False;
 
-  dbg("%s() keydefinition is %s, want_shift is %i\n", __func__, keydef, want_shift);
-
   if ((ks = XStringToKeysym(keydef)) == (KeySym)NULL)
     {
       if (islower(keydef[0]))  /* Try again, changing case */
@@ -140,8 +153,32 @@ keys_add_entry(Wm *w, char *keystr, int action, int idata, char *sdata)
 	}
     }
 
-  if (keys_keysym_needs_shift(w, ks) || want_shift)
-    mask |= ShiftMask;
+  if (keys_keysym_needs_shift(w, ks))
+    {
+      mask |= ShiftMask;
+      index = 1;
+    }
+  else if (want_shift)
+    {
+      KeySym shifted;
+
+      /* Change the keysym for case of '<shift>lowerchar' where we
+       * actually want to grab the shifted version of the keysym.
+       */
+      if ((shifted = keys_keysym_get_shifted (w, ks)) != NoSymbol)
+        {
+          ks = shifted;
+          index = 1;
+        }
+
+      /* Set the mask even if no shifted version - <shift>up key for
+       * example.
+       */
+      mask |= ShiftMask;
+    }
+
+
+  dbg("%s() keydefinition is %s, want_shift is %i\n", __func__, keydef, mask & ShiftMask);
 
   /* If we grab keycode 0, we end up grabbing the entire keyboard :\ */
   if (XKeysymToKeycode(w->dpy, ks) == 0 && mask == 0)
@@ -168,6 +205,7 @@ keys_add_entry(Wm *w, char *keystr, int action, int idata, char *sdata)
   entry->next_entry   = NULL;
   entry->action       = action;
   entry->ModifierMask = mask;
+  entry->index        = index;
   entry->key          = ks;
   entry->idata        = idata;
   entry->sdata        = (( sdata == NULL ) ? NULL : strdup(sdata));

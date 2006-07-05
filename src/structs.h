@@ -453,6 +453,7 @@ typedef struct _kbdconfig_entry
   int                      action;
   KeySym                   key;
   int                      ModifierMask;
+  int                      index;
   char                    *sdata;
   int                      idata;
   struct _kbdconfig_entry *next_entry;

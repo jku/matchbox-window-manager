@@ -464,14 +464,16 @@ base_client_destroy(Client *c)
 {
   Wm *w = c->wm;
   int i = 0;
-  Client *p = NULL, *input_method = NULL;
-   /* Free its memory + remove from list */
+  Client *p = NULL;
+#ifdef USE_ALT_INPUT_WIN
+  Client *input_method = NULL;
+#endif
 
-   dbg("%s() called\n", __func__);
+  /* Free its memory + remove from list */
+  dbg("%s() called\n", __func__);
 
-
-   /* Update focus list and anything that is transient for this */
-   stack_enumerate(w, p)
+  /* Update focus list and anything that is transient for this */
+  stack_enumerate(w, p)
      {
        if (p->next_focused_client == c)
 	 p->next_focused_client = c->next_focused_client;

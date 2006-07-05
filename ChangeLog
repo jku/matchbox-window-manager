@@ -1,5 +1,14 @@
 2006-07-05  Matthew Allum  <mallum@openedhand.com>
 
+	* src/base_client.c: (base_client_destroy):
+	Fix compiler warning when not building with alt input wins.
+	* src/structs.h:
+	* src/keys.c: (keys_keysym_needs_shift), (keys_add_entry):
+	* src/wm.c: (wm_handle_keypress):
+	Fixes for better handling shifted key shortcuts.
+
+2006-07-05  Matthew Allum  <mallum@openedhand.com>
+
 	* src/wm.c: (wm_activate_client):
 	Set the active app root prop *after* setting new list
 	props as to avoid sync issues in apps using this info. 
