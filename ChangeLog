@@ -1,3 +1,11 @@
+2006-07-19  Matthew Allum  <mallum@openedhand.com>
+
+	* src/keys.c: (keys_load_config):
+	* src/structs.h:
+	* src/wm.c: (wm_usage), (wm_load_config):
+	Add support for '-kbdconfig' cmd line option to specify
+	an alternate key shortcut config file.
+
 2006-07-05  Matthew Allum  <mallum@openedhand.com>
 
 	* src/base_client.c: (base_client_destroy):

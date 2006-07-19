@@ -508,6 +508,7 @@ typedef struct _wm_config
   Bool         ping_aggressive;
   
   MBConfigKbd *kb;
+  char        *kbd_conf_file;
 
   char        *force_dialogs;
   char        *sm_client_id;

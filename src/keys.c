@@ -323,7 +323,10 @@ keys_load_config(Wm *w)
     { NULL, 0 }
   };
 
-  if (getenv("HOME"))
+  if (w->config->kbd_conf_file != NULL)
+    conf_path = w->config->kbd_conf_file;
+
+  if (conf_path == NULL && getenv("HOME"))
     {
       conf_path = malloc(sizeof(char)*(strlen(getenv("HOME"))+25));
       sprintf(conf_path, "%s/.matchbox/kbdconfig", getenv("HOME"));

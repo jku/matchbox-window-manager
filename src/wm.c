@@ -188,6 +188,9 @@ wm_usage(char *progname)
    printf("\t-use_desktop_mode <decorated|plain>\n");
    printf("\t-use_super_modal  <yes|no>\n");
    printf("\t-force_dialogs    <comma seperated list of window titles>\n");
+#ifndef NO_KBD
+   printf("\t-kbdconfig        <path to option key shortcuts config file>\n");
+#endif
 #ifdef USE_SM
    printf("\t--sm-client-id    <session id>\n");
 #endif
@@ -423,7 +426,14 @@ wm_load_config (Wm   *w,
 	  w->config->force_dialogs = argv[i];
 	  continue;
 	}
-
+#ifndef NO_KBD
+      if (!strcmp ("-kbdconfig", argv[i])) 
+	{
+	  if (++i>=*argc) wm_usage (argv[0]);
+	  w->conf->kbd_conf_file = argv[i];
+	  continue;
+	}
+#endif
 #ifdef USE_SM
    if (!strcmp ("--sm-client-id", argv[i]))
      {
@@ -455,7 +465,7 @@ wm_load_config (Wm   *w,
    char              *type;
    XrmValue          value;
    
-   static int opTableEntries = 11;
+   static int opTableEntries = 12;
    static XrmOptionDescRec opTable[] = {
       {"-theme",       ".theme",           XrmoptionSepArg, (XPointer) NULL},
       {"-use_titlebar",".titlebar",        XrmoptionSepArg, (XPointer) NULL},
@@ -468,6 +478,7 @@ wm_load_config (Wm   *w,
       {"-force_dialogs",  ".forcedialogs", XrmoptionSepArg, (XPointer) NULL},
       {"--sm-client-id",  ".session",      XrmoptionSepArg, (XPointer) NULL},
       {"-use_super_modal", ".supermodal",  XrmoptionSepArg, (XPointer) NULL},
+      {"-kbdconfig", ".kbdconfig",         XrmoptionSepArg, (XPointer) NULL},
    };
 
    XrmInitialize();
@@ -512,7 +523,6 @@ wm_load_config (Wm   *w,
      {
        srDB = XrmGetStringDatabase(XResourceManagerString(w->dpy));
        if (srDB) XrmCombineDatabase(srDB, &rDB, False);
-
      }
 
    if (XrmGetResource(rDB, "matchbox.theme",
@@ -541,6 +551,18 @@ wm_load_config (Wm   *w,
      w->config->force_dialogs[value.size] = '\0';
      dbg("%s() got force dialogs :%s ", __func__, w->config->force_dialogs);
    }
+
+#ifndef NO_KBD
+   if (XrmGetResource(rDB, "matchbox.kbdconfig",
+		      "Matchbox.Keybdconfig",
+		      &type, &value) == True)
+   {
+     w->config->kbd_conf_file = (char *)malloc(sizeof(char)*(value.size+1));
+     strncpy(w->config->kbd_conf_file, value.addr, (int) value.size);
+     w->config->kbd_conf_file[value.size] = '\0';
+     dbg("%s() got kbdconfig :%s ", __func__, w->config->kbd_conf_file);
+   }
+#endif
    
    if (XrmGetResource(rDB, "matchbox.titlebar", "Matchbox.Titlebar",
 		      &type, &value) == True)
