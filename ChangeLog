@@ -1,3 +1,8 @@
+2006-07-28  Matthew Allum  <mallum@openedhand.com>
+
+	* src/wm.c: (wm_load_config):
+	Fix typo in non XRDB cmd line parser.
+
 2006-07-19  Matthew Allum  <mallum@openedhand.com>
 
 	* src/keys.c: (keys_load_config):

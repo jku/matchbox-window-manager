@@ -430,7 +430,7 @@ wm_load_config (Wm   *w,
       if (!strcmp ("-kbdconfig", argv[i])) 
 	{
 	  if (++i>=*argc) wm_usage (argv[0]);
-	  w->conf->kbd_conf_file = argv[i];
+	  w->config->kbd_conf_file = argv[i];
 	  continue;
 	}
 #endif
