@@ -362,6 +362,9 @@ client_get_transient_list(Wm *w, MBList **list, Client *c)
 	{
 	  Client *trans = p->trans;
 
+	  dbg("%s() checking <%s> trans for <%s>\n",
+	      __func__, p->name, trans ? trans->name : "nothing");
+
 	  if (c == NULL) 
 	    { 			
 	      /* Transient for root dialogs */

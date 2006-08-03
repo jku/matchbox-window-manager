@@ -1,3 +1,17 @@
+2006-08-03  Matthew Allum  <mallum@openedhand.com>
+
+	* src/client_common.c: (client_get_transient_list):
+	* src/ewmh.c: (ewmh_init):
+	* src/main_client.c: (main_client_configure),
+	(main_client_title_height), (main_client_get_coverage),
+	(main_client_reparent), (main_client_move_resize),
+	(main_client_toggle_fullscreen), (main_client_redraw),
+	(main_client_button_press), (main_client_toggle_title_bar):
+	* src/structs.h:
+	* src/wm.c: (wm_handle_property_change), (wm_make_new_client),
+	(wm_activate_client):
+	Add support for decoration less application windows. 	
+
 2006-07-28  Matthew Allum  <mallum@openedhand.com>
 
 	* src/wm.c: (wm_load_config):

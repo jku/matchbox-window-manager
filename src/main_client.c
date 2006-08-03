@@ -186,13 +186,15 @@ main_client_configure(Client *c)
 
   int h = wm_get_offsets_size(w, SOUTH, NULL, True);
 
+  if (c->flags & CLIENT_TITLE_HIDDEN_FLAG) /* Decorations */
+    frm_size = offset_south = offset_east = offset_west = 0;
+
    if ( c->flags & CLIENT_FULLSCREEN_FLAG )
      { 
        c->y = 0;  
        c->x = 0;
        c->width  = w->dpy_width;
        c->height = w->dpy_height - main_client_manage_toolbars_for_fullscreen(c, True);
-       
      }
    else
      {
@@ -208,8 +210,6 @@ main_client_configure(Client *c)
        c->height = c->wm->dpy_height - c->y - h - offset_south;
        main_client_manage_toolbars_for_fullscreen(c, False);
 #endif
-
-
      }
 
    dbg("%s() configured as %i*%i+%i+%i, frame size is %i\n", 
@@ -224,7 +224,9 @@ main_client_title_height(Client *c)
     return 0;
 
   if ( (!c->wm->config->use_title)
-       || c->flags & CLIENT_FULLSCREEN_FLAG) return 0;
+       || c->flags & CLIENT_FULLSCREEN_FLAG
+       || c->flags & CLIENT_TITLE_HIDDEN_FLAG) 
+    return 0;
 
   if ((c->wm->flags & TITLE_HIDDEN_FLAG) && c->type == MBCLIENT_TYPE_APP)
     return TITLE_HIDDEN_SZ;
@@ -241,6 +243,9 @@ main_client_get_coverage(Client *c, int *x, int *y, int *w, int *h)
 						   FRAME_MAIN_EAST );
   int offset_west  = theme_frame_defined_width_get(c->wm->mbtheme, 
 						   FRAME_MAIN_WEST );
+
+  if (c->flags & CLIENT_TITLE_HIDDEN_FLAG)
+    offset_south = offset_east = offset_west = 0; 
 
    *x = c->x - offset_west; 
    *y = c->y - main_client_title_height(c);
@@ -268,6 +273,9 @@ main_client_reparent(Client *c)
   attr.background_pixel  = w->grey_col.pixel; /* BlackPixel(w->dpy, w->screen); */
   attr.event_mask         = ChildMask|ButtonMask|ExposureMask;
 
+  if (c->flags & CLIENT_TITLE_HIDDEN_FLAG)
+    offset_south = offset_east = offset_west = 0; 
+
   c->frame =
     XCreateWindow(w->dpy, w->root, 
 		  c->x - offset_west, 
@@ -293,13 +301,13 @@ main_client_reparent(Client *c)
 							FRAME_MAIN);
   }
 
-
-  client_decor_frames_init(c, 
-			   offset_west, 
-			   offset_east, 
-			   ( c->flags & CLIENT_FULLSCREEN_FLAG) ?
-			    : offset_north, 
-			   offset_south);
+  if (!(c->flags & CLIENT_TITLE_HIDDEN_FLAG))
+    client_decor_frames_init(c, 
+			     offset_west, 
+			     offset_east, 
+			     ( c->flags & CLIENT_FULLSCREEN_FLAG) ?
+			     : offset_north, 
+			     offset_south);
 
   XClearWindow(w->dpy, c->frame);
 
@@ -321,6 +329,10 @@ main_client_move_resize(Client *c)
 						   FRAME_MAIN_EAST );
   int offset_west  = theme_frame_defined_width_get(w->mbtheme, 
 						   FRAME_MAIN_WEST );
+
+  if (c->flags & CLIENT_TITLE_HIDDEN_FLAG)
+    offset_south = offset_east = offset_west = 0; 
+
   base_client_move_resize(c);
 
   XMoveResizeWindow(w->dpy, c->window, 
@@ -414,8 +426,9 @@ main_client_redraw(Client *c, Bool use_cache)
 
   dbg("%s() called on %s\n", __func__, c->name);
 
-   if (!w->config->use_title) return;
-
+   if (!w->config->use_title || c->flags & CLIENT_TITLE_HIDDEN_FLAG)
+     return;
+   
    if (w->flags & TITLE_HIDDEN_FLAG)
    {
      XUnmapWindow(w->dpy, client_title_frame(c));
@@ -681,6 +694,9 @@ main_client_toggle_title_bar(Client *c)
   Client *p = NULL;
   int prev_height = main_client_title_height(c);
   int y_offset = wm_get_offsets_size(c->wm, NORTH, NULL, False);
+
+  if (c->flags & CLIENT_TITLE_HIDDEN_FLAG)
+    return;
   
   w->flags ^= TITLE_HIDDEN_FLAG;
   

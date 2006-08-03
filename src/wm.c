@@ -1768,6 +1768,8 @@ wm_handle_property_change(Wm *w, XPropertyEvent *e)
       Window  trans_win = 0;
       int     success = 0;
 
+      dbg("%s() got a tranciency change\n", __func__);
+
       misc_trap_xerrors(); 
 
       success = XGetTransientForHint(w->dpy, c->window, &trans_win);
@@ -1776,6 +1778,8 @@ wm_handle_property_change(Wm *w, XPropertyEvent *e)
 	if ((new_trans_client = wm_find_client(w, trans_win, WINDOW)) != NULL)
 	  {
 	    Client *p = new_trans_client;
+
+	    dbg("%s() <%s> changing trans", __func__, new_trans_client->name);
 
 	    /* Dont let clients be change transiency to themselves
              * either directly or recursively.
@@ -1971,6 +1975,12 @@ wm_make_new_client(Wm *w, Window win)
 		   c = dialog_client_new(w, win, NULL);
 		   if (c == NULL) goto end;
 		   c->flags |= CLIENT_HAS_URGENCY_FLAG;
+		 }
+	       else if (value[0] == w->atoms[WINDOW_TYPE_NORMAL])
+		 {
+		   c = main_client_new(w, win);
+		   if (c == NULL) goto end;
+		   c->flags ^= mwm_flags;
 		 }
 	     } 
 	 }
@@ -2509,6 +2519,9 @@ wm_activate_client(Client *c)
 	}
 
       stack_move_type_above_client(w, MBCLIENT_TYPE_TOOLBAR, c);
+
+      dbg("%s() c is trans for <%s>\n", __func__,
+	  c->trans ? c->trans->name : "nothing");
 
       wm_stack_dialogs_for_transient(w, c);
 
