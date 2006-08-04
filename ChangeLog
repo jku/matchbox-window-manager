@@ -1,3 +1,11 @@
+2006-08-04  =============== 1.1 Release. =====================
+
+2006-08-04  Matthew Allum  <mallum@openedhand.com>
+
+	* NEWS:
+	* configure.ac:
+	Bump up version to 1.1
+
 2006-08-03  Matthew Allum  <mallum@openedhand.com>
 
 	* src/client_common.c: (client_get_transient_list):
@@ -165,7 +173,7 @@
 	* src/dialog_client.c: (dialog_client_set_focus_next):
 	Focus fixes for case of multiple trans for root dialogs.
 
-2006-03-07  1.0 Release.
+2006-03-07  =============== 1.0 Release. =====================
 
 2006-03-07  Matthew Allum  <mallum@openedhand.com>
 
