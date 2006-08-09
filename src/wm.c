@@ -2502,11 +2502,21 @@ wm_activate_client(Client *c)
          that way.                                                      */
 
       if (w->focused_client 
-	  && w->focused_client->type == MBCLIENT_TYPE_DIALOG
-	  && w->focused_client->trans == NULL)
+	  && w->focused_client->type == MBCLIENT_TYPE_DIALOG)
 	{
-	  dbg("%s() keeping focus to root dialog\n", __func__);
-	  client_to_focus = w->focused_client;
+	  Client *lowest_dialog = w->focused_client;
+
+	  /* Get lowest transient dialog, and check its trans for root  */
+	  while (lowest_dialog->trans != NULL 
+		 && lowest_dialog->type == MBCLIENT_TYPE_DIALOG)
+	    lowest_dialog = lowest_dialog->trans;
+
+	  if (lowest_dialog->trans == NULL 
+	      && lowest_dialog->type == MBCLIENT_TYPE_DIALOG)
+	    {
+	      dbg("%s() keeping focus to root dialog\n", __func__);
+	      client_to_focus = w->focused_client;
+	    }
 	}
 
       /* Raise panel + toolbars just above app but below app dialogs */
