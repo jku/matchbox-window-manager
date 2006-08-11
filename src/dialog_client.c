@@ -319,7 +319,8 @@ dialog_client_show(Client *c)
 	    }
 	}
 
-      if (lowest_trans->win_group 
+      if (c->trans->type != MBCLIENT_TYPE_DIALOG
+	  && lowest_trans->win_group 
 	  && (lowest_trans->type == MBCLIENT_TYPE_DESKTOP
 	      || lowest_trans->type == MBCLIENT_TYPE_APP))
 	{
@@ -327,7 +328,7 @@ dialog_client_show(Client *c)
 
 	  visible = wm_get_visible_main_client(w);
 
-	  if (visible 
+	  if (visible
 	      && visible != lowest_trans 
 	      && visible->win_group == lowest_trans->win_group)
 	    stack_move_above_client(c, visible);
@@ -335,6 +336,7 @@ dialog_client_show(Client *c)
     }
   else
     stack_move_top(c);
+
 
   /* Now move any transients for us above us */
 

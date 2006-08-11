@@ -1,3 +1,10 @@
+2006-08-11  Matthew Allum  <mallum@openedhand.com>
+
+	* src/dialog_client.c: (dialog_client_show):
+	* src/stack.c: (stack_dump):
+	* src/wm.c: (wm_activate_client):
+	Grouped dialog stacking fixes (see maemo #36977)
+
 2006-08-09  Matthew Allum  <mallum@openedhand.com>
 
 	* src/wm.c: (wm_activate_client):

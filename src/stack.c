@@ -325,11 +325,12 @@ stack_dump(Wm *w)
 	 w->stack_top->name, w->stack_top->above, 
 	 w->stack_bottom->name, w->stack_bottom->below);
 
+  printf("--- bottom ---\n");
   stack_enumerate(w,c)
     {
-      printf("%s\n", c->name ? c->name : "Not Set");
+      printf("%s ( grp: %i )\n", c->name ? c->name : "Not Set", c->win_group );
     }
-
+  printf("--- top ---\n");
 
   printf("\n---------------------------------------------------------\n\n");
 #endif

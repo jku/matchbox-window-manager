@@ -2617,16 +2617,19 @@ wm_activate_client(Client *c)
        * not currently at the top of the stack. In which case
        * dont try and focus it.
       */
-      if (c->trans != NULL) 	/* not trans for root */
+      if (c->trans != NULL && wm_get_visible_main_client(w))   
 	{
 	  Client *dialog_parent = c->trans;
+
+	  top_main_client = wm_get_visible_main_client(w);
 
 	  while (dialog_parent->trans != NULL)
 	    dialog_parent = dialog_parent->trans;
 
 	  if ( (dialog_parent->type == MBCLIENT_TYPE_APP
 		|| dialog_parent->type == MBCLIENT_TYPE_DESKTOP)
-	       && wm_get_visible_main_client(w) != dialog_parent)
+	       && top_main_client != dialog_parent
+	       && top_main_client->win_group != c->win_group)
 	    client_to_focus = NULL;
 	}
     }
