@@ -2190,6 +2190,8 @@ wm_update_layout(Wm         *w,
 	     switch (p->type)
 	       {
 	       case MBCLIENT_TYPE_APP :
+		 if (p->flags & CLIENT_FULLSCREEN_FLAG)
+		   break;
 		 p->width += change_amount;
 		 p->x     -= change_amount;
 		 p->move_resize(p);
@@ -2240,6 +2242,8 @@ wm_update_layout(Wm         *w,
 	     switch (p->type)
 	       {
 	       case MBCLIENT_TYPE_APP :
+		 if (p->flags & CLIENT_FULLSCREEN_FLAG)
+		   break;
 		 p->width += change_amount;
 		 p->move_resize(p);
 		 client_deliver_config(p);
@@ -2293,6 +2297,8 @@ wm_update_layout(Wm         *w,
 	     switch (p->type)
 	       {
 	       case MBCLIENT_TYPE_APP :
+		 if (p->flags & CLIENT_FULLSCREEN_FLAG)
+		   break;
 		 p->height += change_amount;
 		 p->y      -= change_amount;
 		 p->move_resize(p);
@@ -2339,6 +2345,9 @@ wm_update_layout(Wm         *w,
 	     switch (p->type)
 	       {
 	       case MBCLIENT_TYPE_APP :
+		 if (p->flags & CLIENT_FULLSCREEN_FLAG
+		     && client_changed->type == MBCLIENT_TYPE_PANEL)
+		   break;
 		 p->height += change_amount;
 		 p->move_resize(p);
 		 /*
