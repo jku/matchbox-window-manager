@@ -21,6 +21,10 @@
 #include "wm.h"
 #include "config.h"
 
+#ifdef HAVE_XFIXES
+#include <X11/extensions/Xfixes.h> /* Used to *really* hide cursor */
+#endif
+
 #ifdef USE_XSETTINGS
 static void wm_xsettings_notify_cb (const char       *name,
 				    XSettingsAction   action,
@@ -2829,23 +2833,57 @@ wm_toggle_desktop(Wm *w)
 void
 wm_set_cursor_visibility(Wm *w, Bool visible)
 {
-  /* TODO: do we need to free the cursors ? */
-  if (visible)
+#ifdef HAVE_XFIXES
+  int major = 0, minor = 0, ev_base, err_base;
+
+  if (XFixesQueryExtension (w->dpy, &ev_base, &err_base))
+    XFixesQueryVersion (w->dpy, &major, &minor);
+
+  dbg("Checking Xfixes, got %i.%i , ev (%i), err (%i)",
+      major, minor, ev_base, err_base);
+
+  if (major >= 4)
     {
-      w->config->no_cursor = False;
       w->curs = XCreateFontCursor(w->dpy, XC_left_ptr);
+      XDefineCursor(w->dpy, w->root, w->curs);
+
+      if (visible)
+	{
+	  w->config->no_cursor = False;
+	  misc_trap_xerrors();
+	  /* Appears to fire X error if not already hidden 
+           * but no way to query that ?
+	  */
+	  XFixesShowCursor (w->dpy, w->root);
+	  XSync(w->dpy, False);
+	  misc_untrap_xerrors();
+	}
+      else
+	{
+	  XFixesHideCursor (w->dpy, w->root);
+	}
     }
   else
+#endif
     {
-      Pixmap pix = XCreatePixmap (w->dpy, w->root, 1, 1, 1);
-      XColor col;
-      memset (&col, 0, sizeof (col));
-      w->blank_curs = XCreatePixmapCursor (w->dpy, pix, pix, &col, &col, 1, 1);
-      w->curs = w->blank_curs;
-      XFreePixmap (w->dpy, pix);
-      w->config->no_cursor = True;
-    }     
-   XDefineCursor(w->dpy, w->root, w->curs);
+      /* FIXME: do we need to free the cursors ? */
+      if (visible)
+	{
+	  w->config->no_cursor = False;
+	  w->curs = XCreateFontCursor(w->dpy, XC_left_ptr);
+	}
+      else
+	{
+	  Pixmap pix = XCreatePixmap (w->dpy, w->root, 1, 1, 1);
+	  XColor col;
+	  memset (&col, 0, sizeof (col));
+	  w->blank_curs = XCreatePixmapCursor (w->dpy, pix, pix, &col, &col, 1, 1);
+	  w->curs = w->blank_curs;
+	  XFreePixmap (w->dpy, pix);
+	  w->config->no_cursor = True;
+	}     
+      XDefineCursor(w->dpy, w->root, w->curs);
+    }
 }
 
 Client *

@@ -1,5 +1,13 @@
 2006-08-24  Matthew Allum  <mallum@openedhand.com>
 
+	* configure.ac:
+	* src/Makefile.am:
+	* src/wm.c:
+	Support XFixesHide/ShowCursor if XFixes lib and recent 
+        enough extension available. Really hides cursor now.
+
+2006-08-24  Matthew Allum  <mallum@openedhand.com>
+
 	* src/wm.c: (wm_update_layout):
 	Dont let panels changing size ( or unmapping ) effect
 	fullscreen app windows.

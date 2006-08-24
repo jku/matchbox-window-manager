@@ -251,6 +251,14 @@ if test x$enable_composite != xno; then
 
 fi
 
+dnl ------ XFixes Curosr removal check ------------------------------------
+
+PKG_CHECK_MODULES(XFIXES, xfixes >= 0.2, have_xfixes=yes, have_xfixes=no)
+
+if test x$have_xfixes = xyes; then
+  AC_DEFINE(HAVE_XFIXES, [1], [Use XFixes ext to really hide cursor])
+fi
+
 dnl ------ Expat ------------------------------------------------------------
 
 if test x$enable_expat != xno; then
@@ -454,6 +462,9 @@ AC_SUBST(SN_CFLAGS)
 AC_SUBST(GCONF_LIBS)
 AC_SUBST(GCONF_CFLAGS)
 AC_SUBST(GCONF_SCHEMA_SUBDIRS)
+
+AC_SUBST(XFIXES_CFLAGS)
+AC_SUBST(XFIXES_LIBS)
 
 dnl ------ Standard Stuff -
 
