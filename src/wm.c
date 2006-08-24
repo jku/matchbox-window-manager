@@ -2152,6 +2152,13 @@ wm_remove_client(Wm *w, Client *c)
 
   c->destroy(c);
 
+  /* If no clients left, force update of active props accordingly */
+  if (stack_empty(w) || wm_get_visible_main_client(w) == NULL)
+    {
+      ewmh_set_current_app_window(w);
+      ewmh_set_active(w);
+    }
+
   XUngrabServer(w->dpy);
 }
 

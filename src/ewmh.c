@@ -381,50 +381,65 @@ ewmh_update_lists(Wm *w)
 
   /* Root window client win lists */
 
-   if (!stack_empty(w))
-   {
-     MBList *item = NULL;
-     Window *app_wins = NULL;
-     int     app_win_cnt = 0;
-
-     dbg("%s(): updating ewmh list props %i items\n", 
-	 __func__, n_stack_items(w) ) ;   
-
-     wins     = malloc(sizeof(Window)*n_stack_items(w));
-     app_wins = malloc(sizeof(Window)*n_stack_items(w));
-
-     stack_enumerate(w,c)
-       {
-	 wins[cnt++] = c->window;
-	 if (c->type == MBCLIENT_TYPE_APP)
-	   app_wins[app_win_cnt++] = c->window;
-       }
-  
-     XChangeProperty(w->dpy, w->root, w->atoms[_NET_CLIENT_LIST_STACKING] ,
-		     XA_WINDOW, 32, PropModeReplace,
-		     (unsigned char *)wins, n_stack_items(w));
-
-     XChangeProperty(w->dpy, w->root, w->atoms[_MB_APP_WINDOW_LIST_STACKING],
-		     XA_WINDOW, 32, PropModeReplace,
-		     (unsigned char *)app_wins, app_win_cnt);
-
-     free(app_wins);
-
-     /* Update _NET_CLIENT_LIST but with 'age' order rathe rthan stacking */
-
-     cnt = 0;
-
-     list_enumerate(w->client_age_list, item)
-       {
-	 c = (Client*)item->data;
-	 wins[cnt++] = c->window;
+  if (!stack_empty(w))
+    {
+      MBList *item = NULL;
+      Window *app_wins = NULL;
+      int     app_win_cnt = 0;
+      
+      dbg("%s(): updating ewmh list props %i items\n", 
+	  __func__, n_stack_items(w) ) ;   
+      
+      wins     = malloc(sizeof(Window)*n_stack_items(w));
+      app_wins = malloc(sizeof(Window)*n_stack_items(w));
+      
+      stack_enumerate(w,c)
+	{
+	  wins[cnt++] = c->window;
+	  if (c->type == MBCLIENT_TYPE_APP)
+	    app_wins[app_win_cnt++] = c->window;
+	}
+      
+      XChangeProperty(w->dpy, w->root, w->atoms[_NET_CLIENT_LIST_STACKING] ,
+		      XA_WINDOW, 32, PropModeReplace,
+		      (unsigned char *)wins, n_stack_items(w));
+      
+      XChangeProperty(w->dpy, w->root, w->atoms[_MB_APP_WINDOW_LIST_STACKING],
+		      XA_WINDOW, 32, PropModeReplace,
+		      (unsigned char *)app_wins, app_win_cnt);
+      
+      free(app_wins);
+      
+      /* Update _NET_CLIENT_LIST but with 'age' order rather than stacking */
+      
+      cnt = 0;
+      
+      list_enumerate(w->client_age_list, item)
+	{
+	  c = (Client*)item->data;
+	  wins[cnt++] = c->window;
 	 dbg("%s() adding %s\n", __func__, c->name);
-       }
+	}
+      
+      XChangeProperty(w->dpy, w->root, w->atoms[_NET_CLIENT_LIST] ,
+		      XA_WINDOW, 32, PropModeReplace,
+		      (unsigned char *)wins, n_stack_items(w));
+    }
+  else
+    {
+      /* No managed windows */
+      XChangeProperty(w->dpy, w->root, w->atoms[_NET_CLIENT_LIST_STACKING] ,
+		      XA_WINDOW, 32, PropModeReplace,
+		      NULL, 0);
+      
+      XChangeProperty(w->dpy, w->root, w->atoms[_MB_APP_WINDOW_LIST_STACKING],
+		      XA_WINDOW, 32, PropModeReplace,
+		      NULL, 0);
 
-     XChangeProperty(w->dpy, w->root, w->atoms[_NET_CLIENT_LIST] ,
-		     XA_WINDOW, 32, PropModeReplace,
-		     (unsigned char *)wins, n_stack_items(w));
-   }
+      XChangeProperty(w->dpy, w->root, w->atoms[_NET_CLIENT_LIST] ,
+		      XA_WINDOW, 32, PropModeReplace,
+		      NULL, 0);
+    }
 
   if (wins)
     free(wins);
