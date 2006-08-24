@@ -1,5 +1,11 @@
 2006-08-24  Matthew Allum  <mallum@openedhand.com>
 
+	* src/wm.c: (wm_remove_client):
+	Only check for lack of main win, not desktop also
+	for mb app active prop update ( see last commit )
+
+2006-08-24  Matthew Allum  <mallum@openedhand.com>
+
 	* src/ewmh.c: (ewmh_update_lists):
 	* src/wm.c: (wm_remove_client):
 	Set root win list and active props accordingly when

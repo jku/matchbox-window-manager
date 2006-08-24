@@ -2153,7 +2153,7 @@ wm_remove_client(Wm *w, Client *c)
   c->destroy(c);
 
   /* If no clients left, force update of active props accordingly */
-  if (stack_empty(w) || wm_get_visible_main_client(w) == NULL)
+  if (stack_empty(w) || w->stack_top_app == NULL)
     {
       ewmh_set_current_app_window(w);
       ewmh_set_active(w);
