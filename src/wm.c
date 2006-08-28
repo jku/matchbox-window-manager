@@ -1958,7 +1958,7 @@ wm_make_new_client(Wm *w, Window win)
 		   dbg("%s() got splash atom\n", __func__ );
 		   c = dialog_client_new(w, win, NULL);
 		   if (c == NULL) goto end;
-		   c->flags ^= CLIENT_TITLE_HIDDEN_FLAG;
+		   c->flags |= (CLIENT_TITLE_HIDDEN_FLAG|CLIENT_IS_SPLASH_WIN);
 		 }
 	       else if (value[0] == w->atoms[WINDOW_TYPE_DIALOG]
 			|| value[0] == w->atoms[WINDOW_TYPE_MENU])

@@ -96,9 +96,6 @@ base_client_new(Wm *w, Window win)
    c->width  = attr.width;
    c->height = attr.height;
 
-   if (c->x < 0) c->x = (w->dpy_width + c->x - c->width);
-   if (c->y < 0) c->y = (w->dpy_height + c->y - c->height);
-
    c->gravity = NorthWestGravity;
 
    if (XGetWMNormalHints(w->dpy, c->window, &sz_hints, &mask))

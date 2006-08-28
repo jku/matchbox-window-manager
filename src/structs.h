@@ -297,6 +297,7 @@ typedef struct _mb_client_button
 #define CLIENT_IS_MENU_DIALOG ( 1<<30)
 
 #define CLIENT_DELAY_MAPPING  ( 1<<31)
+#define CLIENT_IS_SPLASH_WIN  ( 1<<0)
 
 #ifdef USE_ALT_INPUT_WIN
 #define CLIENT_TB_ALT_TRANS_FOR_DIALOG (1<<28)
@@ -377,7 +378,7 @@ typedef struct _client
   /* State stuff */
 
   int		    ignore_unmap;
-  int               flags;
+  long              flags;
 
   /* Hung app support */
 

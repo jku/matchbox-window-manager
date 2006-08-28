@@ -1,3 +1,15 @@
+2006-08-28  Matthew Allum  <mallum@openedhand.com>
+
+	* src/base_client.c: (base_client_new):
+	Remove spurious repositioning if client positioned
+	with negative positions ( should get fixed later ).	
+
+	* src/structs.h:
+	* src/dialog_client.c: (dialog_init_geometry):
+	* src/wm.c: (wm_make_new_client):
+	Only center 0,0 non decorated clients if they have
+	splash screen hint set.
+
 2006-08-24  Matthew Allum  <mallum@openedhand.com>
 
 	* configure.ac:
