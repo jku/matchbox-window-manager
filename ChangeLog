@@ -1,5 +1,12 @@
 2006-08-28  Matthew Allum  <mallum@openedhand.com>
 
+	* src/dialog_client.c: (dialog_init_geometry):
+	Still allow decorationless dialogs to position
+	themselves freely - fixes error in previous commit. 
+	( Thanks to Marco )
+
+2006-08-28  Matthew Allum  <mallum@openedhand.com>
+
 	* src/base_client.c: (base_client_new):
 	Remove spurious repositioning if client positioned
 	with negative positions ( should get fixed later ).	

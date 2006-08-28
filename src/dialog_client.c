@@ -686,14 +686,16 @@ dialog_init_geometry(Client *c)
   /* Allow decorationless dialogs to position themselves anywhere 
    * But centered initially if 0,0 and a splash screen.
   */
-  if (c->flags & (CLIENT_TITLE_HIDDEN_FLAG|CLIENT_IS_SPLASH_WIN))
+  if (c->flags & (CLIENT_TITLE_HIDDEN_FLAG))
     {
-      if (c->height < w->dpy_height)
-	c->y = (w->dpy_height - c->height)/2;
+      if (c->flags & CLIENT_IS_SPLASH_WIN)
+	{
+	  if (c->height < w->dpy_height)
+	    c->y = (w->dpy_height - c->height)/2;
       
-      if (c->width < w->dpy_width)
-	c->x = (w->dpy_width - c->width)/2;
-
+	  if (c->width < w->dpy_width)
+	    c->x = (w->dpy_width - c->width)/2;
+	}
       return;
     }
 
