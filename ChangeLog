@@ -1,3 +1,8 @@
+2006-08-29  Matthew Allum  <mallum@openedhand.com>
+
+	* configure.ac:
+	Check for xfixes >= 4.0 rather than 2.0.
+
 2006-08-28  Matthew Allum  <mallum@openedhand.com>
 
 	* src/dialog_client.c: (dialog_init_geometry):
