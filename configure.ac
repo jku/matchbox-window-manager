@@ -253,7 +253,7 @@ fi
 
 dnl ------ XFixes Curosr removal check ------------------------------------
 
-PKG_CHECK_MODULES(XFIXES, xfixes >= 0.4, have_xfixes=yes, have_xfixes=no)
+PKG_CHECK_MODULES(XFIXES, xfixes >= 4.0, have_xfixes=yes, have_xfixes=no)
 
 if test x$have_xfixes = xyes; then
   AC_DEFINE(HAVE_XFIXES, [1], [Use XFixes ext to really hide cursor])
