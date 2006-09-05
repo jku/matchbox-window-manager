@@ -1,3 +1,14 @@
+2006-09-05  Matthew Allum  <mallum@openedhand.com>
+
+	* src/dialog_client.c:
+	Redo dialog dragging code to use XShape for outlines
+	rather that XOR'ing. 
+
+2006-08-31  Matthew Allum  <mallum@openedhand.com>
+
+	* configure.ac:
+	Really check for 4.0 xfixes..
+
 2006-08-29  Matthew Allum  <mallum@openedhand.com>
 
 	* configure.ac:

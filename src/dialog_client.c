@@ -20,29 +20,9 @@
 
 #include "dialog_client.h"
 
-/********************************************
- *
- * Experimental dialog dragging modifications
- */
-
-/* different dragging restraints */
-#define DIALOG_DRAG_NONE         1
-#define DIALOG_DRAG_RESTRAIN     2
-#define DIALOG_DRAG_FREE         3
-
-/* below can be changed for different behaviours */
-
-/* Selected restraint */
-#define DIALOG_DRAG_MODE         DIALOG_DRAG_FREE
-
-
-/********************************************/
-
-
 static void dialog_client_check_for_state_hints(Client *c);
 static void dialog_client_drag(Client *c);
 static void _get_mouse_position(Wm *w, int *x, int *y);
-static void _draw_outline(Client *c, int x, int y, int w, int h);
 
 Client*
 dialog_client_new(Wm *w, Window win, Client *trans)
@@ -1065,53 +1045,21 @@ dialog_client_button_press(Client *c, XButtonEvent *e)
 	    if (e->window != c->frames_decor[NORTH])
 	      return;
 	    
-	    if (XGrabPointer(w->dpy, w->root, False,
-			     ButtonPressMask|ButtonReleaseMask,
-			     GrabModeAsync,
-			     GrabModeAsync, 
-			     None, w->curs, CurrentTime) == GrabSuccess)
+	    XUnmapWindow(w->dpy, c->frame);
+
+	    dialog_client_drag(c);
+
+	    misc_trap_xerrors(); 
+	    XMapWindow(w->dpy, c->frame);
+
+	    if (w->focused_client == c)
 	      {
-		XUnmapWindow(w->dpy, c->frame);
-		_draw_outline(c, c->x - offset_west, c->y - offset_north,
-			      c->width + offset_west + offset_east,
-			      c->height + offset_north + offset_south);
-		
-		XFlush(w->dpy);
-		
-		for (;;) 
-		  {
-		    XEvent xev;
-		    XMaskEvent(w->dpy,ButtonReleaseMask|ButtonPressMask, &xev);
-		    if (xev.type == ButtonRelease)
-		      {
-			_draw_outline(c, c->x - offset_west, 
-				      c->y - offset_north,
-				      c->width + offset_west + offset_east,
-				      c->height + offset_north + offset_south);
-			XMapWindow(w->dpy, c->frame);
-			break;
-		      }
-		  }
-		
-		XUngrabPointer(w->dpy, CurrentTime); 
-
-		/* For some odd reason the above make focus get 
-                 * lost ( for gtk apps at least ). We therefore
-                 * reset it.
-                 * ( we have to set focused client to NULL for set_focus()
-                 *   logic to work :( may a re_focus() is better ).
-		*/
-		if (w->focused_client == c)
-		  {
-		    w->focused_client = NULL;
-		    client_set_focus(c);
-		  }
-
-		XSync(w->dpy, False);
+		w->focused_client = NULL;
+		client_set_focus(c);
 	      }
+	    misc_untrap_xerrors(); 	    
 
-	    
-
+	    XSync(w->dpy, False);
 	    return;
 	  }
 
@@ -1123,11 +1071,15 @@ dialog_client_button_press(Client *c, XButtonEvent *e)
 static void
 dialog_client_drag(Client *c) /* drag box */
 {
-  XEvent ev;
-  int    x1, y1, old_cx = c->x, old_cy = c->y;
-  int    frm_size     = dialog_client_title_height(c);
-  int    offset_south = 0, offset_west = 0, offset_east = 0;
-  int    have_grab = 0;
+  Wm                  *w = c->wm;
+  XEvent               ev;
+  int                  offset_south = 0, offset_west = 0, offset_east = 0;
+  int                  x1, y1, old_cx = c->x, old_cy = c->y;
+  int                  frm_size     = dialog_client_title_height(c);
+  XSetWindowAttributes attr;
+  Window               win_outline;
+  XRectangle           rects[1];
+  Bool                 done = False, client_removed = False;
 
   dbg("%s called\n", __func__);
 
@@ -1140,118 +1092,105 @@ dialog_client_drag(Client *c) /* drag box */
       != GrabSuccess)
     return;
 
-  comp_engine_client_show(c->wm, c); 
+  attr.override_redirect = True;
+  attr.background_pixel  = BlackPixel(w->dpy, w->screen);  
 
-  c->flags |= CLIENT_IS_MOVING;
+  win_outline = XCreateWindow(w->dpy, 
+			      w->root,
+			      c->x - offset_west, c->y - frm_size,
+			      c->width + offset_west + offset_east,
+			      c->height + frm_size + offset_south,
+			      0,
+			      CopyFromParent, 
+			      CopyFromParent, 
+			      CopyFromParent,
+			      CWBackPixel|CWOverrideRedirect,
+			      &attr);
+
+  rects[0].x      = 2;  
+  rects[0].y      = 2;
+  rects[0].width  = c->width + offset_west + offset_east - 4;
+  rects[0].height = c->height + frm_size + offset_south  - 4;
+
+  XShapeCombineRectangles (w->dpy, win_outline,
+			   ShapeBounding,
+			   0, 0, rects, 1, ShapeSubtract, 0 );
+
+  XMapWindow (w->dpy, win_outline);
+  XSync (w->dpy, False);
+
+  comp_engine_client_show(c->wm, c); 
 
   _get_mouse_position(c->wm, &x1, &y1);
 
   XFlush(c->wm->dpy);
 
-  for (;;) 
+  while (!done) 
     {
       int wanted_x = 0, wanted_y = 0;
 
-      if (!have_grab) 
-	{
-	  _draw_outline(c, c->x - offset_west, c->y - frm_size,
-			c->width + offset_west + offset_east,
-			c->height + frm_size + offset_south);
-	  XGrabServer(c->wm->dpy); 
-	  have_grab = 1; 
-	}
-
-
       XMaskEvent(c->wm->dpy, 
-		 ButtonPressMask|ButtonReleaseMask|PointerMotionMask,
+		 ButtonPressMask|ButtonReleaseMask
+		 |PointerMotionMask|SubstructureNotifyMask,
 		 &ev);
 
     switch (ev.type) 
       {
+      case MapRequest:
+	wm_handle_map_request(w, &ev.xmaprequest); 
+	break;
+
+      case UnmapNotify:
+	{
+	  if (wm_find_client(w, ev.xunmap.window, WINDOW) == c)
+	    {
+	      client_removed = True;
+	      done = True;
+	    }
+
+	  wm_handle_unmap_event(w, &ev.xunmap); 
+	  break;
+	}
+
       case MotionNotify:
-	  
-	_draw_outline(c, 
-		      c->x - offset_west, 
-		      c->y - frm_size,
-		      c->width + offset_west + offset_east,
-		      c->height + frm_size + offset_south);
+	if (w->config->dialog_stratergy == WM_DIALOGS_STRATERGY_STATIC)
+	  break;
 
 	wanted_x = (old_cx + (ev.xmotion.x - x1));
 	wanted_y = (old_cy + (ev.xmotion.y - y1));
 
-	switch (DIALOG_DRAG_MODE) 
-	  {
-	  case DIALOG_DRAG_RESTRAIN:
+	c->x = wanted_x;
+	c->y = wanted_y;
 
-	    if ( (wanted_x - offset_west) < 0)
-	      c->x = offset_west;
-	    else if ( (wanted_x + c->width + offset_east) > c->wm->dpy_width)
-	      c->x = c->wm->dpy_width - (c->width + offset_east);
-	    else c->x = wanted_x;
-	    
-	    if ( (wanted_y - frm_size) < 0)
-	      c->y = frm_size;
-	    else if ( (wanted_y + c->height + offset_south) > c->wm->dpy_height)
-	      c->y = c->wm->dpy_height - (c->height + offset_south);
-	    else c->y = wanted_y;
-
-	    break;
-          case DIALOG_DRAG_FREE:
-	    c->x = wanted_x;
-	    c->y = wanted_y;
-	    break;
-	  default:
-	    break;
-	  }
-
-	_draw_outline(c, c->x - offset_west, c->y - frm_size,
-		      c->width + offset_west + offset_east,
-		      c->height + frm_size + offset_south);
+	XMoveWindow(c->wm->dpy, win_outline, c->x-offset_west, c->y-frm_size);
 	break;
-	
+
       case ButtonRelease:
-	dbg("drag, got release");
-	_draw_outline(c, c->x - offset_west, c->y - frm_size,
-		      c->width + offset_west + offset_east,
-		      c->height + frm_size + offset_south);
-
-#ifndef USE_COMPOSITE	
-
-#if 0
-	if (c->wm->config->dialog_shade && (c->flags & CLIENT_IS_MODAL_FLAG))
-	  {
-	    XMoveResizeWindow(c->wm->dpy, 
-			      c->window, 
-			      c->x, 
-			      c->y, 
-			      c->width,
-			      c->height);
-	  } 
-	else
-#endif
-
-#endif /* USE_COMPOSITE */
-	  {
-	    XMoveWindow(c->wm->dpy, c->frame, c->x - offset_west,
-			c->y - dialog_client_title_height(c));
-	  }
-	
-	c->show(c);
-	
-	c->flags &= ~ CLIENT_IS_MOVING;
-	
-	XUngrabPointer(c->wm->dpy, CurrentTime);
-	XUngrabServer(c->wm->dpy);
-	wm_activate_client(c);
-	return;
+	XMoveWindow(c->wm->dpy, c->frame, c->x - offset_west,
+		    c->y - dialog_client_title_height(c));
+	done = True;
+	break;
       }
     }
 
-  XUngrabPointer(c->wm->dpy, CurrentTime);
-  XUngrabServer(c->wm->dpy);
 
+  XUngrabPointer(w->dpy, CurrentTime);
 
-  client_deliver_config(c);
+  misc_trap_xerrors(); 
+  XDestroyWindow (w->dpy, win_outline);
+
+  if (client_removed == False) 
+    {
+      c->show(c);
+      
+      if (w->config->dialog_stratergy != WM_DIALOGS_STRATERGY_STATIC)
+	{
+	  wm_activate_client(c);
+	  client_deliver_config(c);
+	}
+    }
+
+  misc_untrap_xerrors();
 }
 
 
@@ -1264,16 +1203,6 @@ _get_mouse_position(Wm *w, int *x, int *y)
   
   XQueryPointer(w->dpy, w->root, &mouse_root, &mouse_win,
 		x, y, &win_x, &win_y, &mask);
-}
-
-static void
-_draw_outline(Client *c, int x, int y, int width, int height)
-{
-  dbg("%s called +%i,+%i %ix%i\n", __func__,x,y,width,height);
-
-  XDrawRectangle(c->wm->dpy, c->wm->root, c->wm->mbtheme->band_gc, 
-		 x-1, y-1, width+2, height+2);
-
 }
 
 static Client*
