@@ -478,6 +478,7 @@ dialog_get_available_area(Client *c,
 			  int    *height)
 {
   Wm *w = c->wm;
+  int     extra_height = 0;
 
   if (c->flags & CLIENT_TITLE_HIDDEN_FLAG 
       || c->flags & CLIENT_HAS_URGENCY_FLAG)
@@ -495,6 +496,15 @@ dialog_get_available_area(Client *c,
 	if (p->type == MBCLIENT_TYPE_TOOLBAR && p->mapped 
 	    && !(p->flags & CLIENT_IS_MINIMIZED))
 	  { have_toolbar = True; break; }
+#ifdef USE_ALT_INPUT_WIN
+	 if (p->flags & (CLIENT_TB_ALT_TRANS_FOR_DIALOG
+	                   |CLIENT_TB_ALT_TRANS_FOR_APP))
+	   {
+	     have_toolbar = True;
+	     extra_height = p->height;
+	     break;
+	   }
+#endif
       }
 
       *y = wm_get_offsets_size(w, NORTH, NULL, True);
@@ -532,7 +542,8 @@ dialog_get_available_area(Client *c,
 	    *y  += main_client_title_height(c->trans);
 	  
 	  *height = w->dpy_height - *y - wm_get_offsets_size(w, SOUTH, 
-							     NULL, True);
+							     NULL, True)
+	            + extra_height;
 	  *x      = wm_get_offsets_size(w, WEST, NULL, True);
 	  *width  = w->dpy_width - *x - wm_get_offsets_size(w, EAST, 
 							    NULL, True);
