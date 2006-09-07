@@ -1,8 +1,15 @@
 2006-09-07  Matthew Allum  <mallum@openedhand.com>
 
-	reviewed by: <delete if not using a buddy>
+	* src/ewmh.c: (ewmh_init), (ewmh_update_lists):
+	* src/structs.h:
+	Advertise presence of modal blocker wins on root 
+	window ( in maemo super modal mode )
+
+2006-09-07  Matthew Allum  <mallum@openedhand.com>
 
 	* src/dialog_client.c: (dialog_get_available_area):
+        Fix for returning correct available area for dialogs
+        when alt input win present.
 
 2006-09-05  Matthew Allum  <mallum@openedhand.com>
 

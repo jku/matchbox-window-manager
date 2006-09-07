@@ -116,8 +116,8 @@ ewmh_init(Wm *w)
     "_NET_WM_SYNC_REQUEST",
     "_MB_CURRENT_APP_WINDOW",
     "_MB_APP_WINDOW_LIST_STACKING",
-    "_NET_WM_USER_TIME"
-
+    "_NET_WM_USER_TIME",
+    "_MB_NUM_MODAL_WINDOWS_PRESENT"
   };
 
   XInternAtoms (w->dpy, atom_names, ATOM_COUNT,
@@ -443,6 +443,15 @@ ewmh_update_lists(Wm *w)
 
   if (wins)
     free(wins);
+
+  /* Set an MB only prop listing number of modal windows currently mapped.
+   * Behaviour needed by certain maemo elements to avoid hammering window 
+   * tree to check this. It will only work with 'super modal'. 
+  */
+  if (w->config->super_modal)
+    XChangeProperty(w->dpy, w->root, w->atoms[_MB_NUM_MODAL_WINDOWS_PRESENT],
+		    XA_CARDINAL, 32, PropModeReplace,
+		    (unsigned char *)&w->n_modal_blocker_wins, 1);
 }
 
 void
