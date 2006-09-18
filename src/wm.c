@@ -1009,6 +1009,17 @@ wm_handle_button_event(Wm *w, XButtonEvent *e)
      {
        /* Click was on window rather than decorations */
 
+       /* Dont move focus for a modal dialog */
+       if (w->focused_client
+           && c != w->focused_client
+           && w->focused_client->type == MBCLIENT_TYPE_DIALOG
+           && w->focused_client->trans == c
+           && w->focused_client->flags & CLIENT_IS_MODAL_FLAG)
+         {
+           XAllowEvents(w->dpy, ReplayPointer, CurrentTime);
+           return;
+         }
+
        if (c->type == MBCLIENT_TYPE_DIALOG 
 	   && w->config->dialog_stratergy != WM_DIALOGS_STRATERGY_STATIC)
 	 {

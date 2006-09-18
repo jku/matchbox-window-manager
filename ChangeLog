@@ -1,5 +1,11 @@
 2006-09-18  Matthew Allum  <mallum@openedhand.com>
 
+	* src/wm.c: (wm_handle_button_event):
+	Dont attempt to move focus from a modal dialog to parent 
+        (maemo #40455)
+
+2006-09-18  Matthew Allum  <mallum@openedhand.com>
+
 	* src/dialog_client.c: (dialog_get_available_area),
 	(dialog_client_button_press):
 	Fix alt input win positioning.
