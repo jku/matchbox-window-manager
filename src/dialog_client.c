@@ -497,8 +497,7 @@ dialog_get_available_area(Client *c,
 	    && !(p->flags & CLIENT_IS_MINIMIZED))
 	  { have_toolbar = True; break; }
 #ifdef USE_ALT_INPUT_WIN
-	 if (p->flags & (CLIENT_TB_ALT_TRANS_FOR_DIALOG
-	                   |CLIENT_TB_ALT_TRANS_FOR_APP))
+	 if (p->flags & CLIENT_TB_ALT_TRANS_FOR_DIALOG)
 	   {
 	     have_toolbar = True;
 	     extra_height = p->height;
@@ -1000,11 +999,7 @@ dialog_client_button_press(Client *c, XButtonEvent *e)
 
    if (w->config->super_modal)
      {
-       Client *p;
-
-       p = client_get_highest_transient(c, CLIENT_IS_MODAL_FLAG, NULL);
-
-       if (p && p != c)
+       if (w->focused_client != c)
 	 {
 	   MBList *button_item = client_get_button_list_item_from_event(c, e);
 	   /* In the precense of a modal transient dialog ignore 
