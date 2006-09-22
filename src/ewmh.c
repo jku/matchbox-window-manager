@@ -451,7 +451,7 @@ ewmh_update_lists(Wm *w)
   if (w->config->super_modal)
     XChangeProperty(w->dpy, w->root, w->atoms[_MB_NUM_MODAL_WINDOWS_PRESENT],
 		    XA_CARDINAL, 32, PropModeReplace,
-		    (unsigned char *)&w->n_modal_blocker_wins, 1);
+		    (unsigned char *)&w->n_modals_present, 1);
 }
 
 void
@@ -505,7 +505,7 @@ ewmh_state_set(Client *c)
 {
   Wm   *w = c->wm;
 
-  Atom atom_states[2];
+  Atom atom_states[4];
   int  n_atom_states = 0;
 
   /* We need to set ewmh state as some apps need to know when they 
@@ -516,6 +516,12 @@ ewmh_state_set(Client *c)
 
   if  (c->flags & CLIENT_IS_MODAL_FLAG)
     atom_states[n_atom_states++] = w->atoms[WINDOW_STATE_MODAL];
+
+  if (c->flags & CLIENT_DOCK_TITLEBAR)
+    atom_states[n_atom_states++] = w->atoms[MB_WM_STATE_DOCK_TITLEBAR];
+
+  if (c->flags & CLIENT_DOCK_TITLEBAR_SHOW_ON_DESKTOP)
+    atom_states[n_atom_states++] = w->atoms[MB_DOCK_TITLEBAR_SHOW_ON_DESKTOP];
 
   /* XXX Should avoid trashing states here we dont handle. 
    *     Otherwise things like skip taskbar state get trashed. 

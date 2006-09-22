@@ -681,6 +681,7 @@ typedef struct _wm
 #endif
 
   int n_active_ping_clients; 	/* Number of apps we are pinging */
+  int n_modals_present;		/* Number of modal windows present */
 
 } Wm;
 

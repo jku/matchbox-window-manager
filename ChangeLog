@@ -1,3 +1,12 @@
+2006-09-22  Matthew Allum  <mallum@openedhand.com>
+
+	* src/dialog_client.c:
+	* src/ewmh.c:
+	* src/structs.h:
+	Set modal indicator desktop hint for all modal dialogs, not
+	just system ones. 
+	Be sure to set panel in titlebar state hints (#40723)
+
 2006-09-18  Matthew Allum  <mallum@openedhand.com>
 
 	* src/wm.c: (wm_handle_button_event):

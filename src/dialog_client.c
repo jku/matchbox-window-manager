@@ -103,6 +103,8 @@ dialog_client_check_for_state_hints(Client *c)
 
       c->flags ^= CLIENT_IS_MODAL_FLAG;
 
+      c->wm->n_modals_present++;
+
       /* Call comp_engine_client_show to add damage to main window
        * so it gets fully lowlighted ok.
        */
@@ -229,6 +231,9 @@ dialog_client_show(Client *c)
 		XMapSubwindows(w->dpy, p->frame);
 		XMapWindow(w->dpy, p->frame);
 	      }
+
+	  if (c->flags & CLIENT_IS_MODAL_FLAG)
+	    c->wm->n_modals_present++;
 	}
 
       if (c->win_modal_blocker)
@@ -1253,6 +1258,9 @@ dialog_client_iconize(Client *c)
   c->mapped = False;
   XUnmapWindow(w->dpy, c->frame); 
 
+  if (c->flags & CLIENT_IS_MODAL_FLAG)
+    c->wm->n_modals_present--;
+
   if (c->win_modal_blocker)
     {
       XUnmapWindow(w->dpy, c->win_modal_blocker);
@@ -1275,6 +1283,9 @@ dialog_client_destroy(Client *c)
 
   /* Focus the saved next or return a likely candidate if none found */
   d = dialog_client_set_focus_next(c);
+
+  if (c->flags & CLIENT_IS_MODAL_FLAG)      
+    c->wm->n_modals_present--;
 
   if (c->win_modal_blocker)
     {
