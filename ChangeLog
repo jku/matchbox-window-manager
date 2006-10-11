@@ -1,3 +1,11 @@
+2006-10-11  Matthew Allum  <mallum@openedhand.com>
+
+	* src/dialog_client.c: (dialog_get_available_area):
+	Backout 2006-09-07 change (uneeded) 
+	* src/wm.c: (wm_handle_configure_request), (wm_activate_client):
+	Dont let alt input wins resize horizontal. 
+        Misc cleanups ( a c++ comment )
+
 2006-09-22  Matthew Allum  <mallum@openedhand.com>
 
 	* src/dialog_client.c:

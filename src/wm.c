@@ -1477,6 +1477,7 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
         * - eg toolbar/panel/input windows may dissapear and make
         *      more space available. 
         */
+
        if (e->width && (value_mask & CWWidth) 
 	   && e->width != c->width && e->width != c->init_width)
 	 c->init_width = e->width;
@@ -1527,6 +1528,17 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 
 	   dialog_constrain_geometry(c, &req_x, &req_y, &req_w, &req_h);
 
+#ifdef USE_ALT_INPUT_WIN
+	 /* Alternate Input windows use the dialog type to 
+	  * fit in with stacking etc but they cant change width,x
+	  */
+	 if (c->flags & (CLIENT_TB_ALT_TRANS_FOR_DIALOG
+	                   |CLIENT_TB_ALT_TRANS_FOR_APP))
+	   {
+	     req_w = c->init_width = c->width;
+	     req_x = c->x;
+	   }
+#endif
 	   if (c->width == req_w && c->height == req_h)
 	     want_fake_configure = True; 
 
@@ -1534,15 +1546,10 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 	   if (c->width != req_w)
 	     client_buttons_delete_all(c);
 
-	   /* TODO: fix composite for this */
-	   // comp_engine_client_hide(c->wm, c);
-	   
 	   xwc.width  = c->width  = req_w;
 	   xwc.height = c->height = req_h;
 	   xwc.x      = c->x      = req_x;
 	   xwc.y      = c->y      = req_y; 
-
-	   dbg("GRAVITY: x:%i y:%i\n", c->x, c->y);
 
 	   /* ICCCM says if window only moved - not size change,
             * then we send a fake one too.
@@ -2673,7 +2680,6 @@ wm_activate_client(Client *c)
       && mbtheme_has_titlebar_panel(w->mbtheme)
       && !(w->have_titlebar_panel->flags & CLIENT_DOCK_TITLEBAR_SHOW_ON_DESKTOP))
     {
-      // stack_move_below_client(c, w->client_desktop);
       /* TODO: Change to stack move bottom ? 
        *
        * eg use stack_move_above_client(c, NULL)
