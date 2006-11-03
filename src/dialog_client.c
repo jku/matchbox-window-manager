@@ -673,7 +673,7 @@ dialog_init_geometry(Client *c)
   */
   if (c->flags & (CLIENT_TITLE_HIDDEN_FLAG))
     {
-      if (c->flags & CLIENT_IS_SPLASH_WIN)
+      if ((c->flags & CLIENT_IS_SPLASH_WIN) && c->x == 0 && c->y == 0)
 	{
 	  if (c->height < w->dpy_height)
 	    c->y = (w->dpy_height - c->height)/2;
