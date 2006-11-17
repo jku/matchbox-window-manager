@@ -1,3 +1,10 @@
+2006-11-17  Matthew Allum  <mallum@openedhand.com>
+
+	* configure.ac:
+	* src/Makefile.am:
+	* src/wm.c: (wm_xsettings_notify_cb):
+	Sync with cursor theme and size GTK xsettings propertys
+
 2006-11-03  Matthew Allum  <mallum@openedhand.com>
 
 	* src/dialog_client.c: (dialog_init_geometry):

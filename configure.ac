@@ -259,6 +259,13 @@ if test x$have_xfixes = xyes; then
   AC_DEFINE(HAVE_XFIXES, [1], [Use XFixes ext to really hide cursor])
 fi
 
+PKG_CHECK_MODULES(XCURSOR, xcursor, have_xcursor=yes, have_xcursor=no)
+
+if test x$have_xcursor = xyes; then
+  AC_DEFINE(HAVE_XCURSOR, [1], [Use XCursor to sync pointer themes])
+fi
+
+
 dnl ------ Expat ------------------------------------------------------------
 
 if test x$enable_expat != xno; then

@@ -25,6 +25,10 @@
 #include <X11/extensions/Xfixes.h> /* Used to *really* hide cursor */
 #endif
 
+#ifdef HAVE_XCURSOR
+#include <X11/Xcursor/Xcursor.h>
+#endif
+
 #ifdef USE_XSETTINGS
 static void wm_xsettings_notify_cb (const char       *name,
 				    XSettingsAction   action,
@@ -2918,6 +2922,8 @@ wm_get_desktop(Wm *w)
 #define XSET_LOWLIGHT   3
 #define XSET_TITLEBARS  4
 #define XSET_COMPOSITE  5
+#define XSET_CURSOR_THEME_NAME 6
+#define XSET_CURSOR_THEME_SIZE 6
 
 static void
 wm_xsettings_notify_cb (const char       *name,
@@ -2935,14 +2941,15 @@ wm_xsettings_notify_cb (const char       *name,
     { "MATCHBOX/CURSOR",    XSET_CURSOR    },
     { "MATCHBOX/TITLEBARS", XSET_TITLEBARS }, /* XXX Not implemeted */
     { "MATCHBOX/COMPOSITE", XSET_COMPOSITE },
+    { "Gtk/CursorThemeName", XSET_CURSOR_THEME_NAME },
+    { "Gtk/CursorThemeSize", XSET_CURSOR_THEME_SIZE },
     { NULL,       -1 } 
   };
 
   while(  mb_xsettings[i].name != NULL )
     {
       if (!strcmp(name, mb_xsettings[i].name)
-	  && setting != NULL 	/* XXX set to NULL when action deleted */
-	  && setting->type == XSETTINGS_TYPE_STRING )
+	  && setting != NULL) 	/* Set to NULL when action deleted */
 	{
 	  key = mb_xsettings[i].value;
 	  break;
@@ -2952,44 +2959,66 @@ wm_xsettings_notify_cb (const char       *name,
     
   if (key == XSET_UNKNOWN) return;
 
-  switch (action)
+  if (setting->type == XSETTINGS_TYPE_STRING)
     {
-    case XSETTINGS_ACTION_NEW:
-    case XSETTINGS_ACTION_CHANGED:
-      switch (key)
+      switch (action)
 	{
-	case XSET_COMPOSITE:
-	  if (!strcasecmp("off", setting->data.v_string)
-	      || !strcasecmp("false", setting->data.v_string))
+	case XSETTINGS_ACTION_NEW:
+	case XSETTINGS_ACTION_CHANGED:
+	  switch (key)
 	    {
-	      comp_engine_deinit(w);
+	    case XSET_COMPOSITE:
+	      if (!strcasecmp("off", setting->data.v_string)
+		  || !strcasecmp("false", setting->data.v_string))
+		{
+		  comp_engine_deinit(w);
+		}
+	      else
+		{ 
+		  comp_engine_reinit(w);
+		}
+	      break;
+	    case XSET_THEME:
+	      if (w->flags & STARTUP_FLAG)
+		w->config->theme = strdup(setting->data.v_string);
+	      else
+		mbtheme_switch(w, setting->data.v_string);
+	      break;
+	    case XSET_CURSOR:
+	      if (!strcasecmp("true", setting->data.v_string))
+		wm_set_cursor_visibility(w, True);
+	      else 
+		wm_set_cursor_visibility(w, False);
+	      break;
+	    case XSET_TITLEBARS:
+	      /* XXX todo */
+	      break;
+	    case XSET_CURSOR_THEME_NAME:
+#ifdef HAVE_XCURSOR
+	      XcursorSetTheme (w->dpy, setting->data.v_string);
+#endif
+	      break;
+	    default:
+	      break;
 	    }
-	  else
-	    { 
-	      comp_engine_reinit(w);
-	    }
+	case XSETTINGS_ACTION_DELETED:
+	  /* Do nothing for now */
 	  break;
-	case XSET_THEME:
-	  if (w->flags & STARTUP_FLAG)
-	      w->config->theme = strdup(setting->data.v_string);
-	  else
-	      mbtheme_switch(w, setting->data.v_string);
-	  break;
-	case XSET_CURSOR:
-	  if (!strcasecmp("true", setting->data.v_string))
-	    wm_set_cursor_visibility(w, True);
-	  else 
-	    wm_set_cursor_visibility(w, False);
-	  break;
-	case XSET_TITLEBARS:
-	  /* XXX todo */
-	  break;
-
 	}
-    case XSETTINGS_ACTION_DELETED:
-      /* Do nothing for now */
-      break;
     }
+  else if (setting->type == XSETTINGS_TYPE_INT)
+    {
+#ifdef HAVE_XCURSOR
+      if ( (action == XSETTINGS_ACTION_NEW 
+	    || action == XSETTINGS_ACTION_CHANGED) 
+	   && key == XSET_CURSOR_THEME_NAME)
+	{
+	  if (setting->data.v_int)
+	    XcursorSetDefaultSize (w->dpy, setting->data.v_int);
+	}
+#endif
+    }
+
 }
 
 #endif

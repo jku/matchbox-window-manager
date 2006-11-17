@@ -14,13 +14,13 @@ CONFDIR    = $(sysconfdir)/matchbox
 
 bin_PROGRAMS = matchbox-window-manager matchbox-remote
 
-INCLUDES = -DDATADIR=\"$(DATADIR)\" -DCONFDIR=\"$(CONFDIR)\" -DPKGDATADIR=\"$(PKGDATADIR)\" -DPREFIX=\"$(PREFIXDIR)\" $(LIBMB_CFLAGS) $(COMPO_CFLAGS) $(EXPAT_CFLAGS) $(SN_CFLAGS) $(GCONF_CFLAGS) $(XFIXES_CFLAGS)
+INCLUDES = -DDATADIR=\"$(DATADIR)\" -DCONFDIR=\"$(CONFDIR)\" -DPKGDATADIR=\"$(PKGDATADIR)\" -DPREFIX=\"$(PREFIXDIR)\" $(LIBMB_CFLAGS) $(COMPO_CFLAGS) $(EXPAT_CFLAGS) $(SN_CFLAGS) $(GCONF_CFLAGS) $(XFIXES_CFLAGS) $(XCURSOR_CFLAGS)
 
 matchbox_remote_LDADD = $(LIBMB_LIBS)
 
 matchbox_remote_SOURCES = matchbox-remote.c 
 
-matchbox_window_manager_LDADD = $(LIBMB_LIBS) $(COMPO_LIBS) $(EXPAT_LIBS) $(SN_LIBS) $(GCONF_LIBS) $(XFIXES_LIBS)
+matchbox_window_manager_LDADD = $(LIBMB_LIBS) $(COMPO_LIBS) $(EXPAT_LIBS) $(SN_LIBS) $(GCONF_LIBS) $(XFIXES_LIBS) $(XCURSOR_LIBS)
 
 matchbox_window_manager_SOURCES =                        \
 		   main.c structs.h wm.c wm.h            \
