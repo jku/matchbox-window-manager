@@ -20,6 +20,10 @@
 
 #include "mbtheme.h" 
 
+#ifdef HAVE_XCURSOR
+#include <X11/Xcursor/Xcursor.h>
+#endif
+
 #define GET_INT_ATTR(n,k,v) \
     { if (get_attr((n), (k))) (v) = atoi(get_attr((n), (k))); else (v) = 0; }
 
@@ -2609,6 +2613,28 @@ mbtheme_init (Wm   *w,
 	    xml_parser_free(parser, root_node); 
 	    return mbtheme_init (w, NULL); 
 	  }
+	 continue;
+      }
+#endif
+#ifdef HAVE_XCURSOR
+      if (!strcmp("cursor", cnode->tag))
+      {
+	char *cursor_theme = NULL;
+	int   cursor_size = -1;
+
+	cursor_theme = get_attr(cnode, "theme");
+	GET_INT_ATTR(cnode, "size", cursor_size);
+
+	dbg ("Got cursor theme:%s size:%i\n", cursor_theme, cursor_size);
+
+	if (cursor_theme)
+	  XcursorSetTheme (w->dpy, cursor_theme);
+
+	if (cursor_size > -1)
+	  XcursorSetDefaultSize (w->dpy, cursor_size);
+
+	dbg ("cursor size is %i\n", XcursorGetDefaultSize (w->dpy));
+
 	 continue;
       }
 #endif

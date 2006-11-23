@@ -1,3 +1,9 @@
+2006-11-23  Matthew Allum  <mallum@openedhand.com>
+
+	* data/themes/blondie/theme.xml:
+	* src/mbtheme.c: (mbtheme_init):
+	Allow theme to set cursor theme and size.
+
 2006-11-17  Matthew Allum  <mallum@openedhand.com>
 
 	* configure.ac:

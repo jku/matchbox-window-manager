@@ -406,13 +406,16 @@
 
 <lowlight color="lowlightcol" /> 
 
-
 <!-- tweak the shadow style -->
 <!-- <shadow style="gaussian" /> -->
 <shadow style="simple" dx="3" dy="3" color="shadowcol"/>
 
 <!-- You can specify a character to be replaced by an image in text labels
 <subst char=":" pixmap="que" />
+-->
+
+<!-- Set cursor theme and size
+<cursor theme="foo" size="128" />
 -->
 
 </theme>
