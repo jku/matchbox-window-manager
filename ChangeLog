@@ -1,5 +1,11 @@
 2006-12-14  Matthew Allum  <mallum@openedhand.com>
 
+	* src/wm.c: (wm_update_layout):
+	Handle resizing of dialogs better when a input window
+	unmaps. (Note, for non alt-input-wins, i.e. maemo)
+
+2006-12-14  Matthew Allum  <mallum@openedhand.com>
+
 	* src/base_client.c: (base_client_destroy):
 	Release passive button grab on client destruction
 

@@ -2413,6 +2413,7 @@ wm_update_layout(Wm         *w,
    {
      if (p->type == MBCLIENT_TYPE_DIALOG) 
        {
+	 Bool force_height = False;
 	 int req_x = p->x, req_y = p->y, req_w = p->width, req_h = p->height;
 
 #ifdef USE_ALT_INPUT_WIN
@@ -2428,8 +2429,20 @@ wm_update_layout(Wm         *w,
 	     client_deliver_config(p);
 	     continue;
 	   }
+#else
+	 /* Always try and back to intially requested height, a  
+          * panel or input win may have dissapeared giving more 
+          * space.
+          * NOTE: we avoid doing this for ALT_INPUT_WINS (maemo)
+	 */
+	 if (p->init_height && p->init_height > req_h)
+	   {
+	     req_h = p->init_height;
+	     force_height = True;
+	   }
 #endif
-	 if (!dialog_constrain_geometry(p, &req_x, &req_y, &req_w, &req_h))
+	 if (!dialog_constrain_geometry(p, &req_x, &req_y, &req_w, &req_h)
+	     || force_height)
 	   {
 	     p->x = req_x; p->y = req_y; p->width = req_w; p->height = req_h;
 	     p->move_resize(p);
