@@ -538,6 +538,7 @@ base_client_destroy(Client *c)
 
        if (c->icon_rgba_data) XFree(c->icon_rgba_data);
 
+       XUngrabButton(w->dpy, Button1, 0, c->window);
      }    
 
     if (c->name)         XFree(c->name);
