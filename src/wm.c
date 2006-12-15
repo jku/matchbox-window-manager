@@ -2936,7 +2936,7 @@ wm_get_desktop(Wm *w)
 #define XSET_TITLEBARS  4
 #define XSET_COMPOSITE  5
 #define XSET_CURSOR_THEME_NAME 6
-#define XSET_CURSOR_THEME_SIZE 6
+#define XSET_CURSOR_THEME_SIZE 7
 
 static void
 wm_xsettings_notify_cb (const char       *name,
