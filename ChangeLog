@@ -1,3 +1,9 @@
+2006-12-22  Matthew Allum  <mallum@openedhand.com>
+
+	* src/ewmh.c:
+	* src/structs.h:
+	Add very basic support for an _MB_WM_STATE prop.
+
 2006-12-15  Matthew Allum  <mallum@openedhand.com>
 
 	* src/wm.c:

@@ -117,7 +117,8 @@ ewmh_init(Wm *w)
     "_MB_CURRENT_APP_WINDOW",
     "_MB_APP_WINDOW_LIST_STACKING",
     "_NET_WM_USER_TIME",
-    "_MB_NUM_MODAL_WINDOWS_PRESENT"
+    "_MB_NUM_MODAL_WINDOWS_PRESENT",
+    "_MB_WM_STATE"
   };
 
   XInternAtoms (w->dpy, atom_names, ATOM_COUNT,
@@ -537,8 +538,8 @@ ewmh_state_set(Client *c)
 
 }
 
-Bool 
-ewmh_state_check(Client *c, Atom atom_state_wanted)
+static Bool
+state_check (Client *c, Atom check, Atom atom_state_wanted)
 {
   Wm   *w = c->wm;
 
@@ -548,7 +549,7 @@ ewmh_state_check(Client *c, Atom atom_state_wanted)
   Atom          realType, *value = NULL;
 
   status = XGetWindowProperty(w->dpy, c->window,
-			      w->atoms[WINDOW_STATE],
+			      check,
 			      0L, 1000000L,
 			      0, XA_ATOM, &realType, &format,
 			      &n, &extra, (unsigned char **) &value);
@@ -569,6 +570,22 @@ ewmh_state_check(Client *c, Atom atom_state_wanted)
     XFree(value);
 
    return False;
+}
+
+Bool 
+ewmh_state_check(Client *c, Atom atom_state_wanted)
+{
+  if (state_check(c, c->wm->atoms[WINDOW_STATE], atom_state_wanted))
+    return True;
+
+  /* gtk does not let you overide standard states, so we also check 
+   * an mb only state prop for things like panel in titlebar states.
+   * FIXME: This is kludgy.
+  */
+  if (state_check(c, c->wm->atoms[_MB_WM_STATE], atom_state_wanted))
+    return True;
+  
+  return False;
 }
 
 void 
