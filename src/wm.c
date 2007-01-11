@@ -2530,7 +2530,6 @@ wm_activate_client(Client *c)
       /* As matchbox works around 'main' windows ( apps/main and desktop wins).
 	 We need to sync extra stuff up when displaying a new one.
        */
-
       Bool switching_from_to_fullscreen = False;
 
       /* save focus state for transient dialogs of prev showing main win */
@@ -2709,8 +2708,6 @@ wm_activate_client(Client *c)
   if (set_desktop_show_hint) 
     ewmh_update_desktop_hint(w);
 
-  stack_dump(w);
-
   dbg("%s() now syncing above window stack\n", __func__);
 
   stack_sync_to_display(w);
@@ -2723,6 +2720,8 @@ wm_activate_client(Client *c)
     }
 
   client_set_focus(client_to_focus); /* set focus if needed and ewmh active */
+
+  stack_dump(w);
 
   if (set_current_app_active_hint)
     ewmh_set_current_app_window(w);

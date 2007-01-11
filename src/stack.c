@@ -319,18 +319,19 @@ stack_dump(Wm *w)
 #ifdef DEBUG
   Client *c = NULL;
 
-  printf("\n---------------------------------------------------------\n");
+  printf("\n----------------------------------------------------------\n");
 
-  printf("w->stack_top : %s, next %p   w->stack_bottom : %s, prev %p\n\n", 
-	 w->stack_top->name, w->stack_top->above, 
-	 w->stack_bottom->name, w->stack_bottom->below);
-
-  printf("--- bottom ---\n");
-  stack_enumerate(w,c)
+  stack_enumerate_reverse(w,c)
     {
-      printf("%s ( grp: %i )\n", c->name ? c->name : "Not Set", c->win_group );
+      printf("%s:: modal: %s, group: %li, geom: %ix%i+%i+%i%s\n", 
+	     c->name ? c->name : "Unkown", 
+	     c->flags & CLIENT_IS_MODAL_FLAG ? "yes" : "no",
+	     c->win_group,
+	     c->width, c->height, c->x, c->y,
+	     w->focused_client == c ? " [FOCUSED] " : "");
+      if (c->type == MBCLIENT_TYPE_DIALOG)
+	printf("   \\ trans for '%s'\n", c->trans ? c->trans->name : "root");
     }
-  printf("--- top ---\n");
 
   printf("\n---------------------------------------------------------\n\n");
 #endif

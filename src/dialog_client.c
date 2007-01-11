@@ -381,7 +381,7 @@ dialog_client_reparent(Client *c)
                 |CWBackPixel|CWBorderPixel|CWColormap ;
 #endif
 
-  dbg("%s() want lowlight : wm:%i , client:%i\n", __func__,
+  dbg("%s() want lowlight : wm:%i , client:%li\n", __func__,
       c->wm->config->dialog_shade, (c->flags & CLIENT_IS_MODAL_FLAG));
 #ifndef USE_COMPOSITE
   if (c->wm->config->dialog_shade && (c->flags & CLIENT_IS_MODAL_FLAG))
@@ -1228,10 +1228,37 @@ dialog_client_set_focus_next(Client *c)
     }
   else
     {
+      Client *app_client = NULL, *p = NULL;
+
       dbg("%s setting focus to visibe_main\n", __func__); 
+
       if (w->focused_client == c)
 	w->focused_client = NULL;
-      return wm_get_visible_main_client(w);
+
+      /* Find highest modal */
+      stack_enumerate_reverse (w,p)
+	{
+	  if (p->type == MBCLIENT_TYPE_DIALOG
+	      && (p->flags & CLIENT_IS_MODAL_FLAG)
+	      && p != c)
+	    return p;
+	}
+
+      /* Check if main window has modals and focus that */
+      app_client = wm_get_visible_main_client(w);
+
+      if (app_client)
+	{
+	  Client *modal = NULL;
+
+	  modal = client_get_highest_transient(app_client, 
+					       CLIENT_IS_MODAL_FLAG, c);
+
+	  if (modal)
+	    return modal;
+	}
+
+      return app_client;
     }
 
   return NULL;

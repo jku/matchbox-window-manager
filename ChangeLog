@@ -1,3 +1,11 @@
+2007-01-11  Matthew Allum  <mallum@openedhand.com>
+
+	* src/dialog_client.c:
+	Fixes to focus chaining in presence of modal dialogs.
+	* src/stack.c: (stack_dump):
+	* src/wm.c: (wm_activate_client):
+	Improve debug stack dumping info.
+
 2006-12-22  Matthew Allum  <mallum@openedhand.com>
 
 	* src/ewmh.c:
