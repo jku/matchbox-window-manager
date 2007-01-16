@@ -1534,13 +1534,28 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 
 #ifdef USE_ALT_INPUT_WIN
 	 /* Alternate Input windows use the dialog type to 
-	  * fit in with stacking etc but they cant change width,x
+	  * fit in with stacking etc but they cant change width, x nor y
 	  */
 	 if (c->flags & (CLIENT_TB_ALT_TRANS_FOR_DIALOG
 	                   |CLIENT_TB_ALT_TRANS_FOR_APP))
 	   {
-	     req_w = c->init_width = c->width;
-	     req_x = c->x;
+	     if (c->height != req_h)
+	       {
+		 Client *trans_client = c->trans;
+		 int     diff = c->height - req_h;
+
+		 c->height  = req_h;
+		 c->y      += diff;
+		 toolbar_client_move_resize(c);
+
+		 if (trans_client)
+		   {
+		     trans_client->height += diff;
+		     trans_client->move_resize(trans_client);
+		     trans_client->redraw(trans_client, False);
+		   }
+	       }
+	     return;
 	   }
 #endif
 	   if (c->width == req_w && c->height == req_h)
@@ -1863,7 +1878,7 @@ wm_handle_property_change(Wm *w, XPropertyEvent *e)
 
       client_get_wm_protocols(c);
 
-      dbg("%s() WM_PROTOCOLS changed, flags now %i\n", __func__, c->flags);
+      dbg("%s() WM_PROTOCOLS changed, flags now %li\n", __func__, c->flags);
 
       /* If flags have changed, likely means a WM_CONTEXT_HELP|etc has changed 
        * and thus titlebar needs a repaint.
@@ -2023,7 +2038,7 @@ wm_make_new_client(Wm *w, Window win)
        if (c) 
 	 c->flags ^= mwm_flags;
 
-       dbg("%s() got MWM flags: %i\n", __func__, c->flags );
+       dbg("%s() got MWM flags: %li\n", __func__, c->flags );
      }
 
    /* check for transient - ie detect if its a dialog */
