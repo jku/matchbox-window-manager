@@ -118,7 +118,8 @@ ewmh_init(Wm *w)
     "_MB_APP_WINDOW_LIST_STACKING",
     "_NET_WM_USER_TIME",
     "_MB_NUM_MODAL_WINDOWS_PRESENT",
-    "_MB_WM_STATE"
+    "_MB_WM_STATE",
+    "_NET_WM_WINDOW_TYPE_NOTIFICATION"
   };
 
   XInternAtoms (w->dpy, atom_names, ATOM_COUNT,

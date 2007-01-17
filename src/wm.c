@@ -2011,7 +2011,9 @@ wm_make_new_client(Wm *w, Window win)
 		       c->flags |= CLIENT_IS_MENU_DIALOG;
 		     }
 		 }
-	       else if (value[0] == w->atoms[WINDOW_TYPE_MESSAGE])
+	       else if (value[0] == w->atoms[WINDOW_TYPE_MESSAGE] 
+			/* Above to depricate for below */
+			|| value[0] == w->atoms[_NET_WM_WINDOW_TYPE_NOTIFICATION])
 		 {
 		   c = dialog_client_new(w, win, NULL);
 		   if (c == NULL) goto end;
