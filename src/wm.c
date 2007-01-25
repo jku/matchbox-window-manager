@@ -1370,8 +1370,12 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
    if (!(value_mask & CWWidth))  req_w = c->width;
    if (!(value_mask & CWHeight)) req_h = c->height;
    
-   if (e->x <= 0 || !(value_mask & CWX)) req_x = c->x;
-   if (e->y <= 0 || !(value_mask & CWY)) req_y = c->y;
+   if ((e->x <= 0 && !(c->flags & CLIENT_TITLE_HIDDEN_FLAG))
+	|| !(value_mask & CWX)) 
+       req_x = c->x;
+   if ((e->y <= 0 && !(c->flags & CLIENT_TITLE_HIDDEN_FLAG))
+       || !(value_mask & CWY)) 
+     req_y = c->y;
 
    dbg("%s() for win %s - have w: %i vs %i, h: %i" 
        "vs %i, x: %i vs %i, y: %i vs %i,\n", 
