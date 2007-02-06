@@ -498,7 +498,7 @@ ewmh_update_rects(Wm *w)
 		  XA_CARDINAL, 32, PropModeReplace, (unsigned char *)val, 4);
   
   XChangeProperty(w->dpy, w->root, w->atoms[_NET_DESKTOP_GEOMETRY],
-		  XA_CARDINAL, 32, PropModeReplace, (unsigned char *)val, 4);
+		  XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&val[2], 2);
 
 }
 
@@ -824,7 +824,6 @@ static void set_supported(Wm *w) /*  */
     w->atoms[_NET_CLOSE_WINDOW],
     w->atoms[_NET_CURRENT_DESKTOP],
     w->atoms[_NET_CLIENT_LIST_STACKING],
-    w->atoms[_NET_CURRENT_DESKTOP],
     w->atoms[_NET_SHOW_DESKTOP],
     w->atoms[_NET_WM_NAME],
     w->atoms[_NET_WM_ICON],
