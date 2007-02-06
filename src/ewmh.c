@@ -144,7 +144,7 @@ ewmh_init_props(Wm *w)
   
   XChangeProperty(w->dpy, w->root, w->atoms[_NET_CURRENT_DESKTOP],
 		  XA_CARDINAL, 32, PropModeReplace,
-		  (unsigned char *)&num_desktops, 1);
+		  (unsigned char *)&num_desktops, 0);
 }
 
 int
