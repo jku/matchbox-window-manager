@@ -1,3 +1,9 @@
+2007-02-17  Matthew Allum  <mallum@openedhand.com>
+
+	* src/dialog_client.c: (dialog_client_move_resize):
+	Dont attempt to move non existstant frame of non decorated
+	dialog window.
+
 2007-02-06  Matthew Allum  <mallum@openedhand.com>
 
 	* src/ewmh.c: (ewmh_init_props):

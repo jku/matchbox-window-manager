@@ -144,8 +144,10 @@ dialog_client_move_resize(Client *c)
 
   base_client_move_resize(c);
 
-  XMoveResizeWindow(w->dpy, c->window, offset_west, frm_size,
-		    c->width, c->height);
+  if (c->window != c->frame) 	/* Non decorated */
+    XMoveResizeWindow(w->dpy, c->window, 
+		      offset_west, frm_size,
+		      c->width, c->height);
 
 #ifndef USE_COMPOSITE
    if (w->config->dialog_shade && (c->flags & CLIENT_IS_MODAL_FLAG))
