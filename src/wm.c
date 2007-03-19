@@ -2001,19 +2001,20 @@ wm_make_new_client(Wm *w, Window win)
 		   if (c == NULL) goto end;
 		   c->flags |= (CLIENT_TITLE_HIDDEN_FLAG|CLIENT_IS_SPLASH_WIN);
 		 }
-	       else if (value[0] == w->atoms[WINDOW_TYPE_DIALOG]
-			|| value[0] == w->atoms[WINDOW_TYPE_MENU])
+	       else if (value[0] == w->atoms[WINDOW_TYPE_DIALOG])
 		 {
 		   dbg("%s() got type dialog atom\n", __func__ );
 		   c = dialog_client_new(w, win, NULL);
 		   if (c == NULL) goto end;
-
-		   /* check to see if we're a 'menu' dialog  */
-		   if (value[0] == w->atoms[WINDOW_TYPE_MENU])
-		     {
-		       dbg("%s() Got menu hint\n", __func__);
-		       c->flags |= CLIENT_IS_MENU_DIALOG;
-		     }
+		 }
+	       else if (value[0] == w->atoms[WINDOW_TYPE_MENU]
+			|| value[0] == w->atoms[_NET_WM_WINDOW_TYPE_POPUP_MENU]
+			|| value[0] == w->atoms[_NET_WM_WINDOW_TYPE_DROPDOWN_MENU])
+		 {
+		   dbg("%s() got type menu atom\n", __func__ );
+		   c = dialog_client_new(w, win, NULL);
+		   if (c == NULL) goto end;
+		   c->flags |= CLIENT_IS_MENU_DIALOG;
 		 }
 	       else if (value[0] == w->atoms[WINDOW_TYPE_MESSAGE] 
 			/* Above to depricate for below */
