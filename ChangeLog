@@ -1,3 +1,10 @@
+2007-04-13  =============== 1.2 Release. =====================
+
+2007-04-13  Matthew Allum  <mallum@openedhand.com>
+
+	* configure.ac:
+	Bump up for 1.2 release
+
 2007-03-19  Matthew Allum  <mallum@openedhand.com>
 
 	* src/ewmh.c: (ewmh_init):
