@@ -2094,6 +2094,12 @@ wm_make_new_client(Wm *w, Window win)
       else if (c->type == MBCLIENT_TYPE_DIALOG) /* already exists, update  */
 	c->trans = t;  		/* TODO: what about other types 
 				         being transient for things ?*/
+
+      /* Make sure above state is inherited if parent has it */
+      if (c->trans != NULL
+	  && c->trans->type == MBCLIENT_TYPE_DIALOG 
+	  && c->trans->flags & CLIENT_HAS_ABOVE_STATE)
+	c->flags |= CLIENT_HAS_ABOVE_STATE;
    }
    
    if (c == NULL) /* Noting else found, default to a main client */

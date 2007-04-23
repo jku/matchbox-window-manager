@@ -1,3 +1,8 @@
+2007-04-23  Matthew Allum  <mallum@openedhand.com>
+
+	* src/wm.c: (wm_make_new_client):
+	Make sure dialog ABOVE state is inherited. (via Tapani)
+
 2007-04-13  =============== 1.2 Release. =====================
 
 2007-04-13  Matthew Allum  <mallum@openedhand.com>
