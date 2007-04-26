@@ -121,7 +121,8 @@ ewmh_init(Wm *w)
     "_MB_WM_STATE",
     "_NET_WM_WINDOW_TYPE_NOTIFICATION",
     "_NET_WM_WINDOW_TYPE_DROPDOWN_MENU",
-    "_NET_WM_WINDOW_TYPE_POPUP_MENU"
+    "_NET_WM_WINDOW_TYPE_POPUP_MENU",
+    "_MB_NUM_SYSTEM_MODAL_WINDOWS_PRESENT"
   };
 
   XInternAtoms (w->dpy, atom_names, ATOM_COUNT,
@@ -453,9 +454,17 @@ ewmh_update_lists(Wm *w)
    * tree to check this. It will only work with 'super modal'. 
   */
   if (w->config->super_modal)
-    XChangeProperty(w->dpy, w->root, w->atoms[_MB_NUM_MODAL_WINDOWS_PRESENT],
-		    XA_CARDINAL, 32, PropModeReplace,
-		    (unsigned char *)&w->n_modals_present, 1);
+    {
+      XChangeProperty(w->dpy, w->root, 
+		      w->atoms[_MB_NUM_MODAL_WINDOWS_PRESENT],
+		      XA_CARDINAL, 32, PropModeReplace,
+		      (unsigned char *)&w->n_modals_present, 1);
+
+      XChangeProperty(w->dpy, w->root, 
+		      w->atoms[_MB_NUM_SYSTEM_MODAL_WINDOWS_PRESENT],
+		      XA_CARDINAL, 32, PropModeReplace,
+		      (unsigned char *)&w->n_modal_blocker_wins, 1);
+    }
 }
 
 void

@@ -1,3 +1,9 @@
+2007-04-26  Matthew Allum  <mallum@openedhand.com>
+
+	* src/ewmh.c: (ewmh_init), (ewmh_update_lists):
+	* src/structs.h:
+	Add new _MB_NUM_SYSTEM_MODAL_WINDOWS_PRESENT prop.
+
 2007-04-23  Matthew Allum  <mallum@openedhand.com>
 
 	* src/wm.c: (wm_make_new_client):
