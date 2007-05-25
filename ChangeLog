@@ -1,3 +1,9 @@
+2007-05-25  Matthew Allum  <mallum@openedhand.com>
+
+	* src/client_common.c: (client_button_do_ops):
+	Send button number with 'grab tranfer' (#334)
+	(Via Tapani)
+
 2007-04-26  Matthew Allum  <mallum@openedhand.com>
 
 	* src/ewmh.c: (ewmh_init), (ewmh_update_lists):
