@@ -179,6 +179,10 @@ base_client_new(Wm *w, Window win)
 		}
 	    }
 	}
+
+      if ((wmhints->flags & StateHint)
+	  && wmhints->initial_state == IconicState)
+	c->flags |= CLIENT_IS_MINIMIZED;	
    }
 
    dbg("%s() window group %li\n", __func__, c->win_group);

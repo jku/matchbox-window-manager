@@ -1554,7 +1554,42 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 
 		 if (trans_client)
 		   {
-		     trans_client->height += diff;
+		     if (trans_client->type == MBCLIENT_TYPE_DIALOG)
+		       {
+			 /* do not grow over their initial size
+			    because of IM resizing smaller */
+			 if (trans_client->height + diff 
+			              > trans_client->init_height)
+			   {
+			     trans_client->height = trans_client->init_height;
+			   }
+			 else if (diff < 0)
+			   {
+			     /* Input window has grown larger so push it 
+			      *	up but keep it on screen.
+			     */
+			     int x, y, w, h;
+			     dialog_client_get_coverage(trans_client, 
+							&x, &y, &w, &h);
+
+			     if (c->y < y+h)
+			       {
+				 int amount = (y+h) - c->y;
+				 
+				 /* move upwards */
+				 trans_client->y -= amount;
+				 /* but not over screen area */
+				 if (y-amount < 0)
+				   {
+				     trans_client->height -= amount-y;
+				     trans_client->y += amount-y;
+				   }
+			       }
+			   }
+		       }
+		     else 	/* Application window */
+		       trans_client->height += diff;
+
 		     trans_client->move_resize(trans_client);
 		     trans_client->redraw(trans_client, False);
 		   }
@@ -2148,14 +2183,28 @@ wm_make_new_client(Wm *w, Window win)
     * Note, this seems worst on GTK apps.
     */
 
+   XGrabButton(c->wm->dpy, Button1, 0, c->window, True, ButtonPressMask,
+	       GrabModeSync, GrabModeSync, None, None);
+
+   /* Handle an application started iconized */
+   if (c->flags & CLIENT_IS_MINIMIZED
+       && c->type == MBCLIENT_TYPE_APP)
+     {
+       /* Clear the flag now to be safe */
+       c->flags &= ~CLIENT_IS_MINIMIZED;
+
+       c->redraw(c, False);		/* draw the decorations ready */
+       c->iconize (c);
+
+       XUngrabServer(w->dpy);
+       XFlush(w->dpy);
+       return c;
+     }
+
    dbg("%s() showing new client\n", __func__);
 
    c->redraw(c, False);		/* draw the decorations ready */
-
    wm_activate_client(c);       /* Map it into stack, ( will call show()) */
-
-   XGrabButton(c->wm->dpy, Button1, 0, c->window, True, ButtonPressMask,
-	       GrabModeSync, GrabModeSync, None, None);
 
    /* Let window know were all done */
 

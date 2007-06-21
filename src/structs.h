@@ -295,7 +295,7 @@ typedef struct _mb_client_button
 #define CLIENT_IS_MOVING       (1<<19) /* Used by comosite engine */
 #define CLIENT_DOCK_TITLEBAR_SHOW_ON_DESKTOP (1<<20)
 #define CLIENT_NO_FOCUS_ON_MAP (1<<21) /* for _NET_WM_USER_TIME = 0 */
-#define CLIENT_IS_MINIMIZED    (1<<23) /* used by toolbars */
+#define CLIENT_IS_MINIMIZED    (1<<23) /* used by toolbars + icon on map*/
 #define CLIENT_TOOLBARS_MOVED_FOR_FULLSCREEN (1<<24)
 #define CLIENT_IS_TRANSIENT_FOR_ROOT (1<<25)
 #define CLIENT_HAS_URGENCY_FLAG (1<<26)

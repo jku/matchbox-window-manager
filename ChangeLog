@@ -1,3 +1,12 @@
+2007-06-21  Matthew Allum  <mallum@openedhand.com>
+
+	* src/structs.h:
+	* src/base_client.c:	
+	* src/wm.c: (wm_handle_configure_request), (wm_make_new_client):
+	Change handling of affected dialogs when an (alt) input window. 
+        (Via Tapani)
+	Handle application windows starting in iconized state (Sugar)
+
 2007-05-25  Matthew Allum  <mallum@openedhand.com>
 
 	* src/client_common.c: (client_button_do_ops):
