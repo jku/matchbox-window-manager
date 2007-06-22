@@ -2196,9 +2196,12 @@ wm_make_new_client(Wm *w, Window win)
        c->redraw(c, False);		/* draw the decorations ready */
        c->iconize (c);
 
+       ewmh_update_lists(w); 
+
        XUngrabServer(w->dpy);
        XFlush(w->dpy);
-       return c;
+
+       goto end;
      }
 
    dbg("%s() showing new client\n", __func__);

@@ -1,3 +1,9 @@
+2007-06-22  Matthew Allum  <mallum@openedhand.com>
+
+	* src/wm.c: (wm_make_new_client):
+	Make sure EWMH lists are updated when app starts in iconized
+	state.
+
 2007-06-21  Matthew Allum  <mallum@openedhand.com>
 
 	* src/structs.h:
