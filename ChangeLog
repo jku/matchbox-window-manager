@@ -1,3 +1,9 @@
+2007-08-13  Matthew Allum  <mallum@openedhand.com>
+
+	* src/client_common.c: (client_button_do_ops):
+	Set time from event rather that CurrentTime when sending
+	MB_GRAB_TRANSFER (Tapani Palli) 
+
 2007-06-22  Matthew Allum  <mallum@openedhand.com>
 
 	* src/wm.c: (wm_make_new_client):
