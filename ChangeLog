@@ -1,3 +1,8 @@
+2007-08-16  Matthew Allum  <mallum@openedhand.com>
+
+	* src/wm.c: (wm_make_new_client):
+	Always send config notifiy to new clients (Tapani Palli) 
+
 2007-08-13  Matthew Allum  <mallum@openedhand.com>
 
 	* src/client_common.c: (client_button_do_ops):

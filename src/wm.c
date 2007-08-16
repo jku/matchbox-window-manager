@@ -2166,6 +2166,9 @@ wm_make_new_client(Wm *w, Window win)
    
    c->move_resize(c);          	/* set pos + size */
 
+   /* send new configuration to client - needed */
+   client_deliver_config(c);
+
    /* TODO:
     *
     * Its likely the size we given the new client, is not what it requested. 
