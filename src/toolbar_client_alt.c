@@ -256,7 +256,8 @@ toolbar_client_show(Client *c)
 	  */
 	  XSync(w->dpy, False);
 	  
-	  if (app_client)
+	  if (app_client &&
+	      !app_client->type & MBCLIENT_TYPE_DESKTOP)
 	    {
 	      app_client->height -= c->height;
 	      app_client->move_resize(app_client);
@@ -297,7 +298,8 @@ toolbar_client_destroy(Client *c)
     {
       Client *app_client = c->trans;
 
-      if (app_client)
+      if (app_client &&
+	  !app_client->type & MBCLIENT_TYPE_DESKTOP)
 	{
 	  /* app_client could have likely dissapeared with the toolbar
 	   * but we havn't been told yet - therefore trap. 

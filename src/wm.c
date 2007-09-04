@@ -2021,6 +2021,9 @@ wm_make_new_client(Wm *w, Window win)
 		 {
 		   dbg("%s() got toolbar atom\n", __func__ );
 		   c = toolbar_client_new(w, win);
+#ifdef USE_ALT_INPUT_WIN
+		   c->flags &= ~CLIENT_IS_MINIMIZED;
+#endif
 		   if (c == NULL) goto end;
 		 }
 	       else if (value[0] == w->atoms[WINDOW_TYPE_DESKTOP])
