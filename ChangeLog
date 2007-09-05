@@ -1,3 +1,8 @@
+2007-09-05  Matthew Allum  <mallum@openedhand.com>
+
+	* src/toolbar_client_alt.c:
+	Correction to previous patch (Tapani Palli)
+
 2007-09-04  Matthew Allum  <mallum@openedhand.com>
 
 	* src/toolbar_client_alt.c:
