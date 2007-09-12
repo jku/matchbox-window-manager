@@ -512,6 +512,9 @@ _theme_paint_core( MBTheme       *theme,
 
       if (w <= 0) w = 1;
       if (h <= 0) h = 1;
+
+      if (x < 0) x = 0;
+      if (y < 0) y = 0;
 	
       switch (layer_list_item->id)
 	{

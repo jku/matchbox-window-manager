@@ -1,9 +1,7 @@
-2007-09-10  Matthew Allum  <mallum@openedhand.com>
+2007-09-12  Matthew Allum  <mallum@openedhand.com>
 
-	reviewed by: <delete if not using a buddy>
-
-	* data/themes/Default/theme.xml:
-	* src/wm.c: (wm_make_new_client):
+	* src/mbtheme.c: (_theme_paint_core):
+	Clamp x,y destination values for safety. (Tapani Palli)
 
 2007-09-05  Matthew Allum  <mallum@openedhand.com>
 
