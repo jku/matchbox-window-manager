@@ -1587,8 +1587,9 @@ wm_handle_configure_request (Wm *w, XConfigureRequestEvent *e )
 			       }
 			   }
 		       }
-		     else 	/* Application window */
-		       trans_client->height += diff;
+		     else /* Only Application window */
+		       if (trans_client->type != MBCLIENT_TYPE_DESKTOP)
+			 trans_client->height += diff;
 
 		     trans_client->move_resize(trans_client);
 		     trans_client->redraw(trans_client, False);
