@@ -1,3 +1,9 @@
+2007-11-01  Tomas Frydrych  <tf@o-hand.com>
+
+	* src/keys.c: (keys_keysym_needs_shift):
+	Fixed retrival of shift mask for keys that have matching symbol in
+	column 0 of the key map (bug #570).
+
 2007-09-21  Matthew Allum  <mallum@openedhand.com>
 
 	* src/wm.c: (wm_handle_configure_request):
@@ -24,13 +30,13 @@
 2007-08-16  Matthew Allum  <mallum@openedhand.com>
 
 	* src/wm.c: (wm_make_new_client):
-	Always send config notifiy to new clients (Tapani Palli) 
+	Always send config notifiy to new clients (Tapani Palli)
 
 2007-08-13  Matthew Allum  <mallum@openedhand.com>
 
 	* src/client_common.c: (client_button_do_ops):
 	Set time from event rather that CurrentTime when sending
-	MB_GRAB_TRANSFER (Tapani Palli) 
+	MB_GRAB_TRANSFER (Tapani Palli)
 
 2007-06-22  Matthew Allum  <mallum@openedhand.com>
 
@@ -41,9 +47,9 @@
 2007-06-21  Matthew Allum  <mallum@openedhand.com>
 
 	* src/structs.h:
-	* src/base_client.c:	
+	* src/base_client.c:
 	* src/wm.c: (wm_handle_configure_request), (wm_make_new_client):
-	Change handling of affected dialogs when an (alt) input window. 
+	Change handling of affected dialogs when an (alt) input window.
         (Via Tapani)
 	Handle application windows starting in iconized state (Sugar)
 
@@ -94,7 +100,7 @@
 
 	* src/ewmh.c: (ewmh_update_rects), (set_supported):
 	Dont list _NET_CURRENT_DESKTOP supported twice.
-	Fix _NET_DESKTOP_GEOMETRY to be correctly WxH rather than full geom. 
+	Fix _NET_DESKTOP_GEOMETRY to be correctly WxH rather than full geom.
 
 2007-01-25  Matthew Allum  <mallum@openedhand.com>
 
@@ -166,9 +172,9 @@
 2006-10-11  Matthew Allum  <mallum@openedhand.com>
 
 	* src/dialog_client.c: (dialog_get_available_area):
-	Backout 2006-09-07 change (uneeded) 
+	Backout 2006-09-07 change (uneeded)
 	* src/wm.c: (wm_handle_configure_request), (wm_activate_client):
-	Dont let alt input wins resize horizontal. 
+	Dont let alt input wins resize horizontal.
         Misc cleanups ( a c++ comment )
 
 2006-09-22  Matthew Allum  <mallum@openedhand.com>
@@ -177,13 +183,13 @@
 	* src/ewmh.c:
 	* src/structs.h:
 	Set modal indicator desktop hint for all modal dialogs, not
-	just system ones. 
+	just system ones.
 	Be sure to set panel in titlebar state hints (#40723)
 
 2006-09-18  Matthew Allum  <mallum@openedhand.com>
 
 	* src/wm.c: (wm_handle_button_event):
-	Dont attempt to move focus from a modal dialog to parent 
+	Dont attempt to move focus from a modal dialog to parent
         (maemo #40455)
 
 2006-09-18  Matthew Allum  <mallum@openedhand.com>
@@ -198,7 +204,7 @@
 
 	* src/ewmh.c: (ewmh_init), (ewmh_update_lists):
 	* src/structs.h:
-	Advertise presence of modal blocker wins on root 
+	Advertise presence of modal blocker wins on root
 	window ( in maemo super modal mode )
 
 2006-09-07  Matthew Allum  <mallum@openedhand.com>
@@ -211,7 +217,7 @@
 
 	* src/dialog_client.c:
 	Redo dialog dragging code to use XShape for outlines
-	rather that XOR'ing. 
+	rather that XOR'ing.
 
 2006-08-31  Matthew Allum  <mallum@openedhand.com>
 
@@ -227,14 +233,14 @@
 
 	* src/dialog_client.c: (dialog_init_geometry):
 	Still allow decorationless dialogs to position
-	themselves freely - fixes error in previous commit. 
+	themselves freely - fixes error in previous commit.
 	( Thanks to Marco )
 
 2006-08-28  Matthew Allum  <mallum@openedhand.com>
 
 	* src/base_client.c: (base_client_new):
 	Remove spurious repositioning if client positioned
-	with negative positions ( should get fixed later ).	
+	with negative positions ( should get fixed later ).
 
 	* src/structs.h:
 	* src/dialog_client.c: (dialog_init_geometry):
@@ -247,7 +253,7 @@
 	* configure.ac:
 	* src/Makefile.am:
 	* src/wm.c:
-	Support XFixesHide/ShowCursor if XFixes lib and recent 
+	Support XFixesHide/ShowCursor if XFixes lib and recent
         enough extension available. Really hides cursor now.
 
 2006-08-24  Matthew Allum  <mallum@openedhand.com>
@@ -302,7 +308,7 @@
 	* src/structs.h:
 	* src/wm.c: (wm_handle_property_change), (wm_make_new_client),
 	(wm_activate_client):
-	Add support for decoration less application windows. 	
+	Add support for decoration less application windows.
 
 2006-07-28  Matthew Allum  <mallum@openedhand.com>
 
@@ -330,7 +336,7 @@
 
 	* src/wm.c: (wm_activate_client):
 	Set the active app root prop *after* setting new list
-	props as to avoid sync issues in apps using this info. 
+	props as to avoid sync issues in apps using this info.
 
 2006-06-13  Matthew Allum  <mallum@openedhand.com>
 
@@ -347,7 +353,7 @@
 2006-06-01  Matthew Allum  <mallum@openedhand.com>
 
 	* src/ewmh.c: (ewmh_hung_app_check):
-	Call XSync() so ping is sent immediatly to be double safe. 
+	Call XSync() so ping is sent immediatly to be double safe.
 
 	* src/wm.c: (wm_event_loop):
 	correctly honur PING_INTERVAL, not PING_INTERVAL+1
@@ -372,13 +378,13 @@
 2006-05-17  Matthew Allum  <mallum@openedhand.com>
 
 	* src/toolbar_client_alt.c: (toolbar_client_destroy):
-	Fix typo snafu with previous commit. 
+	Fix typo snafu with previous commit.
 
 2006-05-17  Matthew Allum  <mallum@openedhand.com>
 
 	* src/toolbar_client_alt.c: (toolbar_client_destroy):
 	Just change affected dialog height back to original
-	size. Dont try and do anything clever with positioning. 
+	size. Dont try and do anything clever with positioning.
 
 2006-05-11  Matthew Allum  <mallum@openedhand.com>
 
@@ -403,7 +409,7 @@
 2006-04-19  Matthew Allum  <mallum@openedhand.com>
 
 	* src/main_client.c: (main_client_toggle_fullscreen):
-	Send state message before configure when toggleing 
+	Send state message before configure when toggleing
 	fullscreen.
 
 2006-04-19  Matthew Allum  <mallum@openedhand.com>
@@ -421,15 +427,15 @@
 	* src/toolbar_client_alt.c: (toolbar_client_new),
 	(toolbar_client_configure), (toolbar_client_destroy):
 	Support repositioning dialogs an alt toolbar ( IM ) window
-	is transient for.  
+	is transient for.
 	* src/wm.c: (wm_handle_configure_request):
-	Correct some debug info. 
+	Correct some debug info.
 
 2006-04-12  Matthew Allum  <mallum@openedhand.com>
 
 	* src/client_common.c: (client_set_focus):
 	Focus tracking fix moving between dialogs and trans for
-	root dialog. fixs maemo #26095 
+	root dialog. fixs maemo #26095
 
 2006-04-10  Matthew Allum  <mallum@openedhand.com>
 
@@ -462,7 +468,7 @@
 2006-03-07  Matthew Allum  <mallum@openedhand.com>
 
 	* configure.ac:
-	Be brave and finally bump up version to 1.0 
+	Be brave and finally bump up version to 1.0
 
 2006-03-01  Matthew Allum  <mallum@openedhand.com>
 
@@ -481,7 +487,7 @@
 	* src/wm.c: (wm_load_config), (wm_event_loop),
 	(wm_activate_client):
 	Implement alternate optional more aggesive pinging policy needed
-        for maemo. 
+        for maemo.
 
 2006-02-05  Matthew Allum  <mallum@openedhand.com>
 
@@ -493,12 +499,12 @@
 	* src/mbtheme.h:
 	* src/structs.h:
 	Add support for optional alternate custom themeing for border only
-        ( no title bar ) dialogs. 
+        ( no title bar ) dialogs.
 
 2006-02-03  Matthew Allum  <mallum@openedhand.com>
 
 	* configure.ac:
-	Add a FIXME comment 
+	Add a FIXME comment
 	* src/mbtheme.c: (theme_frame_paint):
 	avoid freeing non existant font color on theme switch.
 
@@ -506,7 +512,7 @@
 
 	* src/mbtheme.c: (mbtheme_new), (mbtheme_init):
 	Add support for cache attribute in <theme> tags.
-	MB_THEME_ALWAYS_CACHE env var overides. 
+	MB_THEME_ALWAYS_CACHE env var overides.
 
 2006-01-19  Matthew Allum  <mallum@openedhand.com>
 
@@ -539,7 +545,7 @@
 	* src/client_common.c: (client_set_focus),
 	(client_get_transient_list):
 	* src/dialog_client.c: (dialog_client_show):
-	Add basic support for window grouping. 
+	Add basic support for window grouping.
 
 2005-12-12  Matthew Allum  <mallum@openedhand.com>
 
@@ -561,7 +567,7 @@
 
 	* src/stack.c: (stack_get_window_list), (stack_sync_to_display):
 	XRestackWindows didn't include count of blocker wins in total
-        window count. 
+        window count.
 
 2005-10-27  Matthew Allum  <mallum@openedhand.com>
 
@@ -608,7 +614,7 @@
 	(dialog_client_destroy):
 	* src/stack.c: (stack_get_window_list):
 	* src/structs.h:
-	Fix issues with modal blocker wins breaking stack count. 
+	Fix issues with modal blocker wins breaking stack count.
 
 2005-09-29  mallum,,,  <mallum@openedhand.com>
 
@@ -675,7 +681,7 @@
 2005-07-28  mallum,,,  <mallum@openedhand.com>
 
 	* src/ewmh.c: (ewmh_state_set):
-	Really clear NET_WM_STATE if no states set. 
+	Really clear NET_WM_STATE if no states set.
 
 2005-06-21  mallum,,,  <mallum@openedhand.com>
 
@@ -703,7 +709,7 @@
 
 	* src/ewmh.c: (ewmh_update_lists), (ewmh_hung_app_check):
 	* src/wm.c: (wm_usage), (wm_load_config):
-	Fix compiler warning. 
+	Fix compiler warning.
         If set, use env 'MB_HUNG_APP_HANDLER' pointing at executable
 	to handle hung applications rather than default killer.
 
@@ -731,10 +737,10 @@
 	* src/ewmh.h:
 	* src/wm.c: (wm_event_loop):
 	Clean up ping code a little. Adding new define for frequency
-	of hung app check. 
+	of hung app check.
 
 	* src/mbtheme.c: (mbtheme_switch):
-	Simplify switching code a little. 
+	Simplify switching code a little.
 
 2005-06-08  mallum,,,  <mallum@openedhand.com>
 
@@ -757,7 +763,7 @@
 
 	* configure.ac:
 	* src/dialog_client.c: (dialog_client_show):
-	avoid potential infinite loop from transiant race?  
+	avoid potential infinite loop from transiant race?
 
 2005-05-26  mallum,,,  <mallum@openedhand.com>
 
@@ -817,7 +823,7 @@
 	* data/themes/MBOpus/theme.xml:
 	* data/themes/blondie/theme.xml:
 	Tweak+add basic rough toolbar decorations to keep
-	old apps happy that still use decorated toolbars. 
+	old apps happy that still use decorated toolbars.
 
 2005-05-11  mallum,,,  <mallum@openedhand.com>
 
@@ -871,7 +877,7 @@
 
 	* src/ewmh.c: (ewmh_handle_root_message):
 	Fix for activate client message being sent to an non topped
-        app dialog window and no effect happerning. 
+        app dialog window and no effect happerning.
         Makes GNOME task selector work nicer with MB.
 
 2005-04-26  mallum,,,  <mallum@openedhand.com>
@@ -890,7 +896,7 @@
 	* configure.ac:
 	Throw an error if AC_PATH_XTRA comes up empty
 
-2005-04-11 Relased 0.9.4 
+2005-04-11 Relased 0.9.4
 
 2005-04-11  mallum,,,  <mallum@openedhand.com>
 
@@ -920,7 +926,7 @@
 	* src/misc.c: (fork_exec):
 	* src/wm.c: (wm_sn_exec):
 	Fixes via Andreas Gunnarsson for bugs 117-121. Includes mainly
-	potential overflow fixes + warnings on openBSD. 
+	potential overflow fixes + warnings on openBSD.
 
 	* src/toolbar_client_alt.c: (toolbar_client_new),
 	(toolbar_client_move_resize):
@@ -976,7 +982,7 @@
 	* src/keys.c: (keys_add_entry), (keys_load_config):
 	Initial work on supporting 'held' keys - config can now be parsed.
 	* src/main_client.c: (main_client_configure):
-	Fix for toolbars affecting app size when toggling fullscreen. 
+	Fix for toolbars affecting app size when toggling fullscreen.
 
 2005-02-22  mallum,,,  <mallum@openedhand.com>
 
@@ -987,7 +993,7 @@
 2005-02-22  mallum,,,  <mallum@openedhand.com>
 
 	* src/composite-engine.c: (_render_a_client):
-	Force composite lowlighting *off* for now. Needs fixing. 
+	Force composite lowlighting *off* for now. Needs fixing.
 
 2005-02-22  mallum,,,  <mallum@openedhand.com>
 
@@ -1019,8 +1025,8 @@
 	(dialog_constrain_geometry):
 	* src/toolbar_client_alt.c: (toolbar_client_new),
 	(toolbar_win_offset), (toolbar_client_configure):
-	Fix alternative toolbar repositioning dialog. 
-	Also add some more debug statements. 
+	Fix alternative toolbar repositioning dialog.
+	Also add some more debug statements.
 
 2005-02-18  mallum,,,  <mallum@openedhand.com>
 
@@ -1089,7 +1095,7 @@
 	* src/mbtheme-standalone.c: (_draw_button),
 	(_theme_paint_pixmap_border), (theme_frame_paint), (mbtheme_new):
 	* src/mbtheme-standalone.h:
-	Tweak the standalone 'theme' a little. 
+	Tweak the standalone 'theme' a little.
 
 2005-01-21  mallum,,,  <mallum@openedhand.com>
 
@@ -1125,7 +1131,7 @@
 	* src/ewmh.c: (ewmh_handle_root_message):
 	* src/wm.c: (wm_handle_configure_request):
 	Allow window stacking changes for dialogs vai _NET_STATE_ABOVE
-	changing and a window raising itself. 
+	changing and a window raising itself.
 
 2005-01-14  mallum,,,  <mallum@openedhand.com>
 
@@ -1170,7 +1176,7 @@
 	* data/themes/MBOpus/theme.desktop:
 	* data/themes/MBOpus/theme.xml:
 	* data/themes/Makefile.am:
-	Add new themes 
+	Add new themes
 
 	* src/structs.h:
 	Set Default theme to 'Default'
@@ -1183,25 +1189,25 @@
 	* src/stack.c: (stack_get_window_list):
 	* src/structs.h:
 	Add initial support for 'forcing' modility on transient for
-        root modal dialogs. 
+        root modal dialogs.
 
 	* src/main_client.c: (main_client_button_press):
 	* src/mbtheme.c: (theme_frame_button_paint):
-	Fix bug in buttons having the backgrounds wrong.  
+	Fix bug in buttons having the backgrounds wrong.
 
 2005-01-10  mallum,,,  <mallum@openedhand.com>
 
 	* src/dialog_client.c: (dialog_client_reparent),
 	(dialog_client_destroy):
 	Dont set colormap on dialogs. For some odd reason causes
-	firefox dialogs to break. Needs more looking into. 
-	Clean up compile warning. 
+	firefox dialogs to break. Needs more looking into.
+	Clean up compile warning.
 
 2005-01-10  mallum,,,  <mallum@openedhand.com>
 
 	* data/kbdconfig:
 	Add saner defaults to keyboard shortcut config.
-	Also add some more info to the file. 
+	Also add some more info to the file.
 
 2005-01-10  mallum,,,  <mallum@openedhand.com>
 
@@ -1224,7 +1230,7 @@
 	* src/mbtheme.c: (theme_frame_paint):
 	* src/structs.h:
 	* src/wm.c: (wm_handle_property_change):
-	Remove support of MB only SUBNAME property. 
+	Remove support of MB only SUBNAME property.
 
 2005-01-10  mallum,,,  <mallum@openedhand.com>
 
@@ -1285,12 +1291,12 @@
 
 	* src/main_client.c: (main_client_show):
 	Make sure closed app goes back to desktop correctly even after app
-	has opened. 
+	has opened.
 
 	* src/toolbar_client.c: (toolbar_client_show),
 	(toolbar_client_redraw):
 	Try and fix composite not updating properly when dialog resized
-	via toolbar. 
+	via toolbar.
 
 	* src/wm.c: (wm_handle_configure_request):
 	repaint resized dialogs
@@ -1314,7 +1320,7 @@
 	* data/Makefile.am:
 	* src/Makefile.am:
 	* src/keys.c: (keys_load_config):
-	Move kdbconfig to /etc/matchbox so more visible. 
+	Move kdbconfig to /etc/matchbox so more visible.
 
 2004-12-20  mallum <mallum@openedhand.com>
 
@@ -1349,10 +1355,10 @@
 	* src/mbtheme.h:
 	* src/structs.h:
 	Implement a new pixmap cache that caches pixmaps for east/west/south
-	app window decorations. 
+	app window decorations.
 
 	* src/wm.c: (wm_handle_configure_notify):
-	Clear *all* caches or a display size change/rotation 
+	Clear *all* caches or a display size change/rotation
 
 2004-12-10  mallum <mallum@openedhand.com>
 
@@ -1368,7 +1374,7 @@
 	* src/dialog_client.c: (dialog_constrain_geometry),
 	(dialog_init_geometry):
 	Position decorationless centered if and only if 0,0
-	initial position. 
+	initial position.
 
 	* src/wm.c: (wm_handle_button_event):
 	Dont try and forward button events onto window decor if
@@ -1377,11 +1383,11 @@
 2004-12-09  mallum  <mallum@openedhand.com>
 
 	* src/base_client.c: (base_client_destroy):
-	Trap X errors. 
+	Trap X errors.
 
 	* src/client_common.c: (client_want_focus),
 	(client_decor_frames_move_resize), (client_decor_frames_init):
-	Remove uneeded calls. Trap errors in want focus.  
+	Remove uneeded calls. Trap errors in want focus.
 
 	* src/stack.c: (stack_get_above), (stack_get_below):
 	Add some commenting.
@@ -1390,7 +1396,7 @@
 	(main_client_unmap):
 	* src/wm.c: (wm_handle_unmap_event), (wm_handle_property_change),
 	(wm_activate_client), (wm_get_offsets_size), (wm_toggle_desktop):
-	Focus/desktop handling fixes. Trap some more X errors. 
+	Focus/desktop handling fixes. Trap some more X errors.
 
 2004-12-09  mallum <mallum@openedhand.com>
 
@@ -1408,7 +1414,7 @@
 
 	* configure.ac:
 	* src/wm.c: (wm_usage), (wm_load_config):
-	Minor tweaks to XRM option layout. 
+	Minor tweaks to XRM option layout.
 
 	* src/base_client.c: (base_client_new), (base_client_move_resize),
 	(base_client_destroy):
@@ -1449,21 +1455,21 @@
 	* src/structs.h:
 	* src/wm.c: (wm_find_client), (wm_handle_button_event):
 	Add Initial support for new lower server memory frame decorations.
-	Composite and standalone will likely be BROKEN atm. 
+	Composite and standalone will likely be BROKEN atm.
 	Also avoid refocusing dialog if it already has focus.
 
 2004-12-07  Ross Burton  <ross@openedhand.com>
 
 	* configure.ac:
 	Add an option to disable use of Xrm.
-	
+
 	* src/wm.c:
 	When Xrm is disabled, use a simple command line parser.
-	
+
 2004-12-01  mallum <mallum@handhelds.org>
 
 	* src/composite-engine.c: (comp_engine_client_get_trans_prop):
-	Change old atoms[INTEGER] to XA_INTEGER 
+	Change old atoms[INTEGER] to XA_INTEGER
 
 2004-11-30  mallum <mallum@handhelds.org>
 
@@ -1519,7 +1525,7 @@
 	* src/xml.h:
 	Update copyright on all files.
 	Add initial _NET_WM_SYNC support ( not working ).
-	Tweak alternative toolbar behaviour. 
+	Tweak alternative toolbar behaviour.
 
 2004-11-19  mallum,,,  <mallum@handhelds.org>
 
@@ -1527,9 +1533,9 @@
 	* src/desktop_client.c: (desktop_client_new):
 	Fixes for decorated desktop mode
 	* src/main.c: (main):
-	Add call to XSyncronize() is MB_SYNC env var set. 
+	Add call to XSyncronize() is MB_SYNC env var set.
 
-2004-11-19 0.9rc2 released. 
+2004-11-19 0.9rc2 released.
 
 2004-11-19  mallum,,,  <mallum@handhelds.org>
 
@@ -1548,11 +1554,11 @@
 	odd problems with GTK transients and GDK X Errors
 	Make handle_configure_request more ICCCM compliant.
 	Handle clients changing transient property.
-	Remove AWT workaround. 
+	Remove AWT workaround.
 
 	* src/toolbar_client_alt.c: (toolbar_client_show),
 	(toolbar_client_hide):
-	Remove compiler warning. 
+	Remove compiler warning.
 
 2004-11-18  mallum,,,  <mallum@handhelds.org>
 
@@ -1562,14 +1568,14 @@
 	(toolbar_client_show), (toolbar_client_redraw):
 	* src/wm.c: (wm_update_layout), (wm_activate_client):
 	More alternative toolbar/input window work.
-	Now works with fullscreen correctly + repositions dialogs ok. 
+	Now works with fullscreen correctly + repositions dialogs ok.
 
 2004-11-18  mallum,,,  <mallum@handhelds.org>
 
 	* src/base_client.c: (base_client_new), (base_client_process_name),
 	(base_client_destroy):
 	* src/desktop_client.c: (desktop_client_unmap):
-	Reduce some bogus X Errors. 
+	Reduce some bogus X Errors.
 
 	* src/ewmh.c: (ewmh_update_lists):
 	* src/list.c: (list_add), (list_find_by_id), (list_find_by_name),
@@ -1580,7 +1586,7 @@
 	* src/structs.h:
 	* src/wm.c: (wm_handle_unmap_event):
 	Add a new sperate 'age' based client list for non stack ordered
-	propertys. May not keep this code, not sure if needed. 
+	propertys. May not keep this code, not sure if needed.
 
 2004-11-17  mallum,,,  <mallum@handhelds.org>
 
@@ -1595,14 +1601,14 @@
 	(toolbar_client_move_resize), (toolbar_client_reparent),
 	(toolbar_client_show), (toolbar_client_hide),
 	(toolbar_client_destroy), (toolbar_client_redraw):
-	Add initial alternative input/toolbar window code. 
+	Add initial alternative input/toolbar window code.
 
 	* src/stack.c: (stack_get_type_list),
 	(stack_move_type_above_client):
 	Fix possible infinite loop.
 
 	* src/wm.c: (wm_new), (wm_usage):
-	Minor cleanup - remove old PANGO defines. 
+	Minor cleanup - remove old PANGO defines.
 
 2004-11-17  mallum  <mallum@handhelds.org>
 
@@ -1618,7 +1624,7 @@
 2004-11-16  mallum <mallum@handhelds.org>
 
 	* src/xml.c:
-	Really free up parsed params for non expat parser. 
+	Really free up parsed params for non expat parser.
 	Should fix bug #100
 
 2004-11-16  mallum,,,  <mallum@handhelds.org>
@@ -1628,7 +1634,7 @@
 	* src/wm.c: (wm_handle_button_event):
 	Dont try and set main app focus if task menu is active ( crasher )
 
-2004-11-15 0.9rc1 released. 
+2004-11-15 0.9rc1 released.
 
 2004-11-15  mallum,,,  <mallum@handhelds.org>
 
@@ -1641,14 +1647,14 @@
 	* src/mbtheme-standalone.h:
 	* src/mbtheme.c: (theme_has_message_decor):
 	* src/mbtheme.h:
-	Make message window decor fall back to normal dialog decor 
+	Make message window decor fall back to normal dialog decor
 	if none defined in theme.
 
 2004-11-12  mallum,,,  <mallum@handhelds.org>
 
 	* src/client_common.c: (client_get_transient_list):
-	Fixes for stacking dialogs transient for transient .. for root. 
-	
+	Fixes for stacking dialogs transient for transient .. for root.
+
 	* src/desktop_client.c: (desktop_client_show):
 	* src/dockbar_client.c: (dockbar_client_show):
 	* src/stack.c: (stack_prepend_bottom),
@@ -1671,8 +1677,8 @@
 	(wm_msg_win_queue_add), (wm_msg_win_queue_pop),
 	(wm_msg_win_queue_process):
 	* src/wm.h:
-	Re-add message window queueing code and old message hint. 
-	Fix segv on dialog closing with no 'focus' history. 
+	Re-add message window queueing code and old message hint.
+	Fix segv on dialog closing with no 'focus' history.
 
 2004-11-11  mallum,,,  <mallum@handhelds.org>
 
@@ -1690,7 +1696,7 @@
 	* src/stack.c: (stack_move_transients_to_top):
 	* src/wm.c: (wm_activate_client):
 	Add support for _NET_WM_STATE_ABOVE to dialog stacking
-	Make urgent wins non transient for root stack lower. 
+	Make urgent wins non transient for root stack lower.
 
 2004-11-11  mallum,,,  <mallum@handhelds.org>
 
@@ -1713,7 +1719,7 @@
 2004-11-10  mallum <mallum@handhelds.org>
 
 	* COMPLIANCE:
-	Update a little. 
+	Update a little.
 
 	* src/base_client.c: (base_client_new), (base_client_process_name),
 	(base_client_hide), (base_client_show), (base_client_destroy):
@@ -1738,7 +1744,7 @@
 	* src/wm.c: (wm_handle_configure_request), (wm_handle_unmap_event),
 	(wm_make_new_client), (wm_activate_client):
 	Eeek, another massive commit. Mainly just cleanups - removal
-	of #if 0's, more commenting, remove dialog defines. 
+	of #if 0's, more commenting, remove dialog defines.
 
 2004-11-10  mallum,,,  <mallum@handhelds.org>
 
@@ -1774,7 +1780,7 @@
 2004-11-09  mallum <mallum@handhelds.org>
 
 	* src/misc.c: (handle_xerror):
-	Fix silly mistake in xerror handler causing random segfaults	      
+	Fix silly mistake in xerror handler causing random segfaults
 
 2004-11-08  mallum  <mallum@handhelds.org>
 
@@ -1785,9 +1791,9 @@
 	* src/stack.c: (stack_move_transients_to_top):
 	* src/structs.h:
 	* src/wm.c: (wm_handle_map_notify), (wm_activate_client):
-	Compositor now at least compiles again. 
+	Compositor now at least compiles again.
 	Doesn't work 100% as yet ( crashes ).
-	Basic support for reading _NET_WM_STATE_ABOVE hint added. 
+	Basic support for reading _NET_WM_STATE_ABOVE hint added.
 
 2004-11-07  mallum,,,  <mallum@handhelds.org>
 
@@ -1799,10 +1805,10 @@
 	(ignore_xerror), (mwm_get_decoration_flags):
 	* src/wm.c: (wm_new), (wm_load_config):
 	Minor clean up of misc.c. Remove err() call.
-	
+
 	* src/xml.c: (list_add_node), (xml_node_new):
 	* src/xml.h:
-	Minor cleanup of xml.c . Remove xml_dump() 
+	Minor cleanup of xml.c . Remove xml_dump()
 
 2004-11-02  mallum,,,  <mallum@handhelds.org>
 
@@ -1836,7 +1842,7 @@
 
 	Fix standalone + startup notification builds.
 	Initial implimentation of 'msg' wins via urgent flag with
-	correct stacking. 
+	correct stacking.
 	Make matchbox-remote theme switching work again
 
 2004-11-01  mallum,,,  <mallum@handhelds.org>
@@ -1888,7 +1894,7 @@
 	* src/wm.c: (wm_handle_button_event), (wm_activate_client):
 	More transient stacking dialog fixes.
 	Initial support for minimize button on app windows ( untested ).
-	Embedded panel in titlebar fixes. 
+	Embedded panel in titlebar fixes.
 	Other stacking fixes.
 
 2004-10-28  <mallum@handhelds.org>
@@ -1959,8 +1965,8 @@
 	(wm_get_visible_main_client), (wm_get_offsets_size),
 	(wm_toggle_desktop), (wm_get_desktop), (wm_sn_monitor_event_func):
 	* src/wm.h:
-	Much restructing of WM stacking. Is not 100% stable yet.  
-	Many --enable options probably broken. 
+	Much restructing of WM stacking. Is not 100% stable yet.
+	Many --enable options probably broken.
 
 2004-10-20  mallum,,,  <mallum@handhelds.org>
 
@@ -1973,10 +1979,10 @@
 	(stack_get_window_list), (stack_sync_to_display), (main):
 	* src/stack.h:
 	* src/structs.h:
-	Add initial new stack API. Note nothing uses it as yet. 
+	Add initial new stack API. Note nothing uses it as yet.
 
 	* src/wm.c: (wm_make_new_client):
-	Remove extra ';' typo ausing probs on gcc2.96 
+	Remove extra ';' typo ausing probs on gcc2.96
 
 2004-10-15  mallum,,,  <mallum@handhelds.org>
 
@@ -1986,10 +1992,10 @@
 2004-10-15  mallum  <mallum@handhelds.org>
 
 	* src/wm.c: (wm_handle_configure_request):
-	Make sure a toolbar that resizes itself gets repositioned 
+	Make sure a toolbar that resizes itself gets repositioned
 	correctly. ( Bug #94 )
 
-2004-09-22 0.8.4 released. 
+2004-09-22 0.8.4 released.
 
 2004-09-28  mallum,,,  <mallum@handhelds.org>
 
@@ -2002,12 +2008,12 @@
 
 	* src/base_client.c: (base_client_new):
 	* src/dialog_client.c: (dialog_client_drag), (_draw_outline):
-	Revert back to non problematic hidden dialog drag. 
+	Revert back to non problematic hidden dialog drag.
 	* src/structs.h:
 	* src/wm.c: (wm_usage), (wm_load_config),
 	(wm_handle_configure_request), (wm_win_force_dialog),
 	(wm_make_new_client):
-	Add support for new -force_dialogs option. 
+	Add support for new -force_dialogs option.
 	Add missing configure notify from dialog resize
 
 2004-09-21  mallum  <mallum@handhelds.org>
@@ -2021,7 +2027,7 @@
 	* src/wm.c: (wm_load_config), (wm_find_client),
 	(wm_make_new_client):
 	Minor optimisations to reduce freq of some uneeded calls
-	
+
 2004-09-07  mallum  <mallum@handhelds.org>
 
 	* src/mbtheme.c: (mbtheme_switch):
@@ -2040,7 +2046,7 @@
 2004-09-01  mallum,,,  <mallum@handhelds.org>
 
 	* src/wm.c: (wm_handle_property_change):
-	Actually update client sub name prop on change. 
+	Actually update client sub name prop on change.
 
 2004-08-30  mallum,,,  <mallum@handhelds.org>
 
@@ -2051,7 +2057,7 @@
 
 	* src/main_client.c: (main_client_manage_toolbars_for_fullscreen),
 	(main_client_toggle_fullscreen):
-	More fullscreen fixes. 
+	More fullscreen fixes.
 
 2004-08-30  mallum,,,  <mallum@handhelds.org>
 
@@ -2066,10 +2072,10 @@
 2004-08-28  mallum,,,  <mallum@handhelds.org>
 
 	* src/matchbox-remote.c: (mbpanelcommand), (mbcommand), (usage),
-	Add support for -panel-toggle.  
+	Add support for -panel-toggle.
 	Based on patch from Tom Hui.
 
-2004-08-23 0.8.3 released. 
+2004-08-23 0.8.3 released.
 
 2004-08-23  mallum,,,  <mallum@handhelds.org>
 
@@ -2087,7 +2093,7 @@
 2004-08-18  mallum,,,  <mallum@handhelds.org>
 
 	* src/client_common.c: (client_want_focus):
-	Never give message windows input focus. 
+	Never give message windows input focus.
 	* src/ewmh.c: (ewmh_set_active):
 	Remove silly debug crasher.
 
@@ -2104,7 +2110,7 @@
 	(dialog_init_geometry), (dialog_client_button_press),
 	(dialog_client_drag), (_get_mouse_position), (_draw_outline),
 	(dialog_client_destroy):
-	Quick dialog code cleanup 
+	Quick dialog code cleanup
 
 2004-08-17  mallum,,,  <mallum@handhelds.org>
 
@@ -2113,14 +2119,14 @@
 	* src/mbtheme.c: (theme_frame_button_paint), (mbtheme_button_new):
 	* src/mbtheme.h:
 	* src/structs.h:
-	Fix for button press-only crazziness. 
+	Fix for button press-only crazziness.
 
 2004-08-17  mallum,,,  <mallum@handhelds.org>
 
 	* src/structs.h:
 	* src/wm.c: (wm_load_config), (wm_handle_configure_request):
 	Make awt workaround set via env var rather than ifdef
-	Safer vaue_mask checks for dialog resizing. 
+	Safer vaue_mask checks for dialog resizing.
 
 2004-08-13  mallum,,,  <mallum@handhelds.org>
 
@@ -2133,18 +2139,18 @@
 
 	* src/composite-engine.c: (comp_engine_client_configure):
 	* src/wm.c: (wm_handle_configure_request):
-	Attempted shadow fix for self resizing dialogs 
+	Attempted shadow fix for self resizing dialogs
 
 2004-08-12  mallum,,,  <mallum@handhelds.org>
 
 	* src/dialog_client.c: (dialog_init_geometry):
-	Eek, fix typo. 
+	Eek, fix typo.
 
 2004-08-11  mallum,,,  <mallum@handhelds.org>
 
 	* src/composite-engine.c: (comp_engine_theme_init),
 	(comp_engine_render):
-	Use red rectangles for visual debug. 	
+	Use red rectangles for visual debug.
 
 	* src/dialog_client.c: (dialog_init_geometry):
 	Message window positioning fixes
@@ -2158,7 +2164,7 @@
 	* src/toolbar_client.c: (toolbar_client_configure),
 	(toolbar_client_show):
 	* src/wm.c: (wm_restack):
-	Add intial support for showing toolbar windows for fullscreen 
+	Add intial support for showing toolbar windows for fullscreen
 	windows
 
 2004-08-06  mallum,,,  <mallum@handhelds.org>
@@ -2167,7 +2173,7 @@
 	(wm_handle_configure_request), (wm_restack):
 	* src/dialog_client.c: (dialog_check_geometry):
 	* src/dialog_client.h:
-	Allow dialog resizing / repostioning via new dialog stuff. 
+	Allow dialog resizing / repostioning via new dialog stuff.
         Raise a dialog on click ( not just titlebar anymore ).
 
 	* src/ewmh.c: (ewmh_set_active):
@@ -2183,7 +2189,7 @@
 	* src/dialog_client.c: (dialog_client_new),
 	(dialog_get_available_area), (dialog_check_gemoetry):
 	* src/structs.h:
-	More dialog positioning/sizing improvements. 
+	More dialog positioning/sizing improvements.
 
 	* src/toolbar_client.c: (toolbar_client_new),
 	(toolbar_client_configure), (toolbar_client_move_resize),
@@ -2192,7 +2198,7 @@
 	(toolbar_client_button_press), (toolbar_win_offset),
 	(toolbar_client_redraw):
 	Speed up toolbar handling removing the numerous get_state()
-	roundtrips and using a local flag instead. 
+	roundtrips and using a local flag instead.
 
 2004-08-05  mallum,,,  <mallum@handhelds.org>
 
@@ -2217,12 +2223,12 @@
 	* src/ewmh.c: (ewmh_init):
 	* src/mbtheme.c: (mbtheme_button_new):
 	* src/structs.h:
-	More subname work and grab message functionality added. 
+	More subname work and grab message functionality added.
 
 2004-07-30  mallum,,,  <mallum@handhelds.org>
 
 	* data/schemas/Makefile.am:
-	Fix disable schemas install. 
+	Fix disable schemas install.
 	* src/base_client.c: (base_client_new):
 	* src/client_common.c: (client_button_do_ops):
 	* src/ewmh.c: (ewmh_init):
@@ -2234,7 +2240,7 @@
 	* src/mbtheme.h:
 	* src/structs.h:
 	* src/wm.c: (wm_handle_property_change), (wm_toggle_desktop):
-	Add initial support for sub name/label property. 
+	Add initial support for sub name/label property.
 
 2004-07-19  Matthew Allum,,,  <mallum@handhelds.org>
 
@@ -2247,7 +2253,7 @@
 	* src/composite-engine.c: (comp_engine_render), (comp_engine_time):
 	* src/structs.h:
 	* src/wm.c: (wm_handle_client_message):
-	Add suport for visual composite debugging. Toggle via 
+	Add suport for visual composite debugging. Toggle via
 	matchbox-remote -x
 
 2004-07-13  Matthew Allum,,,  <mallum@handhelds.org>
@@ -2277,7 +2283,7 @@
 	(wm_sn_exec), (wm_sn_monitor_event_func), (wm_msg_win_queue_add),
 	(wm_msg_win_queue_process), (gconf_key_changed_callback):
 
-	minor source cleanups. 
+	minor source cleanups.
 
 2004-06-18  Matthew Allum,,,  <mallum@handhelds.org>
 
@@ -2288,13 +2294,13 @@
 
 	* src/toolbar_client.c: (toolbar_client_new):
 	If theres no vertical space for a new toolbar turn it
-	into a main client. 
+	into a main client.
 
 2004-06-04  Matthew Allum,,,  <mallum@handhelds.org>
 
 	* src/ewmh.c: (ewmh_handle_root_message):
 	fix for _NET_SHOWING_DESKTOP - dont hide desktop if already showing
-	and show is requested. 
+	and show is requested.
 
 2004-06-04  Matthew Allum,,,  <mallum@handhelds.org>
 
@@ -2330,8 +2336,8 @@
 	* src/wm.c: (wm_handle_configure_request), (wm_make_new_client):
 	Added initial support for ARGB Windows.
 	Changed blondie theme to use simple shadows.
-	Possible fix for allowing message wins to move themselves. 
-	
+	Possible fix for allowing message wins to move themselves.
+
 2004-05-06  mb-wm 0.8.2 release RELEASE_0_8_2
 
 2004-05-06  Matthew Allum,,,  <mallum@handhelds.org>
@@ -2376,13 +2382,13 @@
 	* src/wm.c: (wm_usage), (wm_load_config), (wm_event_loop):
 
 	ping related cleanups. remove -ping_handler cmd line option,
-	shorten time to kill hung app.  
+	shorten time to kill hung app.
 
 2004-04-06  Matthew Allum,,,  <mallum@openedhand.com>
 
 	* configure.ac:
 	Add disable ping option.
-	
+
 	* src/base_client.c: (base_client_new), (base_client_destroy):
 	* src/client_common.c: (client_obliterate),
 	(client_deliver_delete):
@@ -2404,7 +2410,7 @@
 
 	* configure.ac:
 	Add support for test builds with gconf/gprof
-	Clean up the configure --help output 
+	Clean up the configure --help output
 
 2004-03-26  Matthew Allum,,,  <mallum@openedhand.com>
 
@@ -2418,7 +2424,7 @@
 	* src/dialog_client.c: (dialog_client_get_offsets),
 	(dialog_client_configure):
 	Allow decorationless dialog to position themselves anywhere
-	Dont add invisible border to decorationless dialogs	
+	Dont add invisible border to decorationless dialogs
 	* src/wm.c: (wm_handle_configure_request):
 	Fix Composite for self moving dialogs
 
@@ -2449,7 +2455,7 @@
 2004-03-09  Matthew Allum,,,  <mallum@handhelds.org>
 
 	* src/composite-engine.c: (comp_engine_time):
-	Disable lowlight timings define - shouldn't be in release 
+	Disable lowlight timings define - shouldn't be in release
 	* src/dialog_client.c: (dialog_client_drag), (_draw_outline):
 	Initial hiding dialog when dragged experiments
 
@@ -2525,7 +2531,7 @@
 2004-02-07  Matthew Allum,,,  <mallum@handhelds.org>
 
 	* configure.ac:
-	fix startup notification 
+	fix startup notification
 
 2004-02-06  Matthew Allum,,,  <mallum@handhelds.org>
 

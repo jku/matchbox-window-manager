@@ -35,10 +35,12 @@ keys_keysym_needs_shift(Wm *w, KeySym keysym)
 
   for (keycode = min_kc; keycode <= max_kc; keycode++) {
     for (col = 0; (k = XKeycodeToKeysym (w->dpy, keycode, col))
-           != NoSymbol; col++)
-      if (k == keysym && col == 1) {
+           != NoSymbol; col++) {
+      if (k == keysym && col == 1)
         return True;
-      }
+      if (k == keysym)
+	break;
+    }
   }  
   return False;
 }
