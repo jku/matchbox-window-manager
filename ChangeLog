@@ -1,3 +1,10 @@
+2007-11-14  Richard Purdie  <rpurdie@opened.com>
+
+	* configure.ac:
+	Stop -L/lib being added to compiler commandline and breaking builds
+	when --enable-expat and --disable-expat options aren't used and 
+	$expat is empty.
+
 2007-11-01  Tomas Frydrych  <tf@o-hand.com>
 
 	* src/keys.c: (keys_keysym_needs_shift):

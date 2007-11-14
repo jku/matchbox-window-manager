@@ -283,7 +283,7 @@ if test x$enable_expat != xno; then
     yes)
 
 	case "$expat" in
-	  yes)
+	  yes|"")
 		EXPAT_LIBS="-lexpat"
 		;;
 	    *)
