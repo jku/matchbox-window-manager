@@ -28,7 +28,7 @@ void
 client_set_state(Client *c, int state)
 {
   Wm *w = c->wm;
-  CARD32 data[2];
+  long data[2];
 
   data[0] = state;
   data[1] = None;
