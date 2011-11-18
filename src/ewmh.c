@@ -482,7 +482,7 @@ ewmh_update_desktop_hint(Wm *w)
 void
 ewmh_update_rects(Wm *w)
 {
-  CARD32 val[4];
+  long val[4];
 
   val[0] = wm_get_offsets_size(w, WEST, NULL, True);
   val[1] = wm_get_offsets_size(w, NORTH, NULL, True);
