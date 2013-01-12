@@ -4,7 +4,7 @@ AC_CONFIG_SRCDIR([src/wm.c])
 
 AM_INIT_AUTOMAKE()
 AM_MAINTAINER_MODE
-AM_CONFIG_HEADER([config.h])
+AC_CONFIG_HEADERS([config.h])
 
 # Checks for programs.
 AC_PROG_CC
