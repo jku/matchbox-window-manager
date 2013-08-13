@@ -87,8 +87,8 @@ void
 ewmh_hung_app_check (Wm *w);
 
 #ifndef REDUCE_BLOAT
-int 
-*ewmh_get_icon_prop_data (Wm *w, Window win);
+unsigned long *
+ewmh_get_icon_prop_data (Wm *w, Window win);
 #endif
 
 int 

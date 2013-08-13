@@ -125,15 +125,15 @@ void theme_frame_icon_paint(MBTheme *t, Client *c,
 			    int x, int y)
 {
   MBPixbufImage *img = NULL;
-  int           *data = NULL;
+  unsigned long *data = NULL;
 
   if (c->icon_rgba_data != NULL)
     {
       data = c->icon_rgba_data;
 
-      img = mb_pixbuf_img_new_from_int_data(t->wm->pb,
-					    (data+2),
-					    data[0], data[1]);
+      img = mb_pixbuf_img_new_from_long_data(t->wm->pb,
+                                             (data+2),
+                                             data[0], data[1]);
     }
   else 
     {

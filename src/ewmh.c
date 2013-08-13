@@ -917,7 +917,7 @@ ewmh_get_utf8_prop(Wm *w, Window win, Atom req_atom)
 
 #ifndef REDUCE_BLOAT
 
-int*
+unsigned long *
 ewmh_get_icon_prop_data(Wm *w, Window win)
 {
   Atom           type;
@@ -939,7 +939,7 @@ ewmh_get_icon_prop_data(Wm *w, Window win)
       return NULL;
     }
 
-  return (int *)data;
+  return (long *)data;
 }
 
 #endif

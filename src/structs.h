@@ -366,7 +366,7 @@ typedef struct _client
   Pixmap            icon, icon_mask;
   Bool              mapped;	                 /* Bogus ? */
 #ifndef REDUCE_BLOAT
-  int              *icon_rgba_data;
+  unsigned long    *icon_rgba_data;
 #endif
 
   /* Decoration etc */
