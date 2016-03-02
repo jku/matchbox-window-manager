@@ -3039,7 +3039,6 @@ wm_xsettings_notify_cb (const char       *name,
   int key = XSET_UNKNOWN;
   
   struct _mb_xsettings { char *name; int value; } mb_xsettings[] = {
-    { "Net/ThemeName",      XSET_THEME     },
     { "MATCHBOX/THEME",     XSET_THEME     },
     { "MATCHBOX/CURSOR",    XSET_CURSOR    },
     { "MATCHBOX/TITLEBARS", XSET_TITLEBARS }, /* XXX Not implemeted */
