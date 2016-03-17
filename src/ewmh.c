@@ -472,7 +472,7 @@ ewmh_update_desktop_hint(Wm *w)
 {
    /* Desktop showing hint */
 
-   int val = (w->flags & DESKTOP_RAISED_FLAG) ? 1 : 0;
+   long val = (w->flags & DESKTOP_RAISED_FLAG) ? 1 : 0;
 
    XChangeProperty(w->dpy, w->root, w->atoms[_NET_SHOW_DESKTOP],
 		   XA_CARDINAL, 32, PropModeReplace, 
