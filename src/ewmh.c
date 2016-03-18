@@ -136,7 +136,7 @@ ewmh_init(Wm *w)
 void
 ewmh_init_props(Wm *w)
 {
-  int num_desktops = 1;
+  long num_desktops = 1;
   
   set_compliant(w);
   set_supported(w);
@@ -455,15 +455,18 @@ ewmh_update_lists(Wm *w)
   */
   if (w->config->super_modal)
     {
+      long modals = w->n_modals_present;
+      long modal_blockers = w->n_modal_blocker_wins;
+
       XChangeProperty(w->dpy, w->root, 
 		      w->atoms[_MB_NUM_MODAL_WINDOWS_PRESENT],
 		      XA_CARDINAL, 32, PropModeReplace,
-		      (unsigned char *)&w->n_modals_present, 1);
+		      (unsigned char *)&modals, 1);
 
       XChangeProperty(w->dpy, w->root, 
 		      w->atoms[_MB_NUM_SYSTEM_MODAL_WINDOWS_PRESENT],
 		      XA_CARDINAL, 32, PropModeReplace,
-		      (unsigned char *)&w->n_modal_blocker_wins, 1);
+		      (unsigned char *)&modal_blockers, 1);
     }
 }
 
@@ -472,7 +475,7 @@ ewmh_update_desktop_hint(Wm *w)
 {
    /* Desktop showing hint */
 
-   int val = (w->flags & DESKTOP_RAISED_FLAG) ? 1 : 0;
+   long val = (w->flags & DESKTOP_RAISED_FLAG) ? 1 : 0;
 
    XChangeProperty(w->dpy, w->root, w->atoms[_NET_SHOW_DESKTOP],
 		   XA_CARDINAL, 32, PropModeReplace, 
