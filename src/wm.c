@@ -1074,6 +1074,7 @@ wm_handle_keypress(Wm *w, XKeyEvent *e)
 #ifndef NO_KBD
   MBConfigKbdEntry *entry =  w->config->kb->entrys;
   Client *p = NULL;
+  int state = e->state;
 
 #ifdef USE_LIBSN
   Bool found = False;
@@ -1094,11 +1095,14 @@ wm_handle_keypress(Wm *w, XKeyEvent *e)
 	   return;
 	 }
        }
-   
+
+   /* Don't care about Caps/Num/Scroll lock here */
+   state &= ~w->config->kb->lock_mask;
+
    while (entry != NULL)
      {
        if (XKeycodeToKeysym(w->dpy, e->keycode, entry->index) == entry->key
-	   && e->state == entry->ModifierMask )
+	   && state == entry->ModifierMask )
 	{
 	  switch (entry->action) 
 	    {
