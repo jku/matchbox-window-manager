@@ -495,7 +495,7 @@ keys_grab(Wm *w, Bool ungrab)
       int ignored_mask = 0;
 
       /* Needed to grab all ignored combo's too */
-      while (ignored_mask < (int) w->config->kb->lock_mask)
+      while (ignored_mask <= (int) w->config->kb->lock_mask)
 	{                                       
 	  if (ignored_mask & ~(w->config->kb->lock_mask))
 	    {
