@@ -143,11 +143,13 @@ mbcommand(int cmd_id, char *data) {
        /* Check if desktop is running */
        if (!XGetSelectionOwner(dpy, desktop_manager_atom))
 	 {
+	   char *exec_args[] = { NULL };
+
 	   fprintf(stderr, "Desktop not running, exiting...\n");
 	   switch (fork())
 	     {
 	     case 0:
-	       execvp ("mbdesktop", NULL);
+	       execvp ("mbdesktop", exec_args);
 	       break;
 	     case -1:
 	       fprintf(stderr, "failed to exec mbdesktop");
