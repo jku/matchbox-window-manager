@@ -602,7 +602,6 @@ theme_frame_paint( MBTheme *theme,
   MBThemeFrame     *frame;
   MBPixbufImage    *img;
   MBThemeLayer     *layer_label = NULL, *layer_icon = NULL;
-  struct list_item *layer_list_item;
   int               label_rendered_width;
   int               decor_idx = 0;
   MBDrawable       *drawable = NULL;
@@ -698,8 +697,6 @@ theme_frame_paint( MBTheme *theme,
 							      dw,dh);
       img = theme->img_caches[frame_type];
     }
-
-  layer_list_item = frame->layers;
 
   layer_label = (MBThemeLayer*)list_find_by_id(frame->layers, LAYER_LABEL);
 
@@ -981,7 +978,6 @@ theme_frame_menu_highlight_entry(Client         *c,
   MBDrawable    *drw;
   MBThemeFrame  *frame;
   MBFont        *font;
-  MBColor       *color;
   Client        *entry = (Client *)button->data;
   int            offset, item_h;
 
@@ -991,7 +987,6 @@ theme_frame_menu_highlight_entry(Client         *c,
     return;
 
   font  = frame->font;
-  color = frame->color;
 
   if (frame->hl_color)
     {
@@ -1982,7 +1977,6 @@ parse_color_tag (MBTheme *theme,
 		 XMLNode *node)
 {
   MBColor *color = NULL;
-  int alpha;
   char *id     = get_attr(node, "id");
   char *spec   = get_attr(node, "def");
 
@@ -1990,7 +1984,6 @@ parse_color_tag (MBTheme *theme,
     {
       fprintf(stderr, "matchbox *warning*: alpha attribute in theme.xml color tar is depreciated\n                    Use def='rrggbbaa' format instead to specify alpha\n"); 
     }
-  else alpha = 0xff;
 
   dbg("%s() id : %s , def : %s\n", __func__, id, spec);
 

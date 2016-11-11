@@ -1257,8 +1257,9 @@ int
 ewmh_utf8_len(unsigned char *str) /* Only parse _validated_ utf8 */
 {
   unsigned char *p = str;
+  int len, result = 0;
+  __attribute__((unused)) int mask;
 
-  int mask, len, result = 0;
   while (*p != '\0')
     {
       UTF8_COMPUTE(*p, mask, len);
@@ -1273,8 +1274,9 @@ int
 ewmh_utf8_get_byte_cnt(unsigned char *str, int num_chars)
 {
   unsigned char *p = str;
+  int len, result = 0;
+  __attribute__((unused)) int mask;
 
-  int mask, len, result = 0;
   while (*p != '\0' && num_chars-- > 0)
     {
       UTF8_COMPUTE(*p, mask, len);

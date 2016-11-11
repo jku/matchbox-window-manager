@@ -2621,7 +2621,7 @@ wm_activate_client(Client *c)
       /* As matchbox works around 'main' windows ( apps/main and desktop wins).
 	 We need to sync extra stuff up when displaying a new one.
        */
-      Bool switching_from_to_fullscreen = False;
+      __attribute__((unused)) Bool switching_from_to_fullscreen = False;
 
       /* save focus state for transient dialogs of prev showing main win */
 
