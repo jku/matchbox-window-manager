@@ -1,5 +1,5 @@
 AC_PREREQ(2.53)
-AC_INIT([matchbox-window-manager], 1.2.1, [yocto@yoctoproject.org])
+AC_INIT([matchbox-window-manager], 1.2.2, [yocto@yoctoproject.org])
 AC_CONFIG_SRCDIR([src/wm.c])
 
 AM_INIT_AUTOMAKE()
